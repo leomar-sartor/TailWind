@@ -1,0 +1,28 @@
+@layer components {
+  /* ===== BASE ===== */
+  .btn {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-md font-medium transition-colors;
+  }
+
+  /* ===== VARIANTS ===== */
+  .btn-primary-green {
+    @apply bg-primary-green text-primary-green-foreground hover:bg-primary-green-hover;
+  }
+
+  .btn-destructive {
+    @apply bg-destructive text-destructive-foreground hover:bg-destructive-hover;
+  }
+
+  /* ===== SIZES ===== */
+  .btn-sm {
+    @apply h-8 px-3 text-sm;
+  }
+
+  .btn-md {
+    @apply h-10 px-4 text-sm;
+  }
+
+  .btn-lg {
+    @apply h-12 px-6 text-base;
+  }
+}

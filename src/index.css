@@ -1,5 +1,4 @@
 @import "tailwindcss";
-
-@theme {
-  --color-padrao: #23393b;
-}
+@import "./styles/base.css";
+@import "./styles/theme.css";
+@import "./styles/components/button.css";

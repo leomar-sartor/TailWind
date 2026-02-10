@@ -1,0 +1,43 @@
+/* 
+  L - Lightness - Quão claro/escuro (0% a 100%)
+  C - Chroma - Intensidade da cor (0 = cinza)
+  H - Hue - Qual cor é (0–360)
+*/
+
+@theme {
+
+  /* Light (default) */
+  --color-funcional: var(--color-funcional);
+
+  /* ===== GLOBAL ===== */
+  --color-background: var(--color-white);
+  --color-foreground: var(--color-black);
+
+  /* ===== PRIMARY GREEN ===== */
+  --color-primary-green: var(--color-primary-green-950);
+  --color-primary-green-foreground: var(--color-primary-yellow-600);
+  --color-primary-green-hover: var(--color-primary-green-900);
+
+  /* ===== DESTRUCTIVE ===== */
+  --color-destructive: var(--color-destructive-600);
+  --color-destructive-foreground: var(--colors-destructive-100);
+  --color-destructive-hover: var(--color-destructive-700);
+}
+
+/* DARK MODE */
+.dark {
+  --color-funcional: var(--color-funcional-dark);
+   /* ===== GLOBAL ===== */
+  --color-background: var(--color-black);
+  --color-foreground: var(--color-white);
+
+  /* ===== PRIMARY GREEN ===== */
+  --color-primary-green: var(--color-primary-green-700);
+  --color-primary-green-foreground: var(--color-primary-yellow-600);
+  --color-primary-green-hover: var(--color-primary-green-900);
+  
+  /* ===== DESTRUCTIVE ===== */
+  --color-destructive: var(--color-destructive-700);
+  --color-destructive-foreground: var(--color-destructive-100);
+  --color-destructive-hover: var(--color-destructive-900);
+}
