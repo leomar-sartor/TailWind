@@ -25,4 +25,8 @@
   .btn-lg {
     @apply h-12 px-6 text-base;
   }
+
+  .btn-xl {
+    @apply h-14 px-6 text-base;
+  }
 }

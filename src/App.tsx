@@ -4,7 +4,11 @@ import { useEffect, useState } from 'react';
 import { SplitScreenLayout } from './layouts/SplitScreenLayout';
 import loginImage from '@/assets/wallpaper/Professional.png'
 import headerImage from '@/assets/logos/LogoHeaderFormSample.png';
+import eyeOpenIcon from "@/assets/icons/eye.svg";
+import eyeCloseIcon from "@/assets/icons/eye-slash.svg";
+
 import { useForm, SubmitHandler } from "react-hook-form"
+import { Input } from './components/Input';
 
 type AvailableThemes = 'dark' | 'light';
 
@@ -16,6 +20,7 @@ type Inputs = {
 export function App() {
 
   const [theme, setTheme] = useState<AvailableThemes>('dark');
+  const [showPassword, setShowPassword] = useState(false);
 
   function handleThemeChange(
     event: React.MouseEvent<HTMLAnchorElement, MouseEvent>
@@ -36,6 +41,10 @@ export function App() {
     };
 
   }, [theme]);
+
+  const toggleShowPasswordButton = (): void => {
+    setShowPassword(prev => !prev);
+  }
 
   const {
     register,
@@ -76,9 +85,29 @@ export function App() {
           <div className=''>
             <form className='space-y-4' onSubmit={handleSubmit(onSubmit)}>
 
-              <input className="flex w-full h-14 rounded-2xl border p-4" name="user" placeholder="user" />
+              <p className="text-link text-center text-2xl mb-1">
+                Bem-vindo ao ARP! 👋
+              </p>
+              <p className="text-center text-md mb-12">
+                Para acessar, preencha os dados abaixo
+              </p>
 
-              <input className="flex w-full h-14 rounded-2xl border p-4" name="password" placeholder="senha" />
+
+              <Input name="user" placeholder="Nome de usuário" />
+
+              <div className="relative">
+                <Input name="password" placeholder="Digite a senha"
+                  type={showPassword ? "text" : "password"} />
+                <button
+                  type="button"
+                  onClick={toggleShowPasswordButton}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center justify-center" >
+                  <img
+                    src={showPassword ? eyeCloseIcon : eyeOpenIcon}
+                    alt={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                  />
+                </button>
+              </div>
 
               <div className="flex mx-auto">
                 <Button
@@ -86,7 +115,7 @@ export function App() {
                   className='w-full rounded-2xl border my-4 p-4 justify-center'
                   onClick={() => console.log("Acessar Portal", new Date())}
                 >
-                  Acessar Portal
+                  Entrar
                 </Button>
               </div>
 

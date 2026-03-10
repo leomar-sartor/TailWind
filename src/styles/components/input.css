@@ -1,0 +1,27 @@
+@layer components {
+
+  /* ===== BASE ===== */
+  .input {
+    @apply flex w-full h-14 rounded-2xl border p-4;
+  }
+
+  /* ===== VARIANTS ===== */
+  
+
+  /* ===== SIZES ===== */
+  .input-sm {
+    @apply h-8 text-sm;
+  }
+
+  .input-md {
+    @apply h-10 text-sm;
+  }
+
+  .input-lg {
+    @apply h-12 text-base;
+  }
+
+  .input-xl {
+    @apply h-14 text-base;
+  }
+}
