@@ -15,13 +15,17 @@
 
   /* ===== PRIMARY GREEN ===== */
   --color-primary-green: var(--color-primary-green-950);
-  --color-primary-green-foreground: var(--color-primary-yellow-600);
-  --color-primary-green-hover: var(--color-primary-green-900);
+  --color-primary-green-foreground: var(--color-primary-yellow-950);
+  --color-primary-green-hover: var(--color-primary-green-950);
 
   /* ===== DESTRUCTIVE ===== */
   --color-destructive: var(--color-destructive-600);
   --color-destructive-foreground: var(--colors-destructive-100);
   --color-destructive-hover: var(--color-destructive-700);
+
+  /* ===== LINK ===== */
+  --color-link: var(--color-link-green);
+  --color-link-hover: var(--color-link-green-hover);
 }
 
 /* DARK MODE */
@@ -32,12 +36,16 @@
   --color-foreground: var(--color-white);
 
   /* ===== PRIMARY GREEN ===== */
-  --color-primary-green: var(--color-primary-green-700);
-  --color-primary-green-foreground: var(--color-primary-yellow-600);
+  --color-primary-green: var(--color-primary-green-950);
   --color-primary-green-hover: var(--color-primary-green-900);
+  --color-primary-green-foreground: var(--color-primary-yellow-550);
   
   /* ===== DESTRUCTIVE ===== */
   --color-destructive: var(--color-destructive-700);
-  --color-destructive-foreground: var(--color-destructive-100);
   --color-destructive-hover: var(--color-destructive-900);
+  --color-destructive-foreground: var(--color-destructive-100);
+
+  /* ===== LINK ===== */
+  --color-link: var(--color-link-green);
+  --color-link-hover: var(--color-link-green-hover);
 }

@@ -5,6 +5,10 @@
   --color-funcional-dark: #082426;
   --color-white: #ffffff;
 
+  /* ===== BASE ===== */
+  --color-link-green: #459091;
+  --color-link-green-hover: #0D4344;
+
   /* ===== PRIMARY GREEN ===== */
   --color-primary-green-50:  #F2FBFA;
   --color-primary-green-100: #D4F3EF;
@@ -25,6 +29,7 @@
   --color-primary-yellow-300: #EFFA5C;
   --color-primary-yellow-400: #D4F02B;
   --color-primary-yellow-500: #B7D60C;
+  --color-primary-yellow-550: #fdffc7;
   --color-primary-yellow-600: #8FAB05;
   --color-primary-yellow-700: #6B8209;
   --color-primary-yellow-800: #55660E;
@@ -43,4 +48,15 @@
   --color-destructive-800: #9A221A;
   --color-destructive-900: #80231C;
   --color-destructive-950: #460D09;
+}
+
+@layer base {
+  html {
+    font-family: 'Outfit', sans-serif;
+  }
+
+  button {
+    cursor: pointer;
+  }
+  
 }

@@ -9,7 +9,7 @@ type ButtonProps = {
 
 export function Button({
   variant = 'primary-green',
-  size = 'md',
+  size = 'xl',
   className,
   children,
   ...props

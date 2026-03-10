@@ -9,4 +9,5 @@ export const buttonSizes: Record<ButtonSize, string> = {
   sm: 'btn-sm',
   md: 'btn-md',
   lg: 'btn-lg',
+  xl: 'btn-xl',
 }
