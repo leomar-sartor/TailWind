@@ -6,6 +6,7 @@ import loginImage from '@/assets/wallpaper/Professional.png'
 import headerImage from '@/assets/logos/LogoHeaderFormSample.png';
 import eyeOpenIcon from "@/assets/icons/eye.svg";
 import eyeCloseIcon from "@/assets/icons/eye-slash.svg";
+import { AuthImage } from "./components/AuthImage/AuthImage";
 
 import { useForm, SubmitHandler } from "react-hook-form"
 import { Input } from './components/Input';
@@ -143,7 +144,8 @@ export function App() {
         </div>
       }
       right={
-        <img src={loginImage} alt="Login" className="w-full h-full object-cover" />
+        <AuthImage src={loginImage} />
+        // <img src={loginImage} alt="Login" className="w-full h-full object-cover" />
       }
     />
   )
