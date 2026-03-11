@@ -5,14 +5,16 @@ type SplitScreenLayoutProps = {
 
 export function SplitScreenLayout({ left, right }: SplitScreenLayoutProps) {
   return (
-    <div className="h-screen w-full flex flex-col xl:flex-row">
+    <div className="flex min-h-screen">
 
-      <div className="flex h-screen justify-center p-8 xl:w-1/3 ">
+      {/* LEFT */}
+      <div className="w-full xl:w-1/3 flex flex-col min-h-screen">
           {left}
       </div>
 
+      {/* RIGHT */}
       {right && (
-        <div className="hidden xl:flex xl:w-2/3">
+        <div className="hidden xl:block xl:w-2/3 sticky top-0 h-screen">
           {right}
         </div>
       )}

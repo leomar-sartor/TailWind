@@ -69,21 +69,21 @@ export function App() {
 
     <SplitScreenLayout
       left={
-        <div className="flex flex-col justify-between space-y-2 min-w-100 sm:min-w-113 xl:min-w-100 2xl:min-w-113 transition-all duration-500 ease-in-out">
-
+        <div className="flex flex-col min-h-screen transition-all duration-500 ease-in-out">
+          
           {/* Header */}
-          <div className='pt-4'>
+          <div className='flex justify-center pt-8'>
             <img
               src={headerImage}
               alt="Logo"
-              className="w-full h-24 object-cover "
+              className="w-108 h-24 object-cover"
             />
           </div>
           {/* /Header */}
 
           {/* Form */}
-          <div className=''>
-            <form className='space-y-4' onSubmit={handleSubmit(onSubmit)}>
+          <div className='flex-1 flex justify-center items-center px-8'>
+            <form className='space-y-4 w-full max-w-md' onSubmit={handleSubmit(onSubmit)}>
 
               <p className="text-link text-center text-2xl mb-1">
                 Bem-vindo ao ARP! 👋
@@ -91,7 +91,6 @@ export function App() {
               <p className="text-center text-md mb-12">
                 Para acessar, preencha os dados abaixo
               </p>
-
 
               <Input name="user" placeholder="Nome de usuário" />
 
@@ -132,15 +131,13 @@ export function App() {
           {/* /Form */}
 
           {/* Footer */}
-          <div className=''>
-            <p className='text-center text-xs space-y-1'>
+            <p className='pb-6 px-8 text-center text-xs'>
               © Prospect 2025 - Analise de Riscos Piscosociais
               <br />
               <a href='#' className='underline'>Política de Privacidade</a>
               {' '}e{' '}
               <a href='#' className='underline'>Dúvidas</a>
             </p>
-          </div>
           {/* /Footer */}
 
         </div>
