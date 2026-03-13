@@ -17,7 +17,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
     // Substitua pelo seu componente de loading/splash screen
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
-        <span>Restaurando sessão...</span>
+        <span> Carregando...</span>
       </div>
     );
   }

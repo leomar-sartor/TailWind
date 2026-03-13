@@ -5,6 +5,7 @@ import {
   useEffect,
   useState,
   ReactNode,
+  useRef,
 } from 'react';
 import { useMutation } from '@apollo/client/react';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -15,9 +16,25 @@ import {
   LOGOUT_MUTATION,
   REFRESH_TOKEN_MUTATION,
 } from '../graphql/mutations/auth.mutation';
+import { jwtDecode } from 'jwt-decode';
+interface JwtPayload {
+  sub: string;
+  email: string;
+  exp: number; // expiração em Unix timestamp (segundos)
+}
+
+// Retorna true se o token ainda é válido por mais de 30 segundos
+// Os 30s de margem evitam usar um token que vai expirar durante a request
+function isTokenValid(token: string): boolean {
+  try {
+    const { exp } = jwtDecode<JwtPayload>(token);
+    return exp * 1000 > Date.now() + 30_000;
+  } catch {
+    return false;
+  }
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-
 interface LoginInput {
   email: string;
   password: string;
@@ -56,14 +73,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Mas o refresh token está no cookie httpOnly.
   // Logo: ao iniciar o app, chamamos refresh. Se o cookie existir e for válido,
   // a sessão é restaurada silenciosamente. Se não, o usuário vai para o login.
+
+  const hasRestoredSession = useRef(false);
+
   useEffect(() => {
+
+    if (hasRestoredSession.current) return;
+    hasRestoredSession.current = true;
+
     const tryRestoreSession = async () => {
+
+      const currentToken = useAuthStore.getState().accessToken;
+
+      // Token veio do sessionStorage e ainda é válido — não precisa de refresh
+      if (currentToken && isTokenValid(currentToken)) {
+        setIsLoading(false);
+        return; // ← F5 cai aqui enquanto o token não expirar
+      }
+
       try {
         const { data } = await refreshMutation();
 
         if (data?.refreshToken) {
           const { accessToken, user } = data.refreshToken;
-          setAuth(accessToken, user);
+          setAuth(accessToken, user);// ← seta os dois no Zustand
         }
       } catch {
         // Cookie expirado ou inexistente — estado já é "não autenticado"
@@ -84,7 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const result = await loginMutation({ variables: { input } });
 
     if (!result.data?.login) {
-      throw new Error('Unexpected error during login.');
+      throw new Error('Erro durante o login.');
     }
 
     const { accessToken, user } = result.data.login;

@@ -14,7 +14,7 @@ import { REFRESH_TOKEN_MUTATION } from './mutations/auth.mutation';
 // ─── HTTP Link ────────────────────────────────────────────────────────────────
 
 const httpLink = new HttpLink({
-  uri: import.meta.env.VITE_GRAPHQL_ENDPOINT,
+  uri: import.meta.env.VITE_ARP_GRAPHQL_API_URL,
   // CRÍTICO: instrui o browser a enviar o cookie httpOnly em toda request
   credentials: 'include',
 });

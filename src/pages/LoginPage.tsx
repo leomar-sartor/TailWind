@@ -13,8 +13,8 @@ import { useAuth } from '../auth/AuthContext'; // ← adiciona isso
 
 type AvailableThemes = 'dark' | 'light';
 
-type Inputs = {
-  user: string;
+type LoginInputs = {
+  email: string;
   password: string;
 }
 
@@ -43,7 +43,7 @@ export function LoginPage() {
 
     return () => {
     };
-}, []);
+  }, []);
   // }, [theme]);
 
   const toggleShowPasswordButton = (): void => {
@@ -51,19 +51,19 @@ export function LoginPage() {
   }
 
   const {
-    //register,
+    register,
     handleSubmit,
     //watch,
-    //formState: { errors },
-  } = useForm<Inputs>()
+    formState: { errors, isSubmitting },
+  } = useForm<LoginInputs>();
 
   // const onSubmit: SubmitHandler<Inputs> = (data) => console.log(data)
 
   // onSubmit agora chama o backend de verdade
-  const onSubmit: SubmitHandler<Inputs> = async (data) => {
+  const onSubmit: SubmitHandler<LoginInputs> = async (data) => {
     setAuthError(null);
     try {
-      await login({ email: data.user, password: data.password });
+      await login({ email: data.email, password: data.password });
       // navegação acontece dentro do login() via useNavigate
     } catch (err) {
       setAuthError(err instanceof Error ? err.message : 'Credenciais inválidas.');
@@ -85,7 +85,7 @@ export function LoginPage() {
     <SplitScreenLayout
       left={
         <div className="flex flex-col min-h-screen transition-all duration-500 ease-in-out">
-          
+
           {/* Header */}
           <div className='flex justify-center pt-8'>
             <img
@@ -98,7 +98,9 @@ export function LoginPage() {
 
           {/* Form */}
           <div className='flex-1 flex justify-center items-center px-8'>
-            <form className='space-y-4 w-full max-w-md' onSubmit={handleSubmit(onSubmit)}>
+            <form
+              className='space-y-4 w-full max-w-md'
+              onSubmit={handleSubmit(onSubmit)}>
 
               <p className="text-link text-center text-2xl mb-1">
                 Bem-vindo ao ARP! 👋
@@ -107,11 +109,30 @@ export function LoginPage() {
                 Para acessar, preencha os dados abaixo
               </p>
 
-              <Input name="user" placeholder="Nome de usuário" />
+              {/* E-mail */}
+              <Input
+                name="email"
+                placeholder="E-mail"
+                registration={register("email", {
+                  required: "O e-mail é obrigatório."
+                })}
+              />
 
+              {errors.email && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.email.message}
+                </p>
+              )}
+
+              {/* Senha */}
               <div className="relative">
-                <Input name="password" placeholder="Digite a senha"
-                  type={showPassword ? "text" : "password"} />
+                <Input
+                  name="password"
+                  placeholder="Digite a senha"
+                  type={showPassword ? "text" : "password"}
+                  registration={register('password', {
+                    required: 'Senha obrigatória',
+                  })} />
                 <button
                   type="button"
                   onClick={toggleShowPasswordButton}
@@ -121,15 +142,22 @@ export function LoginPage() {
                     alt={showPassword ? "Ocultar senha" : "Mostrar senha"}
                   />
                 </button>
+                {errors.password && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.password.message}
+                  </p>
+                )}
               </div>
 
               <div className="flex mx-auto">
                 <Button
                   type="submit"
+                  disabled={isSubmitting}
                   className='w-full rounded-2xl border my-4 p-4 justify-center'
                   onClick={() => console.log("Acessar Portal", new Date())}
                 >
                   Entrar
+                  {/* {isSubmitting ? 'Entrando...' : 'Entrar'} */}
                 </Button>
               </div>
 
@@ -138,7 +166,9 @@ export function LoginPage() {
               )}
 
               <div className="flex mx-auto">
-                <button type="button" className="w-full text-link hover:text-link-hover"
+                <button 
+                  type="submit"
+                  className="w-full text-link hover:text-link-hover"
                   onClick={() => console.log("Esqueci minha senha", new Date())}
                 >
                   Esqueci minha senha
@@ -150,13 +180,13 @@ export function LoginPage() {
           {/* /Form */}
 
           {/* Footer */}
-            <p className='pb-6 px-8 text-center text-xs'>
-              © Prospect 2025 - Analise de Riscos Piscosociais
-              <br />
-              <a href='#' className='underline'>Política de Privacidade</a>
-              {' '}e{' '}
-              <a href='#' className='underline'>Dúvidas</a>
-            </p>
+          <p className='pb-6 px-8 text-center text-xs'>
+            © Prospect 2025 - Análise de Riscos Piscossociais
+            <br />
+            <a href='#' className='underline'>Política de Privacidade</a>
+            {' '}e{' '}
+            <a href='#' className='underline'>Dúvidas</a>
+          </p>
           {/* /Footer */}
 
         </div>

@@ -538,14 +538,12 @@ export function DashboardPage() {
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              {/* {user?.roles?.map((role) => (
+              {user?.roles?.map((role) => (
                 <span key={role} className="badge-role">{role}</span>
-              ))} */}
-              LEOMAR
+              ))}
               <div className="header-badge">
                 <span className="badge-dot" />
-                leomar_sartor
-                {/* <span>{user?.email ?? '—'}</span> */}
+                <span>{user?.email ?? '—'}</span>
               </div>
             </div>
           </header>
