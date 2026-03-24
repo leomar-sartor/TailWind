@@ -3,13 +3,11 @@ import { useEffect, useState } from 'react';
 import { SplitScreenLayout } from '../layouts/SplitScreenLayout';
 import loginImage from '@/assets/wallpaper/Professional.png'
 import headerImage from '@/assets/logos/LogoHeaderFormSample.png';
-import eyeOpenIcon from "@/assets/icons/eye.svg";
-import eyeCloseIcon from "@/assets/icons/eye-slash.svg";
 import { AuthImage } from "../components/AuthImage/AuthImage";
-
 import { useForm, SubmitHandler } from "react-hook-form"
 import { Input } from '../components/Input';
 import { useAuth } from '../auth/AuthContext'; // ← adiciona isso
+import { User } from 'lucide-react';
 
 type AvailableThemes = 'dark' | 'light';
 
@@ -21,11 +19,10 @@ type LoginInputs = {
 export function LoginPage() {
 
   // const [theme, setTheme] = useState<AvailableThemes>('dark');
-  const [showPassword, setShowPassword] = useState(false);
 
   const { login } = useAuth(); // ← hook de auth
   const [authError, setAuthError] = useState<string | null>(null);
-
+  const [loadedLogo, setLoadedLogo] = useState(false);
   // function handleThemeChange(
   //   event: React.MouseEvent<HTMLAnchorElement, MouseEvent>
   // ) {
@@ -46,9 +43,6 @@ export function LoginPage() {
   }, []);
   // }, [theme]);
 
-  const toggleShowPasswordButton = (): void => {
-    setShowPassword(prev => !prev);
-  }
 
   const {
     register,
@@ -80,7 +74,7 @@ export function LoginPage() {
 
     //   <Button  onClick={() => console.log("Two", new Date())}>
     //     Botão Two
-    //   </Button>
+    //   </Button>d
 
     <SplitScreenLayout
       left={
@@ -91,7 +85,10 @@ export function LoginPage() {
             <img
               src={headerImage}
               alt="Logo"
-              className="w-108 h-24 object-cover"
+              loading="eager"
+              onLoad={() => setLoadedLogo(true)}
+              className={`w-108 h-24 object-cover transition-opacity duration-300 ${loadedLogo ? "opacity-100" : "opacity-0"
+                }`}
             />
           </div>
           {/* /Header */}
@@ -111,49 +108,31 @@ export function LoginPage() {
 
               {/* E-mail */}
               <Input
+                icon={<User size={18} />}
                 name="email"
                 placeholder="E-mail"
                 registration={register("email", {
                   required: "O e-mail é obrigatório."
                 })}
+                error={errors.email}
               />
 
-              {errors.email && (
-                <p className="text-red-500 text-xs mt-1">
-                  {errors.email.message}
-                </p>
-              )}
-
               {/* Senha */}
-              <div className="relative">
-                <Input
-                  name="password"
-                  placeholder="Digite a senha"
-                  type={showPassword ? "text" : "password"}
-                  registration={register('password', {
-                    required: 'Senha obrigatória',
-                  })} />
-                <button
-                  type="button"
-                  onClick={toggleShowPasswordButton}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center justify-center" >
-                  <img
-                    src={showPassword ? eyeCloseIcon : eyeOpenIcon}
-                    alt={showPassword ? "Ocultar senha" : "Mostrar senha"}
-                  />
-                </button>
-                {errors.password && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.password.message}
-                  </p>
-                )}
-              </div>
+              <Input
+                name="password"
+                placeholder="Digite a senha"
+                type={"password"}
+                registration={register('password', {
+                  required: 'Senha obrigatória',
+                })}
+                error={errors.password}
+              />
 
               <div className="flex mx-auto">
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className='w-full rounded-2xl border my-4 p-4 justify-center'
+                  className='w-full rounded-2xl my-4 p-4 justify-center'
                   onClick={() => console.log("Acessar Portal", new Date())}
                 >
                   Entrar
@@ -166,7 +145,7 @@ export function LoginPage() {
               )}
 
               <div className="flex mx-auto">
-                <button 
+                <button
                   type="submit"
                   className="w-full text-link hover:text-link-hover"
                   onClick={() => console.log("Esqueci minha senha", new Date())}
@@ -193,7 +172,6 @@ export function LoginPage() {
       }
       right={
         <AuthImage src={loginImage} />
-        // <img src={loginImage} alt="Login" className="w-full h-full object-cover" />
       }
     />
   )

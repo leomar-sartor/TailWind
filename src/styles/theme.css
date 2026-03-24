@@ -15,8 +15,8 @@
 
   /* ===== PRIMARY GREEN ===== */
   --color-primary-green: var(--color-primary-green-950);
-  --color-primary-green-foreground: var(--color-primary-yellow-950);
-  --color-primary-green-hover: var(--color-primary-green-950);
+  --color-primary-green-foreground: var(--color-primary-yellow-100);
+  --color-primary-green-hover: var(--color-primary-green-900);
 
   /* ===== DESTRUCTIVE ===== */
   --color-destructive: var(--color-destructive-600);
@@ -37,8 +37,8 @@
 
   /* ===== PRIMARY GREEN ===== */
   --color-primary-green: var(--color-primary-green-950);
+  --color-primary-green-foreground: var(--color-primary-yellow-100);
   --color-primary-green-hover: var(--color-primary-green-900);
-  --color-primary-green-foreground: var(--color-primary-yellow-550);
   
   /* ===== DESTRUCTIVE ===== */
   --color-destructive: var(--color-destructive-700);

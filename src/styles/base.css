@@ -10,7 +10,7 @@
   --color-link-green-hover: #0D4344;
 
   /* ===== PRIMARY GREEN ===== */
-  --color-primary-green-50:  #F2FBFA;
+  --color-primary-green-50: #F2FBFA;
   --color-primary-green-100: #D4F3EF;
   --color-primary-green-200: #A9E6E0;
   --color-primary-green-300: #76D2CC;
@@ -23,7 +23,7 @@
   --color-primary-green-950: #082426;
 
   /* ===== PRIMARY YELLOW ===== */
-  --color-primary-yellow-50:  #FDFFE6;
+  --color-primary-yellow-50: #FDFFE6;
   --color-primary-yellow-100: #FAFFCB;
   --color-primary-yellow-200: #F2FBEF;
   --color-primary-yellow-300: #EFFA5C;
@@ -37,7 +37,7 @@
   --color-primary-yellow-950: #253003;
 
   /* ===== DESTRUCTIVE ===== */
-  --color-destructive-50:  #FEF3F2;
+  --color-destructive-50: #FEF3F2;
   --color-destructive-100: #FEE4E2;
   --color-destructive-200: #FFCDC9;
   --color-destructive-300: #FDAAA4;
@@ -58,5 +58,4 @@
   button {
     cursor: pointer;
   }
-  
 }

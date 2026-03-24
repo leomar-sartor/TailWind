@@ -5,7 +5,7 @@ type ButtonProps = {
   variant?: ButtonVariant,
   size?: ButtonSize,
 } & React.ComponentProps<'button'>
-& React.HTMLAttributes<HTMLButtonElement>;
+  & React.HTMLAttributes<HTMLButtonElement>;
 
 export function Button({
   variant = 'primary-green',
@@ -14,6 +14,7 @@ export function Button({
   children,
   ...props
 }: ButtonProps) {
+
   return (
     <button
       className={[

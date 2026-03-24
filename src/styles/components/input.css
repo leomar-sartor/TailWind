@@ -2,7 +2,15 @@
 
   /* ===== BASE ===== */
   .input {
-    @apply flex w-full h-14 rounded-2xl border p-4;
+    @apply flex w-full h-14 rounded-2xl border p-4
+     focus-visible:ring-[#3e9392]
+     focus-visible:ring-3
+     focus-visible:ring-offset-2
+     focus-visible:outline-none;
+  }
+
+  .input[type="password"] {
+    @apply pr-12;
   }
 
   /* ===== VARIANTS ===== */
