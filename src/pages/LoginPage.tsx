@@ -9,8 +9,6 @@ import { Input } from '../components/Input';
 import { useAuth } from '../auth/AuthContext'; // ← adiciona isso
 import { User } from 'lucide-react';
 
-type AvailableThemes = 'dark' | 'light';
-
 type LoginInputs = {
   email: string;
   password: string;
@@ -18,22 +16,10 @@ type LoginInputs = {
 
 export function LoginPage() {
 
-  // const [theme, setTheme] = useState<AvailableThemes>('dark');
-
   const { login } = useAuth(); // ← hook de auth
   const [authError, setAuthError] = useState<string | null>(null);
   const [loadedLogo, setLoadedLogo] = useState(false);
-  // function handleThemeChange(
-  //   event: React.MouseEvent<HTMLAnchorElement, MouseEvent>
-  // ) {
-  //   event.preventDefault();
-
-  //   setTheme(prevTheme => {
-  //     const nextTheme = prevTheme === 'dark' ? 'light' : 'dark';
-  //     return nextTheme;
-  //   });
-  // }
-
+  
   useEffect(() => {
     const htmlElement = document.documentElement;
     htmlElement.classList.toggle('dark');
@@ -41,8 +27,6 @@ export function LoginPage() {
     return () => {
     };
   }, []);
-  // }, [theme]);
-
 
   const {
     register,
@@ -65,17 +49,6 @@ export function LoginPage() {
   };
 
   return (
-    //   <a 
-    //     aria-label='Trocar Tema'
-    //     title='Trocar Tema'
-    //     onClick={handleThemeChange}>
-    //     Trocar Tema
-    //   </a>
-
-    //   <Button  onClick={() => console.log("Two", new Date())}>
-    //     Botão Two
-    //   </Button>d
-
     <SplitScreenLayout
       left={
         <div className="flex flex-col min-h-screen transition-all duration-500 ease-in-out">

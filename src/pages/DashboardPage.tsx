@@ -1,668 +1,406 @@
-// pages/DashboardPage.tsx
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { ArrowRight, Building2, FileSearch } from 'lucide-react';
 import { useAuthStore, selectUser } from '../auth/authStore';
 import { useAuth } from '../auth/AuthContext';
+import { DashboardHeader } from '../components/dashboard/DashboardHeader';
+import { DashboardFooter } from '../components/dashboard/DashboardFooter';
+import { Sidebar } from '../components/dashboard/Sidebar';
+import { DashboardLayout } from '../layouts/DashboardLayout';
+import { PageContainer } from '../components/dashboard/PageContainer';
 
-// ─── Mock data — substitua por useQuery do Apollo ────────────────────────────
+type MenuPage = 'dashboard' | 'cadastros' | 'pesquisas' | 'empresa' | 'setor' | 'consultar';
 
-const STATS = [
-  { label: 'Receita Mensal', value: 'R$ 84.320', delta: '+12,4%', up: true },
-  { label: 'Usuários Ativos', value: '3.291', delta: '+8,1%', up: true },
-  { label: 'Tickets Abertos', value: '47', delta: '-3,2%', up: false },
-  { label: 'Uptime', value: '99,98%', delta: '+0,02%', up: true },
+type PageInfo = {
+  title: string;
+  description: string;
+  subtitle: string;
+};
+
+const pageInfo: Record<MenuPage, PageInfo> = {
+  dashboard: {
+    title: 'Dashboard',
+    description: 'Visão geral do painel administrativo',
+    subtitle: 'Acompanhe resultados, status de sistemas e ações recentes em tempo real.',
+  },
+  cadastros: {
+    title: 'Cadastros',
+    description: 'Visão geral dos cadastros',
+    subtitle: 'Acesse os principais cadastros e acompanhe o estado das informações.',
+  },
+  pesquisas: {
+    title: 'Pesquisas',
+    description: 'Visão geral das pesquisas',
+    subtitle: 'Acesse relatórios e filtros para encontrar os dados mais importantes.',
+  },
+  empresa: {
+    title: 'Cadastros',
+    description: 'Cadastro de empresas',
+    subtitle: 'Gerencie empresas ativas, dados cadastrais e informações de contato.',
+  },
+  setor: {
+    title: 'Cadastros',
+    description: 'Cadastro de setores',
+    subtitle: 'Organize setores internos com descrição e responsáveis.',
+  },
+  consultar: {
+    title: 'Pesquisas',
+    description: 'Consulta de dados',
+    subtitle: 'Busque temas, relatórios e indicadores com respostas rápidas.',
+  },
+};
+
+const stats = [
+  { label: 'Receita Mensal', value: 'R$ 84.320', delta: '+12,4%', positive: true },
+  { label: 'Usuários Ativos', value: '3.291', delta: '+8,1%', positive: true },
+  { label: 'Tickets Abertos', value: '47', delta: '-3,2%', positive: false },
+  { label: 'Uptime', value: '99,98%', delta: '+0,02%', positive: true },
 ];
 
-const ACTIVITY = [
-  { id: 1, user: 'Ana Costa', action: 'criou um novo pedido', time: '2 min atrás', avatar: 'AC' },
-  { id: 2, user: 'Bruno Lima', action: 'atualizou perfil', time: '14 min atrás', avatar: 'BL' },
-  { id: 3, user: 'Carla Dias', action: 'abriu ticket #4821', time: '31 min atrás', avatar: 'CD' },
-  { id: 4, user: 'Diego Ramos', action: 'fechou ticket #4799', time: '1h atrás', avatar: 'DR' },
-  { id: 5, user: 'Elena Souza', action: 'realizou pagamento', time: '2h atrás', avatar: 'ES' },
+const activity = [
+  { id: 1, title: 'Novo pedido registrado', details: 'Ana Costa enviou uma cotação', time: '2 min atrás' },
+  { id: 2, title: 'Perfil atualizado', details: 'Bruno Lima atualizou seus dados', time: '14 min atrás' },
+  { id: 3, title: 'Ticket recebido', details: 'Carla Dias abriu ticket #4821', time: '31 min atrás' },
+  { id: 4, title: 'Chamado finalizado', details: 'Diego Ramos resolveu ticket #4799', time: '1h atrás' },
 ];
-
-const NAV_ITEMS = [
-  { icon: '⬡', label: 'Dashboard', active: true },
-  { icon: '◈', label: 'Usuários', active: false },
-  { icon: '◇', label: 'Pedidos', active: false },
-  { icon: '◉', label: 'Relatórios', active: false },
-  { icon: '◎', label: 'Configurações', active: false },
-];
-
-// ─── Sparkline SVG simples (sem lib externa) ─────────────────────────────────
-
-function Sparkline({ data, color }: { data: number[]; color: string }) {
-  const max = Math.max(...data);
-  const min = Math.min(...data);
-  const range = max - min || 1;
-  const w = 80;
-  const h = 28;
-  const points = data
-    .map((v, i) => `${(i / (data.length - 1)) * w},${h - ((v - min) / range) * h}`)
-    .join(' ');
-
-  return (
-    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}>
-      <polyline
-        fill="none"
-        stroke={color}
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        points={points}
-      />
-    </svg>
-  );
-}
-
-// ─── Component ────────────────────────────────────────────────────────────────
 
 export function DashboardPage() {
   const user = useAuthStore(selectUser);
   const { logout } = useAuth();
-  const [loggingOut, setLoggingOut] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [selectedPage, setSelectedPage] = useState<MenuPage>('dashboard');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 639.98px)');
+    const update = () => setIsMobile(media.matches);
+    update();
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
+
+  useEffect(() => {
+    if (isMobile) {
+      setSidebarCollapsed(true);
+      return;
+    }
+
+    const saved = localStorage.getItem('dashboardSidebarCollapsed');
+    setSidebarCollapsed(saved === 'true');
+  }, [isMobile]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('dashboardSidebarCollapsed');
+    if (!isMobile || saved !== null) {
+      localStorage.setItem('dashboardSidebarCollapsed', String(sidebarCollapsed));
+    }
+  }, [sidebarCollapsed, isMobile]);
+
+  const handleToggleSidebar = () => {
+    setSidebarCollapsed((prev) => !prev);
+  };
+
+  const handlePageChange = (page: MenuPage) => {
+    if (page === selectedPage) {
+      return;
+    }
+
+    setLoading(true);
+    setTimeout(() => {
+      setSelectedPage(page);
+      setLoading(false);
+    }, 550);
+  };
 
   const handleLogout = async () => {
-    setLoggingOut(true);
     await logout();
   };
 
-  const hour = new Date().getHours();
-  const greeting =
-    hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
+  const handleSettings = () => {
+    window.alert('Abrir configurações de usuário (a implementar).');
+  };
 
-  return (
-    <>
-      {/* ── Google Fonts ── */}
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap');
-
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-        :root {
-          --bg:       #0c0c0f;
-          --surface:  #131318;
-          --border:   #1e1e28;
-          --border-2: #2a2a38;
-          --text:     #e8e8f0;
-          --muted:    #6b6b82;
-          --accent:   #c8f060;
-          --accent-2: #60c8f0;
-          --danger:   #f06060;
-          --font-display: 'Syne', sans-serif;
-          --font-mono:    'DM Mono', monospace;
-        }
-
-        body { background: var(--bg); color: var(--text); }
-
-        .dash-root {
-          display: flex;
-          min-height: 100vh;
-          font-family: var(--font-mono);
-          background: var(--bg);
-        }
-
-        /* ── Sidebar ── */
-        .sidebar {
-          width: 220px;
-          min-height: 100vh;
-          background: var(--surface);
-          border-right: 1px solid var(--border);
-          display: flex;
-          flex-direction: column;
-          padding: 28px 0;
-          position: fixed;
-          top: 0; left: 0; bottom: 0;
-          z-index: 10;
-        }
-
-        .sidebar-logo {
-          font-family: var(--font-display);
-          font-weight: 800;
-          font-size: 18px;
-          letter-spacing: -0.5px;
-          color: var(--accent);
-          padding: 0 24px 32px;
-          border-bottom: 1px solid var(--border);
-        }
-
-        .sidebar-logo span { color: var(--muted); }
-
-        .sidebar-nav {
-          flex: 1;
-          padding: 24px 12px;
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
-
-        .nav-item {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 10px 12px;
-          border-radius: 6px;
-          font-size: 13px;
-          font-weight: 400;
-          color: var(--muted);
-          cursor: pointer;
-          transition: all 0.15s ease;
-          border: 1px solid transparent;
-          letter-spacing: 0.02em;
-        }
-
-        .nav-item:hover {
-          color: var(--text);
-          background: var(--border);
-        }
-
-        .nav-item.active {
-          color: var(--accent);
-          background: rgba(200, 240, 96, 0.07);
-          border-color: rgba(200, 240, 96, 0.15);
-        }
-
-        .nav-icon { font-size: 15px; width: 20px; text-align: center; }
-
-        .sidebar-footer {
-          padding: 16px 12px 0;
-          border-top: 1px solid var(--border);
-        }
-
-        .logout-btn {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 10px 12px;
-          border-radius: 6px;
-          font-size: 13px;
-          color: var(--muted);
-          cursor: pointer;
-          transition: all 0.15s ease;
-          border: none;
-          background: none;
-          width: 100%;
-          font-family: var(--font-mono);
-          letter-spacing: 0.02em;
-        }
-
-        .logout-btn:hover:not(:disabled) {
-          color: var(--danger);
-          background: rgba(240, 96, 96, 0.07);
-        }
-
-        .logout-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-        /* ── Main ── */
-        .main {
-          margin-left: 220px;
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          min-height: 100vh;
-        }
-
-        /* ── Header ── */
-        .header {
-          padding: 28px 40px 0;
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          border-bottom: 1px solid var(--border);
-          padding-bottom: 24px;
-        }
-
-        .header-greeting {
-          font-family: var(--font-display);
-          font-size: 26px;
-          font-weight: 700;
-          color: var(--text);
-          letter-spacing: -0.5px;
-          line-height: 1.2;
-        }
-
-        .header-greeting span { color: var(--accent); }
-
-        .header-sub {
-          font-size: 12px;
-          color: var(--muted);
-          margin-top: 4px;
-          letter-spacing: 0.05em;
-        }
-
-        .header-badge {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          background: var(--surface);
-          border: 1px solid var(--border-2);
-          border-radius: 20px;
-          padding: 8px 14px;
-          font-size: 12px;
-          color: var(--muted);
-        }
-
-        .badge-dot {
-          width: 6px; height: 6px;
-          border-radius: 50%;
-          background: var(--accent);
-          box-shadow: 0 0 6px var(--accent);
-          animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.4; }
-        }
-
-        .badge-role {
-          background: rgba(200, 240, 96, 0.1);
-          color: var(--accent);
-          border: 1px solid rgba(200, 240, 96, 0.2);
-          border-radius: 4px;
-          padding: 2px 7px;
-          font-size: 10px;
-          font-weight: 500;
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-        }
-
-        /* ── Content ── */
-        .content {
-          padding: 32px 40px;
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          gap: 32px;
-        }
-
-        /* ── Section label ── */
-        .section-label {
-          font-size: 10px;
-          font-weight: 500;
-          color: var(--muted);
-          text-transform: uppercase;
-          letter-spacing: 0.15em;
-          margin-bottom: 14px;
-        }
-
-        /* ── Stats grid ── */
-        .stats-grid {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 16px;
-        }
-
-        .stat-card {
-          background: var(--surface);
-          border: 1px solid var(--border);
-          border-radius: 10px;
-          padding: 20px;
-          position: relative;
-          overflow: hidden;
-          transition: border-color 0.2s ease;
-        }
-
-        .stat-card:hover { border-color: var(--border-2); }
-
-        .stat-card::before {
-          content: '';
-          position: absolute;
-          top: 0; left: 0; right: 0;
-          height: 2px;
-          background: linear-gradient(90deg, var(--accent), transparent);
-          opacity: 0;
-          transition: opacity 0.2s ease;
-        }
-
-        .stat-card:hover::before { opacity: 1; }
-
-        .stat-label {
-          font-size: 11px;
-          color: var(--muted);
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          margin-bottom: 12px;
-        }
-
-        .stat-bottom {
-          display: flex;
-          align-items: flex-end;
-          justify-content: space-between;
-        }
-
-        .stat-value {
-          font-family: var(--font-display);
-          font-size: 22px;
-          font-weight: 700;
-          color: var(--text);
-          letter-spacing: -0.5px;
-          line-height: 1;
-        }
-
-        .stat-delta {
-          font-size: 11px;
-          font-weight: 500;
-          padding: 3px 7px;
-          border-radius: 4px;
-          margin-top: 6px;
-          display: inline-block;
-        }
-
-        .delta-up {
-          color: var(--accent);
-          background: rgba(200, 240, 96, 0.1);
-        }
-
-        .delta-down {
-          color: var(--danger);
-          background: rgba(240, 96, 96, 0.1);
-        }
-
-        /* ── Lower grid ── */
-        .lower-grid {
-          display: grid;
-          grid-template-columns: 1fr 360px;
-          gap: 16px;
-        }
-
-        /* ── Activity feed ── */
-        .card {
-          background: var(--surface);
-          border: 1px solid var(--border);
-          border-radius: 10px;
-          padding: 24px;
-        }
-
-        .card-title {
-          font-family: var(--font-display);
-          font-size: 14px;
-          font-weight: 700;
-          color: var(--text);
-          margin-bottom: 20px;
-          letter-spacing: -0.2px;
-        }
-
-        .activity-list {
-          display: flex;
-          flex-direction: column;
-          gap: 0;
-        }
-
-        .activity-item {
-          display: flex;
-          align-items: center;
-          gap: 14px;
-          padding: 13px 0;
-          border-bottom: 1px solid var(--border);
-          transition: background 0.15s;
-        }
-
-        .activity-item:last-child { border-bottom: none; }
-
-        .avatar {
-          width: 34px; height: 34px;
-          border-radius: 8px;
-          background: linear-gradient(135deg, var(--border-2), var(--border));
-          border: 1px solid var(--border-2);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 10px;
-          font-weight: 500;
-          color: var(--muted);
-          flex-shrink: 0;
-          letter-spacing: 0.05em;
-        }
-
-        .activity-body { flex: 1; min-width: 0; }
-
-        .activity-user {
-          font-size: 13px;
-          font-weight: 500;
-          color: var(--text);
-        }
-
-        .activity-action {
-          font-size: 12px;
-          color: var(--muted);
-          margin-top: 2px;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .activity-time {
-          font-size: 11px;
-          color: var(--muted);
-          white-space: nowrap;
-          opacity: 0.7;
-        }
-
-        /* ── System status ── */
-        .status-list {
-          display: flex;
-          flex-direction: column;
-          gap: 14px;
-        }
-
-        .status-item {
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-        }
-
-        .status-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-
-        .status-name { font-size: 12px; color: var(--muted); }
-        .status-val  { font-size: 12px; color: var(--text); font-weight: 500; }
-
-        .progress-track {
-          height: 3px;
-          background: var(--border-2);
-          border-radius: 2px;
-          overflow: hidden;
-        }
-
-        .progress-fill {
-          height: 100%;
-          border-radius: 2px;
-          transition: width 0.8s ease;
-        }
-
-        /* ── Token info ── */
-        .token-card {
-          background: rgba(200, 240, 96, 0.03);
-          border: 1px solid rgba(200, 240, 96, 0.12);
-          border-radius: 10px;
-          padding: 16px 20px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 12px;
-        }
-
-        .token-label { font-size: 11px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
-        .token-value { font-size: 12px; color: var(--accent); margin-top: 4px; }
-      `}</style>
-
-      <div className="dash-root">
-
-        {/* ── Sidebar ─────────────────────────────────────────────────── */}
-        <aside className="sidebar">
-          <div className="sidebar-logo">
-            sys<span>.</span>core
-          </div>
-
-          <nav className="sidebar-nav">
-            {NAV_ITEMS.map((item) => (
-              <div
+  const content = useMemo(() => {
+    if (selectedPage === 'dashboard') {
+      return (
+        <div className="space-y-6">
+          <div className="grid gap-4 xl:grid-cols-4">
+            {stats.map((item) => (
+              <article
                 key={item.label}
-                className={`nav-item ${item.active ? 'active' : ''}`}
+                className="dashboard-card rounded-[28px] border p-5 shadow-xl shadow-[0_18px_60px_-28px_rgba(43,44,64,0.18)]"
               >
-                <span className="nav-icon">{item.icon}</span>
-                {item.label}
-              </div>
+                <p className="text-xs uppercase tracking-[0.32em] dashboard-text-muted">{item.label}</p>
+                <div className="mt-4 flex items-end justify-between gap-3">
+                  <div>
+                    <p className="text-3xl font-semibold text-[#2B2C40]">{item.value}</p>
+                    <p className={`mt-2 text-sm font-semibold ${item.positive ? 'text-emerald-300' : 'text-rose-300'}`}>
+                      {item.delta}
+                    </p>
+                  </div>
+                  <div className={`h-14 w-14 rounded-3xl ${item.positive ? 'bg-emerald-500/10' : 'bg-rose-500/10'} flex items-center justify-center`}>
+                    <ArrowRight className={`h-5 w-5 ${item.positive ? 'text-emerald-300' : 'text-rose-300'}`} />
+                  </div>
+                </div>
+              </article>
             ))}
-          </nav>
-
-          <div className="sidebar-footer">
-            <button
-              className="logout-btn"
-              onClick={handleLogout}
-              disabled={loggingOut}
-            >
-              <span className="nav-icon">⊗</span>
-              {loggingOut ? 'Saindo...' : 'Sair'}
-            </button>
           </div>
-        </aside>
 
-        {/* ── Main ─────────────────────────────────────────────────────── */}
-        <main className="main">
-
-          {/* Header */}
-          <header className="header">
-            <div>
-              <div className="header-greeting">
-                {greeting}, <span>{user?.email?.split('@')[0] ?? 'usuário'}</span>
+          <div className="grid gap-4 xl:grid-cols-[1.3fr_0.9fr]">
+            <section className="dashboard-card space-y-4 rounded-[28px] border p-6 shadow-xl shadow-[0_18px_60px_-28px_rgba(43,44,64,0.18)]">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-[#2B2C40]">Atividade recente</h3>
+                  <p className="mt-1 text-sm dashboard-text-muted">As últimas ações realizadas pela equipe.</p>
+                </div>
+                <span className="rounded-full bg-[#F4F6FA] px-3 py-1 text-xs uppercase tracking-[0.28em] dashboard-text-muted">Ao vivo</span>
               </div>
-              <div className="header-sub">
-                {new Date().toLocaleDateString('pt-BR', {
-                  weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-                })}
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              {user?.roles?.map((role) => (
-                <span key={role} className="badge-role">{role}</span>
-              ))}
-              <div className="header-badge">
-                <span className="badge-dot" />
-                <span>{user?.email ?? '—'}</span>
-              </div>
-            </div>
-          </header>
-
-          {/* Content */}
-          <div className="content">
-
-            {/* Stats */}
-            <section>
-              <div className="section-label">visão geral</div>
-              <div className="stats-grid">
-                {STATS.map((s, i) => (
-                  <div key={s.label} className="stat-card">
-                    <div className="stat-label">{s.label}</div>
-                    <div className="stat-bottom">
+              <div className="space-y-3">
+                {activity.map((item) => (
+                  <article key={item.id} className="dashboard-card-alt rounded-3xl border p-4">
+                    <div className="flex items-start justify-between gap-4">
                       <div>
-                        <div className="stat-value">{s.value}</div>
-                        <span className={`stat-delta ${s.up ? 'delta-up' : 'delta-down'}`}>
-                          {s.delta}
-                        </span>
+                        <h4 className="font-semibold text-[#2B2C40]">{item.title}</h4>
+                        <p className="mt-1 text-sm dashboard-text-muted">{item.details}</p>
                       </div>
-                      <Sparkline
-                        data={[40, 55, 45, 60, 50, 70, 65, 80, 75, 90].map(
-                          (v) => v + (i * 7)
-                        )}
-                        color={s.up ? 'var(--accent)' : 'var(--danger)'}
-                      />
+                      <time className="text-xs uppercase tracking-[0.24em] dashboard-text-muted">{item.time}</time>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+
+            <section className="dashboard-card rounded-[28px] border p-6 shadow-xl shadow-[0_18px_60px_-28px_rgba(43,44,64,0.18)]">
+              <h3 className="text-lg font-semibold text-[#2B2C40]">Status do sistema</h3>
+              <div className="mt-5 space-y-4">
+                {[
+                  { label: 'API GraphQL', value: '99,98%', pct: 99, color: 'bg-emerald-400' },
+                  { label: 'Banco de dados', value: '87 ms', pct: 82, color: 'bg-sky-400' },
+                  { label: 'Cache (Redis)', value: '12 ms', pct: 95, color: 'bg-emerald-400' },
+                  { label: 'Storage', value: '64%', pct: 64, color: 'bg-amber-400' },
+                ].map((item) => (
+                  <div key={item.label} className="space-y-2">
+                    <div className="flex items-center justify-between text-sm dashboard-text-muted">
+                      <span>{item.label}</span>
+                      <span className="font-semibold text-[#2B2C40]">{item.value}</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-[#F4F6FA]">
+                      <div className={`${item.color} h-2 rounded-full`} style={{ width: `${item.pct}%` }} />
                     </div>
                   </div>
                 ))}
               </div>
             </section>
+          </div>
+        </div>
+      );
+    }
 
-            {/* Lower grid */}
-            <div className="lower-grid">
-
-              {/* Activity feed */}
-              <div className="card">
-                <div className="card-title">Atividade Recente</div>
-                <div className="activity-list">
-                  {ACTIVITY.map((a) => (
-                    <div key={a.id} className="activity-item">
-                      <div className="avatar">{a.avatar}</div>
-                      <div className="activity-body">
-                        <div className="activity-user">{a.user}</div>
-                        <div className="activity-action">{a.action}</div>
-                      </div>
-                      <div className="activity-time">{a.time}</div>
+    if (selectedPage === 'empresa') {
+      return (
+        <div className="grid gap-4 lg:grid-cols-2">
+          <article className="dashboard-card rounded-[28px] border p-6 shadow-xl shadow-[0_18px_60px_-28px_rgba(43,44,64,0.18)]">
+            <h3 className="text-lg font-semibold text-[#2B2C40]">Empresas cadastradas</h3>
+            <p className="mt-2 text-sm dashboard-text-muted">Gerencie o cadastro de empresas e mantenha as informações atualizadas.</p>
+            <div className="mt-6 space-y-4">
+              {['Functional Brasil', 'Functional Saúde', 'Functional Internacional'].map((company) => (
+                <div key={company} className="dashboard-card-alt rounded-3xl border p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-[#2B2C40]">{company}</p>
+                      <p className="text-sm dashboard-text-muted">Operação ativa</p>
                     </div>
-                  ))}
+                    <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs text-emerald-300">Ativa</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className="dashboard-card rounded-[28px] border p-6 shadow-xl shadow-[0_18px_60px_-28px_rgba(43,44,64,0.18)]">
+            <h3 className="text-lg font-semibold text-[#2B2C40]">Ações rápidas</h3>
+            <div className="mt-5 space-y-4">
+              <button className="flex w-full items-center justify-between rounded-3xl border dashboard-border bg-white px-4 py-4 text-left text-[#2B2C40] transition hover:border-orange-400/40 hover:bg-[#F4F6FA]">
+                <div>
+                  <p className="font-semibold">Adicionar nova empresa</p>
+                  <p className="text-sm dashboard-text-muted">Cadastrar CNPJ, razão social e responsável.</p>
+                </div>
+                <Building2 className="h-5 w-5 text-orange-400" />
+              </button>
+
+              <button className="flex w-full items-center justify-between rounded-3xl border dashboard-border bg-white px-4 py-4 text-left text-[#2B2C40] transition hover:border-orange-400/40 hover:bg-[#F4F6FA]">
+                <div>
+                  <p className="font-semibold">Exportar lista</p>
+                  <p className="text-sm dashboard-text-muted">Baixar relatório em CSV ou XLS.</p>
+                </div>
+                <ArrowRight className="h-5 w-5 text-orange-400" />
+              </button>
+            </div>
+          </article>
+        </div>
+      );
+    }
+
+    if (selectedPage === 'setor') {
+      return (
+        <div className="grid gap-4 lg:grid-cols-2">
+          <article className="dashboard-card rounded-[28px] border p-6 shadow-xl shadow-[0_18px_60px_-28px_rgba(43,44,64,0.18)]">
+            <h3 className="text-lg font-semibold text-[#2B2C40]">Setores ativos</h3>
+            <p className="mt-2 text-sm dashboard-text-muted">Detalhe os setores internos e responsáveis associados.</p>
+            <div className="mt-6 space-y-4">
+              {['Financeiro', 'Operações', 'Tecnologia'].map((sector) => (
+                <div key={sector} className="dashboard-card-alt rounded-3xl border p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-[#2B2C40]">{sector}</p>
+                      <p className="text-sm dashboard-text-muted">Equipe responsável</p>
+                    </div>
+                    <span className="rounded-full bg-sky-500/10 px-3 py-1 text-xs text-sky-300">3 membros</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className="dashboard-card rounded-[28px] border p-6 shadow-xl shadow-[0_18px_60px_-28px_rgba(43,44,64,0.18)]">
+            <h3 className="text-lg font-semibold text-[#2B2C40]">Últimas atualizações</h3>
+            <ul className="mt-5 space-y-3">
+              <li className="dashboard-card-alt rounded-3xl border p-4 text-[#646E78]">Plano de metas do setor de Tecnologia atualizado.</li>
+              <li className="dashboard-card-alt rounded-3xl border p-4 text-[#646E78]">Revisão de jornadas no departamento de Operações.</li>
+            </ul>
+          </article>
+        </div>
+      );
+    }
+
+    if (selectedPage === 'cadastros') {
+      return (
+        <div className="grid gap-4 lg:grid-cols-2">
+          <article className="dashboard-card rounded-[28px] border p-6 shadow-xl shadow-[0_18px_60px_-28px_rgba(43,44,64,0.18)]">
+            <h3 className="text-lg font-semibold text-[#2B2C40]">Resumo de cadastros</h3>
+            <p className="mt-2 text-sm dashboard-text-muted">Acompanhe o status geral dos cadastros de empresas e setores.</p>
+            <div className="mt-6 space-y-4">
+              <div className="dashboard-card-alt rounded-3xl border p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm dashboard-text-muted">Empresas cadastradas</p>
+                    <p className="text-2xl font-semibold text-[#2B2C40]">3</p>
+                  </div>
                 </div>
               </div>
-
-              {/* Right column */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-
-                {/* System status */}
-                <div className="card">
-                  <div className="card-title">Status do Sistema</div>
-                  <div className="status-list">
-                    {[
-                      { name: 'API GraphQL', val: '99,98%', pct: 99.98, color: 'var(--accent)' },
-                      { name: 'Banco de Dados', val: '87 ms', pct: 82, color: 'var(--accent-2)' },
-                      { name: 'Cache (Redis)', val: '12 ms', pct: 95, color: 'var(--accent)' },
-                      { name: 'Storage', val: '64%', pct: 64, color: '#f0c060' },
-                    ].map((s) => (
-                      <div key={s.name} className="status-item">
-                        <div className="status-row">
-                          <span className="status-name">{s.name}</span>
-                          <span className="status-val">{s.val}</span>
-                        </div>
-                        <div className="progress-track">
-                          <div
-                            className="progress-fill"
-                            style={{ width: `${s.pct}%`, background: s.color }}
-                          />
-                        </div>
-                      </div>
-                    ))}
+              <div className="dashboard-card-alt rounded-3xl border p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm dashboard-text-muted">Setores ativos</p>
+                    <p className="text-2xl font-semibold text-[#2B2C40]">3</p>
                   </div>
                 </div>
-
-                {/* Session info — dados reais do Zustand */}
-                <div className="card">
-                  <div className="card-title">Sessão Atual</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    <div className="token-card">
-                      <div>
-                        <div className="token-label">User ID</div>
-                        <div className="token-value">{user?.id ?? '—'}</div>
-                      </div>
-                    </div>
-                    <div className="token-card">
-                      <div>
-                        <div className="token-label">Roles</div>
-                        <div className="token-value">
-                          {user?.roles?.join(', ') ?? '—'}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="token-card">
-                      <div>
-                        <div className="token-label">Access Token</div>
-                        <div className="token-value" style={{ fontFamily: 'var(--font-mono)', fontSize: 10 }}>
-                          ••••••••••••••••••••••
-                        </div>
-                      </div>
-                      <span style={{ fontSize: 10, color: 'var(--accent)', opacity: 0.7 }}>
-                        em memória
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
               </div>
             </div>
+          </article>
+
+          <article className="dashboard-card rounded-[28px] border p-6 shadow-xl shadow-[0_18px_60px_-28px_rgba(43,44,64,0.18)]">
+            <h3 className="text-lg font-semibold text-[#2B2C40]">Acessos rápidos</h3>
+            <div className="mt-5 space-y-4">
+              <button className="flex w-full items-center justify-between rounded-3xl border dashboard-border bg-white px-4 py-4 text-left text-[#2B2C40] transition hover:border-orange-400/40 hover:bg-[#F4F6FA]">
+                <div>
+                  <p className="font-semibold">Ir para empresas</p>
+                  <p className="text-sm dashboard-text-muted">Gerencie a lista de empresas.</p>
+                </div>
+                <Building2 className="h-5 w-5 text-orange-400" />
+              </button>
+              <button className="flex w-full items-center justify-between rounded-3xl border dashboard-border bg-white px-4 py-4 text-left text-[#2B2C40] transition hover:border-orange-400/40 hover:bg-[#F4F6FA]">
+                <div>
+                  <p className="font-semibold">Ir para setores</p>
+                  <p className="text-sm dashboard-text-muted">Visualize todos os setores.</p>
+                </div>
+                <ArrowRight className="h-5 w-5 text-orange-400" />
+              </button>
+            </div>
+          </article>
+        </div>
+      );
+    }
+
+    if (selectedPage === 'pesquisas') {
+      return (
+        <div className="space-y-4">
+          <section className="dashboard-card rounded-[28px] border p-6 shadow-xl shadow-[0_18px_60px_-28px_rgba(43,44,64,0.18)]">
+            <h3 className="text-lg font-semibold text-[#2B2C40]">Painel de pesquisas</h3>
+            <p className="mt-2 text-sm dashboard-text-muted">Veja as consultas recentes e métricas principais.</p>
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              <div className="dashboard-card-alt rounded-3xl border p-4">
+                <p className="text-sm dashboard-text-muted">Consultas realizadas</p>
+                <p className="mt-2 text-2xl font-semibold text-[#2B2C40]">124</p>
+              </div>
+              <div className="dashboard-card-alt rounded-3xl border p-4">
+                <p className="text-sm dashboard-text-muted">Tempo médio de resposta</p>
+                <p className="mt-2 text-2xl font-semibold text-[#2B2C40]">1,2s</p>
+              </div>
+            </div>
+          </section>
+          <section className="dashboard-card rounded-[28px] border p-6 shadow-xl shadow-[0_18px_60px_-28px_rgba(43,44,64,0.18)]">
+            <h3 className="text-lg font-semibold text-[#2B2C40]">Últimas buscas</h3>
+            <ul className="mt-5 space-y-3 text-[#646E78]">
+              <li className="dashboard-card-alt rounded-3xl border p-4">Busca por contrato mais rápido.</li>
+              <li className="dashboard-card-alt rounded-3xl border p-4">Filtragem de clientes por segmentação.</li>
+            </ul>
+          </section>
+        </div>
+      );
+    }
+
+    return (
+      <div className="dashboard-card space-y-4 rounded-[28px] border p-6 shadow-xl shadow-[0_18px_60px_-28px_rgba(43,44,64,0.18)]">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h3 className="text-lg font-semibold text-[#2B2C40]">Consulta inteligente</h3>
+            <p className="mt-2 text-sm dashboard-text-muted">Use filtros para identificar os dados mais importantes.</p>
           </div>
-        </main>
+          <FileSearch className="h-6 w-6 text-orange-400" />
+        </div>
+        <div className="rounded-3xl border dashboard-border bg-[#F4F6FA] p-6">
+          <p className="text-sm text-[#646E78]">Pesquisa de contratos, clientes e valores está disponível aqui. Escolha o filtro desejado para começar.</p>
+        </div>
       </div>
-    </>
+    );
+  }, [selectedPage]);
+
+  const contentPadding = sidebarCollapsed ? 'pl-20 pr-4' : 'pl-72 pr-4';
+
+  return (
+    <DashboardLayout
+      sidebar={
+        <Sidebar
+          collapsed={sidebarCollapsed}
+          activePage={selectedPage}
+          onSelectPage={handlePageChange}
+          onToggleSidebar={handleToggleSidebar}
+        />
+      }
+      header={
+        <DashboardHeader
+          collapsed={sidebarCollapsed}
+          pageTitle={pageInfo[selectedPage].title}
+          userName={user?.username ?? user?.email?.split('@')[0] ?? 'Usuário'}
+          roles={user?.roles ?? ['Gestor']}
+          onSettings={handleSettings}
+          onLogout={handleLogout}
+        />
+      }
+      footer={<DashboardFooter collapsed={sidebarCollapsed} />}
+      contentClassName={contentPadding}
+    >
+      <PageContainer
+        loading={loading}
+        title={pageInfo[selectedPage].title}
+        description={pageInfo[selectedPage].description}
+      >
+        <div className="max-w-7xl mx-auto pb-24 pt-2">
+          <p className="mb-6 text-sm dashboard-text-muted">{pageInfo[selectedPage].subtitle}</p>
+          {content}
+        </div>
+      </PageContainer>
+    </DashboardLayout>
   );
 }

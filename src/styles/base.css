@@ -1,53 +1,28 @@
 :root {
   /* ===== BASE ===== */
   --color-black: #000000;
-  --color-funcional: #0D4344;
-  --color-funcional-dark: #082426;
   --color-white: #ffffff;
+  --color-bg: #F5F5F9;
+  --color-surface: #FFFFFF;
+  --color-surface-soft: #F4F6FA;
+  --color-border: #E4E6E8;
+  --color-text: #384551;
+  --color-text-muted: #646E78;
+  --color-shadow: rgba(43,44,64,0.08);
 
-  /* ===== BASE ===== */
-  --color-link-green: #459091;
-  --color-link-green-hover: #0D4344;
+  /* ===== PALETTE ===== */
+  --color-primary: #696CFF;
+  --color-primary-soft: #E6E7FF;
+  --color-secondary: #8592A3;
+  --color-success: #71DD37;
+  --color-danger: #FF3E1D;
+  --color-warning: #FFAB00;
+  --color-info: #03C3EC;
+  --color-dark: #2B2C40;
 
-  /* ===== PRIMARY GREEN ===== */
-  --color-primary-green-50: #F2FBFA;
-  --color-primary-green-100: #D4F3EF;
-  --color-primary-green-200: #A9E6E0;
-  --color-primary-green-300: #76D2CC;
-  --color-primary-green-400: #4AB7B4;
-  --color-primary-green-500: #309C9B;
-  --color-primary-green-600: #247C7D;
-  --color-primary-green-700: #1E6264;
-  --color-primary-green-800: #155051;
-  --color-primary-green-900: #0D4344;
-  --color-primary-green-950: #082426;
-
-  /* ===== PRIMARY YELLOW ===== */
-  --color-primary-yellow-50: #FDFFE6;
-  --color-primary-yellow-100: #FAFFCB;
-  --color-primary-yellow-200: #F2FBEF;
-  --color-primary-yellow-300: #EFFA5C;
-  --color-primary-yellow-400: #D4F02B;
-  --color-primary-yellow-500: #B7D60C;
-  --color-primary-yellow-550: #fdffc7;
-  --color-primary-yellow-600: #8FAB05;
-  --color-primary-yellow-700: #6B8209;
-  --color-primary-yellow-800: #55660E;
-  --color-primary-yellow-900: #475611;
-  --color-primary-yellow-950: #253003;
-
-  /* ===== DESTRUCTIVE ===== */
-  --color-destructive-50: #FEF3F2;
-  --color-destructive-100: #FEE4E2;
-  --color-destructive-200: #FFCDC9;
-  --color-destructive-300: #FDAAA4;
-  --color-destructive-400: #F97970;
-  --color-destructive-500: #F04438;
-  --color-destructive-600: #DE3024;
-  --color-destructive-700: #BB241A;
-  --color-destructive-800: #9A221A;
-  --color-destructive-900: #80231C;
-  --color-destructive-950: #460D09;
+  /* ===== LINK ===== */
+  --color-link: var(--color-primary);
+  --color-link-hover: #525BFF;
 }
 
 @layer base {
@@ -55,7 +30,60 @@
     font-family: 'Outfit', sans-serif;
   }
 
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+  }
+
   button {
     cursor: pointer;
+  }
+
+  .dashboard-bg {
+    background-color: var(--color-bg) !important;
+    color: var(--color-text) !important;
+  }
+
+  .dashboard-card {
+    background-color: var(--color-surface) !important;
+    border-color: var(--color-border) !important;
+    color: var(--color-text) !important;
+  }
+
+  .dashboard-card-alt {
+    background-color: var(--color-surface-soft) !important;
+    border-color: var(--color-border) !important;
+    color: var(--color-text) !important;
+  }
+
+  .dashboard-header {
+    background-color: rgba(255,255,255,0.92) !important;
+    border-color: var(--color-border) !important;
+    color: var(--color-text) !important;
+  }
+
+  .dashboard-sidebar {
+    background-color: #FFFFFF !important;
+    border-color: var(--color-border) !important;
+    color: var(--color-text) !important;
+  }
+
+  .dashboard-footer {
+    background-color: rgba(255,255,255,0.9) !important;
+    border-color: var(--color-border) !important;
+    color: var(--color-text-muted) !important;
+  }
+
+  .dashboard-text-muted {
+    color: var(--color-text-muted) !important;
+  }
+
+  .dashboard-panel {
+    background-color: rgba(105,108,255,0.08) !important;
+  }
+
+  .dashboard-chip {
+    background-color: rgba(255,171,0,0.12) !important;
+    color: var(--color-warning) !important;
   }
 }

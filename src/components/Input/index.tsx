@@ -44,7 +44,7 @@ export function Input({
   const iconColor = hasError
     ? "text-red-500"
     : (isFocused || isFilled
-      ? "text-[#3e9392]"
+      ? "text-[#696CFF]"
       : "text-gray-400");
 
   return (
@@ -65,7 +65,7 @@ export function Input({
             inputVariants[variant],
             inputSizes[sizeInput],
             !isPassword && icon ? "pl-10" : "",
-            hasError ? "border-red-500 focus:border-red-500" : "",
+            hasError ? "border-red-500 focus:border-red-500" : (isFocused || isFilled) ? "border-[#696CFF] focus:border-[#696CFF]" : "",
             className,
           ].join(' ')}
           onFocus={handleInputFocus}

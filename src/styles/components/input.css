@@ -14,7 +14,13 @@
   }
 
   /* ===== VARIANTS ===== */
-  
+  .input-primary-green {
+    @apply bg-[#FEF9C3] border-[#CBD5E1] text-[#111827];
+  }
+
+  .input-primary-green:focus-visible {
+    @apply ring-[#696CFF] ring-3 ring-offset-2 outline-none;
+  }
 
   /* ===== SIZES ===== */
   .input-sm {

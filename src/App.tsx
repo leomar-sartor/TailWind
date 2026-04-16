@@ -11,8 +11,6 @@ import { AuthImage } from "./components/AuthImage/AuthImage";
 import { useForm, SubmitHandler } from "react-hook-form"
 import { Input } from './components/Input';
 
-type AvailableThemes = 'dark' | 'light';
-
 type Inputs = {
   example: string
   exampleRequired: string
@@ -20,38 +18,19 @@ type Inputs = {
 
 export function App() {
 
-  const [theme, setTheme] = useState<AvailableThemes>('dark');
   const [showPassword, setShowPassword] = useState(false);
-
-  function handleThemeChange(
-    event: React.MouseEvent<HTMLAnchorElement, MouseEvent>
-  ) {
-    event.preventDefault();
-
-    setTheme(prevTheme => {
-      const nextTheme = prevTheme === 'dark' ? 'light' : 'dark';
-      return nextTheme;
-    });
-  }
 
   useEffect(() => {
     const htmlElement = document.documentElement;
     htmlElement.classList.toggle('dark');
-
-    return () => {
-    };
-
-  }, [theme]);
+  }, []);
 
   const toggleShowPasswordButton = (): void => {
     setShowPassword(prev => !prev);
   }
 
   const {
-    register,
     handleSubmit,
-    watch,
-    formState: { errors },
   } = useForm<Inputs>()
 
   const onSubmit: SubmitHandler<Inputs> = (data) => console.log(data)
