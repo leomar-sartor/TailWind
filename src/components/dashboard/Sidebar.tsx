@@ -107,7 +107,7 @@ export function Sidebar({ collapsed, activePage, onSelectPage, onToggleSidebar }
             {groups.map((group) => {
               const open = openGroups[group.title];
               return (
-                <div key={group.title} className="rounded-3xl border dashboard-border bg-[#F5F7FC] px-2 py-1.5 pb-4">
+                <div key={group.title} className="rounded-3xl border dashboard-border bg-[#F5F7FC] px-2 py-1.5 pb-2">
                   {(() => {
                     const groupActive = activePage === group.page || group.children.some((child) => child.page === activePage);
                     return (

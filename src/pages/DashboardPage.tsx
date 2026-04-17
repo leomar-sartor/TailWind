@@ -7,6 +7,7 @@ import { DashboardFooter } from '../components/dashboard/DashboardFooter';
 import { Sidebar } from '../components/dashboard/Sidebar';
 import { DashboardLayout } from '../layouts/DashboardLayout';
 import { PageContainer } from '../components/dashboard/PageContainer';
+import { SetorPage } from './SetorPage';
 
 type MenuPage = 'dashboard' | 'cadastros' | 'pesquisas' | 'empresa' | 'setor' | 'consultar';
 
@@ -242,35 +243,7 @@ export function DashboardPage() {
     }
 
     if (selectedPage === 'setor') {
-      return (
-        <div className="grid gap-4 lg:grid-cols-2">
-          <article className="dashboard-card rounded-[28px] border p-6 shadow-xl shadow-[0_18px_60px_-28px_rgba(43,44,64,0.18)]">
-            <h3 className="text-lg font-semibold text-[#2B2C40]">Setores ativos</h3>
-            <p className="mt-2 text-sm dashboard-text-muted">Detalhe os setores internos e responsáveis associados.</p>
-            <div className="mt-6 space-y-4">
-              {['Financeiro', 'Operações', 'Tecnologia'].map((sector) => (
-                <div key={sector} className="dashboard-card-alt rounded-3xl border p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="font-semibold text-[#2B2C40]">{sector}</p>
-                      <p className="text-sm dashboard-text-muted">Equipe responsável</p>
-                    </div>
-                    <span className="rounded-full bg-sky-500/10 px-3 py-1 text-xs text-sky-300">3 membros</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </article>
-
-          <article className="dashboard-card rounded-[28px] border p-6 shadow-xl shadow-[0_18px_60px_-28px_rgba(43,44,64,0.18)]">
-            <h3 className="text-lg font-semibold text-[#2B2C40]">Últimas atualizações</h3>
-            <ul className="mt-5 space-y-3">
-              <li className="dashboard-card-alt rounded-3xl border p-4 text-[#646E78]">Plano de metas do setor de Tecnologia atualizado.</li>
-              <li className="dashboard-card-alt rounded-3xl border p-4 text-[#646E78]">Revisão de jornadas no departamento de Operações.</li>
-            </ul>
-          </article>
-        </div>
-      );
+      return <SetorPage />;
     }
 
     if (selectedPage === 'cadastros') {
