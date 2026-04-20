@@ -1,0 +1,48 @@
+@layer components {
+
+  /* ===== BASE ===== */
+  .select {
+    @apply flex w-full h-14 rounded-2xl border p-4
+     focus-visible:ring-[#3e9392]
+     focus-visible:ring-3
+     focus-visible:ring-offset-2
+     focus-visible:outline-none
+     appearance-none
+     cursor-pointer
+     bg-white;
+  }
+
+  /* ===== VARIANTS ===== */
+  .select-primary-green {
+    @apply bg-[#FEF9C3] border-[#CBD5E1] text-[#111827];
+  }
+
+  .select-primary-green:focus-visible {
+    @apply ring-[#696CFF] ring-3 ring-offset-2 outline-none;
+  }
+
+  .select-destructive {
+    @apply bg-red-50 border-red-200 text-red-900;
+  }
+
+  .select-destructive:focus-visible {
+    @apply ring-red-500 ring-3 ring-offset-2 outline-none;
+  }
+
+  /* ===== SIZES ===== */
+  .select-sm {
+    @apply h-8 text-sm;
+  }
+
+  .select-md {
+    @apply h-10 text-sm;
+  }
+
+  .select-lg {
+    @apply h-12 text-base;
+  }
+
+  .select-xl {
+    @apply h-14 text-base;
+  }
+}

@@ -9,6 +9,10 @@ import { AuthGuard } from '../auth/AuthGuard';
 // Pages — substitua pelos seus componentes reais
 import { LoginPage } from '../pages/LoginPage';
 import { DashboardPage } from '../pages/DashboardPage';
+import { CreateEditSetorPageWithLayout } from '../pages/CreateEditSetorPageWithLayout';
+import { SetorPageWrapper } from '../pages/SetorPageWrapper';
+import { CreateEditEmpresaPageWithLayout } from '../pages/CreateEditEmpresaPageWithLayout';
+import { EmpresaPageWrapper } from '../pages/EmpresaPageWrapper';
 
 // ─── AppRouter ────────────────────────────────────────────────────────────────
 // Hierarquia de providers:
@@ -34,6 +38,10 @@ export function AppRouter() {
               {/* Rotas protegidas — qualquer usuário autenticado */}
               <Route element={<ProtectedRoute />}>
                 <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/dashboard/setor" element={<SetorPageWrapper />} />
+                <Route path="/dashboard/setor/create" element={<CreateEditSetorPageWithLayout />} />
+                <Route path="/dashboard/empresa" element={<EmpresaPageWrapper />} />
+                <Route path="/dashboard/empresa/create" element={<CreateEditEmpresaPageWithLayout />} />
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
               </Route>
 

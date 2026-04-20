@@ -8,6 +8,7 @@ import { Sidebar } from '../components/dashboard/Sidebar';
 import { DashboardLayout } from '../layouts/DashboardLayout';
 import { PageContainer } from '../components/dashboard/PageContainer';
 import { SetorPage } from './SetorPage';
+import { EmpresaPage } from './EmpresaPage';
 
 type MenuPage = 'dashboard' | 'cadastros' | 'pesquisas' | 'empresa' | 'setor' | 'consultar';
 
@@ -198,48 +199,7 @@ export function DashboardPage() {
     }
 
     if (selectedPage === 'empresa') {
-      return (
-        <div className="grid gap-4 lg:grid-cols-2">
-          <article className="dashboard-card rounded-[28px] border p-6 shadow-xl shadow-[0_18px_60px_-28px_rgba(43,44,64,0.18)]">
-            <h3 className="text-lg font-semibold text-[#2B2C40]">Empresas cadastradas</h3>
-            <p className="mt-2 text-sm dashboard-text-muted">Gerencie o cadastro de empresas e mantenha as informações atualizadas.</p>
-            <div className="mt-6 space-y-4">
-              {['Functional Brasil', 'Functional Saúde', 'Functional Internacional'].map((company) => (
-                <div key={company} className="dashboard-card-alt rounded-3xl border p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="font-semibold text-[#2B2C40]">{company}</p>
-                      <p className="text-sm dashboard-text-muted">Operação ativa</p>
-                    </div>
-                    <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs text-emerald-300">Ativa</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </article>
-
-          <article className="dashboard-card rounded-[28px] border p-6 shadow-xl shadow-[0_18px_60px_-28px_rgba(43,44,64,0.18)]">
-            <h3 className="text-lg font-semibold text-[#2B2C40]">Ações rápidas</h3>
-            <div className="mt-5 space-y-4">
-              <button className="flex w-full items-center justify-between rounded-3xl border dashboard-border bg-white px-4 py-4 text-left text-[#2B2C40] transition hover:border-orange-400/40 hover:bg-[#F4F6FA]">
-                <div>
-                  <p className="font-semibold">Adicionar nova empresa</p>
-                  <p className="text-sm dashboard-text-muted">Cadastrar CNPJ, razão social e responsável.</p>
-                </div>
-                <Building2 className="h-5 w-5 text-orange-400" />
-              </button>
-
-              <button className="flex w-full items-center justify-between rounded-3xl border dashboard-border bg-white px-4 py-4 text-left text-[#2B2C40] transition hover:border-orange-400/40 hover:bg-[#F4F6FA]">
-                <div>
-                  <p className="font-semibold">Exportar lista</p>
-                  <p className="text-sm dashboard-text-muted">Baixar relatório em CSV ou XLS.</p>
-                </div>
-                <ArrowRight className="h-5 w-5 text-orange-400" />
-              </button>
-            </div>
-          </article>
-        </div>
-      );
+      return <EmpresaPage />;
     }
 
     if (selectedPage === 'setor') {
@@ -370,7 +330,6 @@ export function DashboardPage() {
         description={pageInfo[selectedPage].description}
       >
         <div className="max-w-7xl mx-auto pb-24 pt-2">
-          <p className="mb-6 text-sm dashboard-text-muted">{pageInfo[selectedPage].subtitle}</p>
           {content}
         </div>
       </PageContainer>
