@@ -13,6 +13,7 @@ import { CreateEditSetorPageWithLayout } from '../pages/CreateEditSetorPageWithL
 import { SetorPageWrapper } from '../pages/SetorPageWrapper';
 import { CreateEditEmpresaPageWithLayout } from '../pages/CreateEditEmpresaPageWithLayout';
 import { EmpresaPageWrapper } from '../pages/EmpresaPageWrapper';
+import { SurveyPage } from '../pages/SurveyPage';
 
 // ─── AppRouter ────────────────────────────────────────────────────────────────
 // Hierarquia de providers:
@@ -32,6 +33,8 @@ export function AppRouter() {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/dash" element={<DashboardPage />} />
 
+              <Route path="/survey" element={<SurveyPage />} />
+              
               {/* Redireciona raiz para login enquanto não há mais páginas */}
               <Route path="/" element={<Navigate to="/login" replace />} />
               
