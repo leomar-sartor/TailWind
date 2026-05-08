@@ -38,3 +38,31 @@ export const FINALIZAR_PESQUISA_MUTATION = gql`
     finalizarPesquisa(token: $token)
   }
 `;
+
+export const CREATE_PESQUISA_MUTATION = gql`
+  mutation NovaPesquisa($input: PesquisaInput!) {
+    createPesquisa(input: $input) {
+      id
+      nome
+      dataInicial
+      dataFinal
+    }
+  }
+`;
+
+export const UPDATE_PESQUISA_MUTATION = gql`
+  mutation UpdatePesquisa($id: Long!, $input: PesquisaInput!) {
+    updatePesquisa(id: $id, input: $input) {
+      id
+      nome
+      dataInicial
+      dataFinal
+    }
+  }
+`;
+
+export const DELETE_PESQUISA_MUTATION = gql`
+  mutation DeletePesquisa($id: Long!) {
+    deletePesquisa(id: $id)
+  }
+`;

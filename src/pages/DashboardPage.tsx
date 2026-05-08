@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Building2, FileSearch } from 'lucide-react';
 import { useAuthStore, selectUser } from '../auth/authStore';
 import { useAuth } from '../auth/AuthContext';
@@ -10,7 +11,7 @@ import { PageContainer } from '../components/dashboard/PageContainer';
 import { SetorPage } from './SetorPage';
 import { EmpresaPage } from './EmpresaPage';
 
-type MenuPage = 'dashboard' | 'cadastros' | 'pesquisas' | 'empresa' | 'setor' | 'consultar';
+type MenuPage = 'dashboard' | 'cadastros' | 'pesquisas' | 'pesquisa' | 'empresa' | 'setor' | 'colaboradores' | 'consultar';
 
 type PageInfo = {
   title: string;
@@ -34,6 +35,11 @@ const pageInfo: Record<MenuPage, PageInfo> = {
     description: 'Visão geral das pesquisas',
     subtitle: 'Acesse relatórios e filtros para encontrar os dados mais importantes.',
   },
+  pesquisa: {
+    title: 'Pesquisa',
+    description: 'Cadastro de pesquisa e perguntas',
+    subtitle: 'Cadastre novas pesquisas, perguntas e opções em uma única página.',
+  },
   empresa: {
     title: 'Cadastros',
     description: 'Cadastro de empresas',
@@ -43,6 +49,11 @@ const pageInfo: Record<MenuPage, PageInfo> = {
     title: 'Cadastros',
     description: 'Cadastro de setores',
     subtitle: 'Organize setores internos com descrição e responsáveis.',
+  },
+  colaboradores: {
+    title: 'Cadastros',
+    description: 'Cadastro de colaboradores',
+    subtitle: 'Gerencie colaboradores ativos e inativos com CPF e setor.',
   },
   consultar: {
     title: 'Pesquisas',
@@ -98,12 +109,34 @@ export function DashboardPage() {
     }
   }, [sidebarCollapsed, isMobile]);
 
+  const navigate = useNavigate();
+
   const handleToggleSidebar = () => {
     setSidebarCollapsed((prev) => !prev);
   };
 
   const handlePageChange = (page: MenuPage) => {
-    if (page === selectedPage) {
+    if (page === selectedPage && page !== 'pesquisa') {
+      return;
+    }
+
+    if (page === 'empresa') {
+      navigate('/dashboard/empresa');
+      return;
+    }
+
+    if (page === 'setor') {
+      navigate('/dashboard/setor');
+      return;
+    }
+
+    if (page === 'colaboradores') {
+      navigate('/dashboard/colaboradores');
+      return;
+    }
+
+    if (page === 'pesquisa') {
+      navigate('/dashboard/pesquisa');
       return;
     }
 

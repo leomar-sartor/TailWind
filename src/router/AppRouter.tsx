@@ -13,6 +13,10 @@ import { CreateEditSetorPageWithLayout } from '../pages/CreateEditSetorPageWithL
 import { SetorPageWrapper } from '../pages/SetorPageWrapper';
 import { CreateEditEmpresaPageWithLayout } from '../pages/CreateEditEmpresaPageWithLayout';
 import { EmpresaPageWrapper } from '../pages/EmpresaPageWrapper';
+import { CreateEditPesquisaPageWithLayout } from '../pages/CreateEditPesquisaPageWithLayout';
+import { PesquisaPageWrapper } from '../pages/PesquisaPageWrapper';
+import { ColaboradorPageWrapper } from '../pages/ColaboradorPageWrapper';
+import { CreateEditColaboradorPageWithLayout } from '../pages/CreateEditColaboradorPageWithLayout';
 import { SurveyPage } from '../pages/SurveyPage';
 
 // ─── AppRouter ────────────────────────────────────────────────────────────────
@@ -45,6 +49,10 @@ export function AppRouter() {
                 <Route path="/dashboard/setor/create" element={<CreateEditSetorPageWithLayout />} />
                 <Route path="/dashboard/empresa" element={<EmpresaPageWrapper />} />
                 <Route path="/dashboard/empresa/create" element={<CreateEditEmpresaPageWithLayout />} />
+                <Route path="/dashboard/colaboradores" element={<ColaboradorPageWrapper />} />
+                <Route path="/dashboard/colaboradores/create" element={<CreateEditColaboradorPageWithLayout />} />
+                <Route path="/dashboard/pesquisa" element={<PesquisaPageWrapper />} />
+                <Route path="/dashboard/pesquisa/create" element={<CreateEditPesquisaPageWithLayout />} />
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
               </Route>
 

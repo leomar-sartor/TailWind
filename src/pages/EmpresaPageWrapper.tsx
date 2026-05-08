@@ -9,14 +9,16 @@ import { DashboardLayout } from '../layouts/DashboardLayout';
 import { PageContainer } from '../components/dashboard/PageContainer';
 import { EmpresaPage } from './EmpresaPage';
 
-type MenuPage = 'dashboard' | 'cadastros' | 'pesquisas' | 'empresa' | 'setor' | 'consultar';
+type MenuPage = 'dashboard' | 'cadastros' | 'pesquisas' | 'pesquisa' | 'empresa' | 'setor' | 'colaboradores' | 'consultar';
 
 const pageInfo: Record<MenuPage, { title: string; description: string }> = {
   dashboard: { title: 'Dashboard', description: 'Visão geral do painel administrativo' },
   cadastros: { title: 'Cadastros', description: 'Visão geral dos cadastros' },
   pesquisas: { title: 'Pesquisas', description: 'Visão geral das pesquisas' },
+  pesquisa: { title: 'Pesquisa', description: 'Cadastro de pesquisa e questões' },
   empresa: { title: 'Cadastros', description: 'Cadastro de empresas' },
   setor: { title: 'Cadastros', description: 'Cadastro de setores' },
+  colaboradores: { title: 'Cadastros', description: 'Cadastro de colaboradores' },
   consultar: { title: 'Pesquisas', description: 'Consulta de dados' },
 };
 
@@ -70,6 +72,22 @@ export function EmpresaPageWrapper() {
 
   const handlePageChange = (page: MenuPage) => {
     if (page === 'empresa') return;
+    if (page === 'dashboard') {
+      navigate('/dashboard');
+      return;
+    }
+    if (page === 'setor') {
+      navigate('/dashboard/setor');
+      return;
+    }
+    if (page === 'colaboradores') {
+      navigate('/dashboard/colaboradores');
+      return;
+    }
+    if (page === 'pesquisa') {
+      navigate('/dashboard/pesquisa');
+      return;
+    }
     navigate('/dashboard');
   };
 
