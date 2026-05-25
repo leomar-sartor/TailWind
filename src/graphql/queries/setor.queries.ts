@@ -8,6 +8,12 @@ export const GET_SETORS = gql`
         nome
         descricao
         createdAt
+        empresaSetores {
+          empresa{
+						id
+						razaoSocial						
+					}
+        }
       }
       pageInfo {
         hasNextPage
@@ -27,6 +33,12 @@ export const GET_SETOR_BY_ID = gql`
       nome
       descricao
       createdAt
+      empresaSetores {
+        empresa{
+						id
+						razaoSocial						
+				}
+      }
     }
   }
 `;

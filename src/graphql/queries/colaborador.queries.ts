@@ -10,6 +10,14 @@ export const GET_COLABORADORES = gql`
         email
         ativo
         setorId
+        empresa{
+			id
+			razaoSocial
+		}
+		setor{
+			id
+			nome
+		}
         empresaId
         createdAt
       }

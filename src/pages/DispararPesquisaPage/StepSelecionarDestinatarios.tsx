@@ -38,7 +38,11 @@ export function StepSelecionarDestinatarios({ onNext, onBack }: Props) {
 
   // ── Setores da empresa selecionada ──────────────────────────────────────────
   const { data: setoresData, loading: loadingSetores } = useQuery<GetSetoresData>(GET_SETORES_BY_EMPRESA, {
-    variables: { first: 100, where: empresaId ? { empresaId: { eq: Number(empresaId) } } : null },
+    // variables: { first: 100, where: empresaId ? { empresaId: { eq: Number(empresaId) } } : null },
+    variables: { first: 50, 
+      where: empresaId ? { empresaSetores: { all: {
+        empresaId: { eq: Number(empresaId) }       
+      } } } : null },
     skip: !empresaId,
     fetchPolicy: 'cache-first',
   });
@@ -47,7 +51,7 @@ export function StepSelecionarDestinatarios({ onNext, onBack }: Props) {
   // ── Colaboradores dos setores selecionados ──────────────────────────────────
   const { data: colaboradoresData, loading: loadingColabs } = useQuery<GetColaboradoresData>(GET_COLABORADORES_BY_SETOR, {
     variables: {
-      first: 500,
+      first: 50,
       where: setorIdsSelecionados.length > 0
         ? { setorId: { in: setorIdsSelecionados.map(Number) } }
         : null,

@@ -1,15 +1,16 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
+import { SelectWithSearch, SelectItem } from '../components/Select/SelectWithSearch';
 import {
   CREATE_SETOR_MUTATION,
   UPDATE_SETOR_MUTATION,
 } from '../graphql/mutations/setor.mutations';
-import { GET_SETOR_BY_ID } from '../graphql/queries/setor.queries';
+import { GET_SETOR_BY_ID, GET_EMPRESAS_PAGINATED } from '../graphql/queries/setor.queries';
 
 type SetorFormValues = {
   id?: string;
@@ -18,7 +19,6 @@ type SetorFormValues = {
 };
 
 const PAGE_SIZE = 10;
-const EMPRESA_ID = 2;
 
 export function CreateEditSetorPage() {
   const navigate = useNavigate();
@@ -26,12 +26,81 @@ export function CreateEditSetorPage() {
   const setorId = searchParams.get('id');
   const isEditing = !!setorId;
 
+  // Estados para SelectWithSearch de empresas
+  const [empresasItems, setEmpresasItems] = useState<SelectItem[]>([]);
+  const [empresasSearchQuery, setEmpresasSearchQuery] = useState('');
+  const [selectedEmpresaId, setSelectedEmpresaId] = useState<string | number>();
+
   const setorForm = useForm<SetorFormValues>({
     defaultValues: { id: '', nome: '', descricao: '' },
   });
 
   const [createSetor, { loading: creating }] = useMutation(CREATE_SETOR_MUTATION);
   const [updateSetor, { loading: updating }] = useMutation(UPDATE_SETOR_MUTATION);
+
+  // Query para empresas com paginação
+  const { data: empresasData, loading: empresasLoading, fetchMore: fetchMoreEmpresas } = useQuery<{
+    empresas: {
+      nodes: Array<{ id: string | number; razaoSocial: string }>;
+      pageInfo: {
+        hasNextPage: boolean;
+        endCursor?: string;
+      };
+    };
+  }>(
+    GET_EMPRESAS_PAGINATED,
+    {
+      variables: {
+        first: 10,
+        where: empresasSearchQuery ? { razaoSocial: { contains: empresasSearchQuery } } : null,
+      },
+    }
+  );
+
+  // Atualizar items quando dados chegam
+  useEffect(() => {
+    if (empresasData?.empresas?.nodes) {
+      const items = empresasData.empresas.nodes.map((emp: any) => ({
+        id: emp.id,
+        label: emp.razaoSocial,
+      }));
+      setEmpresasItems(items);
+    }
+  }, [empresasData?.empresas?.nodes]);
+
+  const handleLoadMoreEmpresas = async () => {
+    const hasMore = empresasData?.empresas?.pageInfo?.hasNextPage;
+    const endCursor = empresasData?.empresas?.pageInfo?.endCursor;
+
+    if (!hasMore || !endCursor) return;
+
+    try {
+      await fetchMoreEmpresas({
+        variables: {
+          first: 10,
+          after: endCursor,
+          where: empresasSearchQuery ? { razaoSocial: { contains: empresasSearchQuery } } : null,
+        },
+        updateQuery: (prev, { fetchMoreResult }) => {
+          if (!fetchMoreResult) return prev;
+          const newItems = fetchMoreResult.empresas.nodes.map((emp: any) => ({
+            id: emp.id,
+            label: emp.razaoSocial,
+          }));
+          setEmpresasItems((prev) => [...prev, ...newItems]);
+          return fetchMoreResult;
+        },
+      });
+    } catch (err) {
+      console.error('Erro ao carregar mais empresas:', err);
+    }
+  };
+
+  const handleSearchEmpresas = (query: string) => {
+    setEmpresasSearchQuery(query);
+    setEmpresasItems([]);
+    setSelectedEmpresaId(undefined);
+  };
 
   // Buscar dados do setor se for edição
   const { data: setorData, loading: loadingSetor, refetch } = useQuery(
@@ -60,10 +129,19 @@ export function CreateEditSetorPage() {
         nome: setor.nome,
         descricao: setor.descricao ?? '',
       });
+      // Carregar empresa do setor se existir
+      if (setor.empresaSetores[0]?.empresa?.id) {
+        setSelectedEmpresaId(setor.empresaSetores[0].empresa.id);
+      }
     }
   }, [setorData, setorForm, setorId]);
 
   const handleSubmit: SubmitHandler<SetorFormValues> = async (values) => {
+    if (!selectedEmpresaId) {
+      alert('Por favor, selecione uma empresa');
+      return;
+    }
+
     const payload = {
       nome: values.nome.trim(),
       descricao: values.descricao.trim(),
@@ -85,7 +163,7 @@ export function CreateEditSetorPage() {
       } else {
         await createSetor({
           variables: {
-            empresaId: EMPRESA_ID,
+            empresaId: Number(selectedEmpresaId),
             input: payload,
           },
         });
@@ -100,7 +178,7 @@ export function CreateEditSetorPage() {
     }
   };
 
-  const isBusy = creating || updating || loadingSetor;
+  const isBusy = creating || updating || loadingSetor || empresasLoading;
 
   return (
     <div className="space-y-6">
@@ -130,6 +208,17 @@ export function CreateEditSetorPage() {
         <article className="dashboard-card rounded-[28px] border p-6 shadow-xl">
           <form className="space-y-6" onSubmit={setorForm.handleSubmit(handleSubmit)}>
             <div className="space-y-4">
+              <SelectWithSearch
+                items={empresasItems}
+                selectedId={selectedEmpresaId}
+                placeholder="Selecione uma empresa"
+                searchPlaceholder="Buscar empresa..."
+                isLoading={empresasLoading}
+                hasMore={empresasData?.empresas?.pageInfo?.hasNextPage ?? false}
+                onLoadMore={handleLoadMoreEmpresas}
+                onSearch={handleSearchEmpresas}
+                onChange={(item) => setSelectedEmpresaId(item.id)}
+              />
               <Input
                 name="nome"
                 placeholder="Nome do setor"

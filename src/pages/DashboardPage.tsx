@@ -11,7 +11,7 @@ import { PageContainer } from '../components/dashboard/PageContainer';
 import { SetorPage } from './SetorPage';
 import { EmpresaPage } from './EmpresaPage';
 
-type MenuPage = 'dashboard' | 'cadastros' | 'pesquisas' | 'pesquisa' | 'empresa' | 'setor' | 'colaboradores' | 'consultar';
+type MenuPage = 'dashboard' | 'cadastros' | 'pesquisas' | 'pesquisa' | 'empresa' | 'setor' | 'colaboradores' | 'consultar' | 'enviar';
 
 type PageInfo = {
   title: string;
@@ -59,6 +59,11 @@ const pageInfo: Record<MenuPage, PageInfo> = {
     title: 'Pesquisas',
     description: 'Consulta de dados',
     subtitle: 'Busque temas, relatórios e indicadores com respostas rápidas.',
+  },
+  enviar: {
+    title: 'Enviar',
+    description: 'Disparo de pesquisas',
+    subtitle: 'Envie pesquisas para colaboradores ou setores específicos.',
   },
 };
 
@@ -137,6 +142,11 @@ export function DashboardPage() {
 
     if (page === 'pesquisa') {
       navigate('/dashboard/pesquisa');
+      return;
+    }
+
+    if (page === 'enviar') {
+      navigate('/dashboard/pesquisa/disparar');
       return;
     }
 

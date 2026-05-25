@@ -17,15 +17,28 @@ type SearchFormValues = {
   empresaId: string;
 };
 
+type EmpresaNode = {
+  id: string;
+  razaoSocial: string;
+};
+
+type EmpresaSetorNode = {
+  empresa: EmpresaNode;
+};
+
+
 type SetorNode = {
   id: string;
   nome: string;
   descricao?: string;
   createdAt?: string;
-  empresa?: {
-    id: string;
-    razaoSocial: string;
-  };
+  // empresaSetores: EmpresaSetorNode[];
+  empresaSetores?: {
+    empresa?: {
+      id?: string;
+      razaoSocial?: string;
+    };
+  }[];
 };
 
 const PAGE_SIZE = 10;
@@ -312,7 +325,7 @@ export function SetorPage() {
                   <td className="px-6 py-4 align-top text-sm text-[#6C7287]">{setor.id}</td>
                   <td className="px-6 py-4 align-top text-sm text-[#2B2C40]">{setor.nome}</td>
                   <td className="px-6 py-4 align-top text-sm text-[#6C7287]">{setor.descricao || '—'}</td>
-                  <td className="px-6 py-4 align-top text-sm text-[#2B2C40]">{setor.empresa?.razaoSocial || '—'}</td>
+                  <td className="px-6 py-4 align-top text-sm text-[#2B2C40]">{setor.empresaSetores[0]?.empresa?.razaoSocial || '—'}</td>
                 </tr>
               ))}
               {!setores.length && (

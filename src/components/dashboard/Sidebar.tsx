@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Building2, ChevronDown, FileSearch, Layers, LayoutDashboard, Menu, Search, Users } from 'lucide-react';
+import { Building2, ChevronDown, FileSearch, Layers, LayoutDashboard, Menu, Search, Send, Users } from 'lucide-react';
 
-type MenuPage = 'dashboard' | 'cadastros' | 'pesquisas' | 'pesquisa' | 'empresa' | 'setor' | 'colaboradores' | 'consultar';
+type MenuPage = 'dashboard' | 'cadastros' | 'pesquisas' | 'pesquisa' | 'empresa' | 'setor' | 'colaboradores' | 'consultar' | 'enviar';
 
 type SidebarProps = {
   collapsed: boolean;
@@ -35,6 +35,7 @@ const groups = [
     page: 'pesquisas',
     children: [
       { label: 'Pesquisa', page: 'pesquisa' as MenuPage, icon: <Search className="h-4 w-4" /> },
+      { label: 'Enviar', page: 'enviar' as MenuPage, icon: <Send className="h-4 w-4" /> },
       { label: 'Consultar', page: 'consultar' as MenuPage, icon: <FileSearch className="h-4 w-4" /> },
     ],
   },

@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 
-export type MenuPage = 'dashboard' | 'cadastros' | 'pesquisas' | 'pesquisa' | 'empresa' | 'setor' | 'colaboradores' | 'consultar';
+export type MenuPage = 'dashboard' | 'cadastros' | 'pesquisas' | 'pesquisa' | 'empresa' | 'setor' | 'colaboradores' | 'consultar' | 'enviar';
 
 export const pageInfo: Record<MenuPage, { title: string; description: string }> = {
   dashboard: { title: 'Dashboard', description: 'Visão geral do painel administrativo' },
@@ -11,6 +11,7 @@ export const pageInfo: Record<MenuPage, { title: string; description: string }> 
   setor: { title: 'Cadastros', description: 'Cadastro de setores' },
   colaboradores: { title: 'Cadastros', description: 'Cadastro de colaboradores' },
   consultar: { title: 'Pesquisas', description: 'Consulta de dados' },
+  enviar: { title: 'Disparar', description: 'Disparo de pesquisas' },
 };
 
 const navigationMap: Record<MenuPage, string | null> = {
@@ -22,6 +23,7 @@ const navigationMap: Record<MenuPage, string | null> = {
   setor: '/dashboard/setor',
   colaboradores: '/dashboard/colaboradores',
   consultar: '/dashboard',
+  enviar: '/dashboard/pesquisa/disparar',
 };
 
 export function useDashboardPageConfig(currentPage: MenuPage) {

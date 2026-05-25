@@ -28,6 +28,14 @@ type ColaboradorNode = {
   ativo: boolean;
   setorId: string;
   empresaId: string;
+  empresa?: {
+    id?: string;
+    razaoSocial?: string;
+  };
+  setor?: {
+    id?: string;
+    nome?: string;
+  };
   createdAt?: string;
 };
 
@@ -80,7 +88,7 @@ export function ColaboradorPage() {
   const [selectedSetorId, setSelectedSetorId] = useState<string | number>();
 
   const searchForm = useForm<SearchFormValues>({ defaultValues: currentFilters });
-  
+
   // Query para empresas com paginação
   const { data: empresasData, loading: empresasLoading, fetchMore: fetchMoreEmpresas } = useQuery<{
     empresas: {
@@ -430,14 +438,13 @@ export function ColaboradorPage() {
                   <td className="px-6 py-4 align-top text-sm text-[#6C7287]">{colaborador.cpf}</td>
                   <td className="px-6 py-4 align-top text-sm text-[#2B2C40]">{colaborador.nome}</td>
                   <td className="px-6 py-4 align-top text-sm text-[#6C7287]">{colaborador.email}</td>
-                  <td className="px-6 py-4 align-top text-sm text-[#2B2C40]">{/* Empresa name */}</td>
-                  <td className="px-6 py-4 align-top text-sm text-[#2B2C40]">{/* Setor name */}</td>
+                  <td className="px-6 py-4 align-top text-sm text-[#2B2C40]">{colaborador.empresa?.razaoSocial || '—'}</td>
+                  <td className="px-6 py-4 align-top text-sm text-[#2B2C40]">{colaborador.setor?.nome || '—'}</td>
                   <td className="px-6 py-4 align-top text-sm text-[#2B2C40]">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      colaborador.ativo
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colaborador.ativo
                         ? 'bg-green-100 text-green-800'
                         : 'bg-red-100 text-red-800'
-                    }`}>
+                      }`}>
                       {colaborador.ativo ? 'Ativo' : 'Inativo'}
                     </span>
                   </td>
@@ -470,7 +477,7 @@ export function ColaboradorPage() {
             >
               «
             </button>
-            
+
             <button
               type="button"
               onClick={handlePreviousPage}
@@ -479,7 +486,7 @@ export function ColaboradorPage() {
             >
               ‹ Anterior
             </button>
-            
+
             {Array.from({ length: Math.ceil(totalCount / PAGE_SIZE) }, (_, i) => i + 1).map((pageNum) => (
               <button
                 key={pageNum}
@@ -491,16 +498,15 @@ export function ColaboradorPage() {
                     handleNextPage();
                   }
                 }}
-                className={`rounded-lg px-3 py-1 text-sm font-medium transition ${
-                  currentCursorIndex === pageNum - 1
+                className={`rounded-lg px-3 py-1 text-sm font-medium transition ${currentCursorIndex === pageNum - 1
                     ? 'bg-[#696CFF] text-white'
                     : 'border border-slate-200 bg-white text-[#2B2C40] hover:bg-[#F4F6FA]'
-                }`}
+                  }`}
               >
                 {pageNum}
               </button>
             ))}
-            
+
             <button
               type="button"
               onClick={handleNextPage}

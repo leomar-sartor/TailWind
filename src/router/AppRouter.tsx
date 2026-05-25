@@ -56,7 +56,7 @@ export function AppRouter() {
                 <Route path="/dashboard/pesquisa/create" element={<CreateEditPesquisaPageWithLayout />} />
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                                 {/* ← Nova rota de disparo */}
-                <Route path="/dashboard/pesquisas/disparar" element={<DispararPesquisaPage />} />
+                <Route path="/dashboard/pesquisa/disparar" element={<DispararPesquisaPage />} />
 
               </Route>
 
