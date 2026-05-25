@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useAuthStore, selectUser } from '../auth/authStore';
 import { useAuth } from '../auth/AuthContext';
@@ -8,29 +8,17 @@ import { Sidebar } from '../components/dashboard/Sidebar';
 import { DashboardLayout } from '../layouts/DashboardLayout';
 import { PageContainer } from '../components/dashboard/PageContainer';
 import { SetorPage } from './SetorPage';
-
-type MenuPage = 'dashboard' | 'cadastros' | 'pesquisas' | 'pesquisa' | 'empresa' | 'setor' | 'colaboradores' | 'consultar';
-
-const pageInfo: Record<MenuPage, { title: string; description: string }> = {
-  dashboard: { title: 'Dashboard', description: 'Visão geral do painel administrativo' },
-  cadastros: { title: 'Cadastros', description: 'Visão geral dos cadastros' },
-  pesquisas: { title: 'Pesquisas', description: 'Visão geral das pesquisas' },
-  pesquisa: { title: 'Pesquisa', description: 'Cadastro de pesquisa e questões' },
-  empresa: { title: 'Cadastros', description: 'Cadastro de empresas' },
-  setor: { title: 'Cadastros', description: 'Cadastro de setores' },
-  colaboradores: { title: 'Cadastros', description: 'Cadastro de colaboradores' },
-  consultar: { title: 'Pesquisas', description: 'Consulta de dados' },
-};
+import { useDashboardPageConfig, type MenuPage } from '../hooks/useDashboardPageConfig';
 
 export function SetorPageWrapper() {
-  const navigate = useNavigate();
   const location = useLocation();
   const user = useAuthStore(selectUser);
   const { logout } = useAuth();
   const [message, setMessage] = useState<string | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [selectedPage] = useState<MenuPage>('setor');
+  const selectedPage: MenuPage = 'setor';
+  const { pageInfo, handlePageChange } = useDashboardPageConfig(selectedPage);
 
   useEffect(() => {
     if (location.state?.message) {
@@ -68,27 +56,6 @@ export function SetorPageWrapper() {
 
   const handleToggleSidebar = () => {
     setSidebarCollapsed((prev) => !prev);
-  };
-
-  const handlePageChange = (page: MenuPage) => {
-    if (page === 'setor') return;
-    if (page === 'dashboard') {
-      navigate('/dashboard');
-      return;
-    }
-    if (page === 'empresa') {
-      navigate('/dashboard/empresa');
-      return;
-    }
-    if (page === 'colaboradores') {
-      navigate('/dashboard/colaboradores');
-      return;
-    }
-    if (page === 'pesquisa') {
-      navigate('/dashboard/pesquisa');
-      return;
-    }
-    navigate('/dashboard');
   };
 
   const handleLogout = async () => {

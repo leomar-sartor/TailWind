@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useAuthStore, selectUser } from '../auth/authStore';
 import { useAuth } from '../auth/AuthContext';
@@ -8,29 +8,17 @@ import { Sidebar } from '../components/dashboard/Sidebar';
 import { DashboardLayout } from '../layouts/DashboardLayout';
 import { PageContainer } from '../components/dashboard/PageContainer';
 import { PesquisaPage } from './PesquisaPage';
-
-type MenuPage = 'dashboard' | 'cadastros' | 'pesquisas' | 'pesquisa' | 'empresa' | 'setor' | 'colaboradores' | 'consultar';
-
-const pageInfo: Record<MenuPage, { title: string; description: string }> = {
-  dashboard: { title: 'Dashboard', description: 'Visão geral do painel administrativo' },
-  cadastros: { title: 'Cadastros', description: 'Visão geral dos cadastros' },
-  pesquisas: { title: 'Pesquisas', description: 'Visão geral das pesquisas' },
-  pesquisa: { title: 'Pesquisa', description: 'Listagem e cadastro de pesquisas' },
-  empresa: { title: 'Cadastros', description: 'Cadastro de empresas' },
-  setor: { title: 'Cadastros', description: 'Cadastro de setores' },
-  colaboradores: { title: 'Cadastros', description: 'Cadastro de colaboradores' },
-  consultar: { title: 'Pesquisas', description: 'Consulta de dados' },
-};
+import { useDashboardPageConfig, type MenuPage } from '../hooks/useDashboardPageConfig';
 
 export function PesquisaPageWrapper() {
-  const navigate = useNavigate();
   const location = useLocation();
   const user = useAuthStore(selectUser);
   const { logout } = useAuth();
   const [message, setMessage] = useState<string | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [selectedPage] = useState<MenuPage>('pesquisa');
+  const selectedPage: MenuPage = 'pesquisa';
+  const { pageInfo, handlePageChange } = useDashboardPageConfig(selectedPage);
 
   useEffect(() => {
     if (location.state?.message) {
@@ -67,27 +55,6 @@ export function PesquisaPageWrapper() {
 
   const handleToggleSidebar = () => {
     setSidebarCollapsed((prev) => !prev);
-  };
-
-  const handlePageChange = (page: MenuPage) => {
-    if (page === 'pesquisa') return;
-    if (page === 'dashboard') {
-      navigate('/dashboard');
-      return;
-    }
-    if (page === 'empresa') {
-      navigate('/dashboard/empresa');
-      return;
-    }
-    if (page === 'setor') {
-      navigate('/dashboard/setor');
-      return;
-    }
-    if (page === 'colaboradores') {
-      navigate('/dashboard/colaboradores');
-      return;
-    }
-    navigate('/dashboard');
   };
 
   const handleLogout = async () => {
