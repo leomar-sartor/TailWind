@@ -4,11 +4,18 @@
 yarn dev
 ```
 
-# GITMOJI - https://gitmoji.dev/
+# GITMOJI
 
 ## Porque?
 
+rápido para padronização de commits e tem emotions que eu gosto
 
-## Como instalar e configurar para commit
+## Configurando
 
+```
 npm i -g gitmoji-cli
+gitmoji -i
+
+git commit
+```
+
