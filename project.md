@@ -1,4 +1,4 @@
-# learning-tailwind
+# Sistema de Análise de Riscos Psicosociais
 
 A React + Vite learning project focused on **Tailwind CSS v4**, with authentication, GraphQL, and client state management.
 
