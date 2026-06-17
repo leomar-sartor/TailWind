@@ -59,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const location = useLocation();
 
   const [loginMutation] = useMutation<{
-    login: { accessToken: string; user: AuthUser };
+    login: { accessToken: string; success: boolean; message: string; user: AuthUser };
   }>(LOGIN_MUTATION);
 
   const [logoutMutation] = useMutation(LOGOUT_MUTATION);
@@ -116,7 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (input: LoginInput) => {
     const result = await loginMutation({ variables: { input } });
 
-    if (!result.data?.login) {
+    if (!result.data?.login?.success ) {
       throw new Error('Erro durante o login.');
     }
 
