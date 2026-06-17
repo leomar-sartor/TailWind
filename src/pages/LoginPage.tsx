@@ -2,7 +2,8 @@ import { Button } from '../components/Button'
 import { useEffect, useState } from 'react';
 import { SplitScreenLayout } from '../layouts/SplitScreenLayout';
 import loginImage from '@/assets/wallpaper/Professional.png'
-import headerImage from '@/assets/logos/LogoHeaderFormSample.png';
+// import headerImage from '@/assets/logos/LogoHeaderFormSample.png';
+import headerImage from '@/assets/logos/LogoCorreta.png';
 import { AuthImage } from "../components/AuthImage/AuthImage";
 import { useForm, SubmitHandler } from "react-hook-form"
 import { Input } from '../components/Input';
