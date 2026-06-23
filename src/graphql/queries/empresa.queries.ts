@@ -5,7 +5,8 @@ export const GET_EMPRESAS = gql`
     empresas(where: $where, first: $first, after: $after) {
       nodes {
         id
-        razaoSocial
+        cnpj
+        nomeFantasia
         descricao
         createdAt
       }
@@ -24,7 +25,8 @@ export const GET_EMPRESA_BY_ID = gql`
   query GetEmpresa($id: Long!) {
     empresaById(id: $id) {
       id
-      razaoSocial
+      cnpj
+      nomeFantasia
       descricao
       createdAt
     }

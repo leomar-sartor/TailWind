@@ -13,8 +13,9 @@ import { GET_EMPRESA_BY_ID } from '../graphql/queries/empresa.queries';
 
 type EmpresaFormValues = {
   id?: string;
-  razaoSocial: string;
-  descricao: string;
+  cnpj: string;
+  nomeFantasia: string;
+  descricao?: string;
 };
 
 export function CreateEditEmpresaPage() {
@@ -24,7 +25,7 @@ export function CreateEditEmpresaPage() {
   const isEditing = !!empresaId;
 
   const empresaForm = useForm<EmpresaFormValues>({
-    defaultValues: { id: '', razaoSocial: '', descricao: '' },
+    defaultValues: { id: '', cnpj: '', nomeFantasia: '', descricao: '' },
   });
 
   const [createEmpresa, { loading: creating }] = useMutation(CREATE_EMPRESA_MUTATION);
@@ -54,7 +55,8 @@ export function CreateEditEmpresaPage() {
       const empresa = empresaData.empresaById;
       empresaForm.reset({
         id: empresa.id,
-        razaoSocial: empresa.razaoSocial,
+        cnpj: empresa.cnpj,
+        nomeFantasia: empresa.nomeFantasia,
         descricao: empresa.descricao ?? '',
       });
     }
@@ -62,8 +64,9 @@ export function CreateEditEmpresaPage() {
 
   const handleSubmit: SubmitHandler<EmpresaFormValues> = async (values) => {
     const payload = {
-      razaoSocial: values.razaoSocial.trim(),
-      descricao: values.descricao.trim(),
+      cnpj: values.cnpj.trim(),
+      nomeFantasia: values.nomeFantasia.trim(),
+      descricao: values.descricao?.trim(),
     };
 
     try {
@@ -127,18 +130,25 @@ export function CreateEditEmpresaPage() {
           <form className="space-y-6" onSubmit={empresaForm.handleSubmit(handleSubmit)}>
             <div className="space-y-4">
               <Input
-                name="razaoSocial"
-                placeholder="Razão social"
-                registration={empresaForm.register('razaoSocial', {
-                  required: 'Razão social obrigatória',
+                name="nomeFantasia"
+                placeholder="Nome fantasia"
+                registration={empresaForm.register('nomeFantasia', {
+                  required: 'Nome fantasia obrigatório',
                 })}
-                error={empresaForm.formState.errors.razaoSocial}
+                error={empresaForm.formState.errors.nomeFantasia}
+              />
+              <Input
+                name="cnpj"
+                placeholder="CNPJ"
+                registration={empresaForm.register('cnpj', {
+                  required: 'CNPJ obrigatório',
+                })}
+                error={empresaForm.formState.errors.cnpj}
               />
               <Input
                 name="descricao"
                 placeholder="Descrição da empresa"
                 registration={empresaForm.register('descricao', {
-                  required: 'Descrição obrigatória',
                 })}
                 error={empresaForm.formState.errors.descricao}
               />

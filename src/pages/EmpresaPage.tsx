@@ -5,14 +5,14 @@ import { useForm, SubmitHandler } from 'react-hook-form';
 import { Edit3, PlusCircle, Search, Trash2 } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
-import { Select } from '../components/Select';
 import { GET_EMPRESAS } from '../graphql/queries/empresa.queries';
 import {
   REMOVE_EMPRESA_MUTATION,
 } from '../graphql/mutations/empresa.mutations';
 
 type SearchFormValues = {
-  razaoSocial: string;
+  cnpj: string;
+  nomeFantasia: string;
   descricao: string;
 };
 
@@ -21,12 +21,16 @@ const PAGE_SIZE = 10;
 function buildWhere(values: SearchFormValues) {
   const where: Record<string, any> = {};
 
-  if (values.razaoSocial?.trim()) {
-    where.razaoSocial = { eq: values.razaoSocial.trim() };
+  if (values.cnpj?.trim()) {
+    where.cnpj = { contains: values.cnpj.trim() };
+  }
+
+  if (values.nomeFantasia?.trim()) {
+    where.nomeFantasia = { contains: values.nomeFantasia.trim() };
   }
 
   if (values.descricao?.trim()) {
-    where.descricao = { eq: values.descricao.trim() };
+    where.descricao = { contains: values.descricao.trim() };
   }
 
   return Object.keys(where).length ? where : null;
@@ -43,7 +47,7 @@ function formatDate(value?: string) {
 
 export function EmpresaPage() {
   const navigate = useNavigate();
-  const [currentFilters, setCurrentFilters] = useState<SearchFormValues>({ razaoSocial: '', descricao: '' });
+  const [currentFilters, setCurrentFilters] = useState<SearchFormValues>({ cnpj: '', nomeFantasia: '', descricao: '' });
   const [cursorStack, setCursorStack] = useState<Array<string | null>>([null]);
   const [currentCursorIndex, setCurrentCursorIndex] = useState(0);
 
@@ -90,8 +94,8 @@ export function EmpresaPage() {
   };
 
   const handleClearSearch = () => {
-    searchForm.reset({ razaoSocial: '', descricao: '' });
-    setCurrentFilters({ razaoSocial: '', descricao: '' });
+    searchForm.reset({ cnpj: '', nomeFantasia: '', descricao: '' });
+    setCurrentFilters({ cnpj: '', nomeFantasia: '', descricao: '' });
     setCursorStack([null]);
     setCurrentCursorIndex(0);
   };
@@ -155,12 +159,18 @@ export function EmpresaPage() {
             <h3 className="text-lg font-semibold text-[#2B2C40]">Buscar empresas</h3>
             <p className="mt-1 text-sm dashboard-text-muted">Filtre a lista por razão social ou descrição.</p>
           </div>
-          <div className="grid w-full gap-4 sm:grid-cols-2">
+          <div className="grid w-full gap-4 sm:grid-cols-3">
             <Input
-              name="razaoSocial"
-              placeholder="Razão social"
-              registration={searchForm.register('razaoSocial')}
-              error={searchForm.formState.errors.razaoSocial}
+              name="cnpj"
+              placeholder="CNPJ"
+              registration={searchForm.register('cnpj')}
+              error={searchForm.formState.errors.cnpj}
+            />
+            <Input
+              name="nomeFantasia"
+              placeholder="Nome fantasia"
+              registration={searchForm.register('nomeFantasia')}
+              error={searchForm.formState.errors.nomeFantasia}
             />
             <Input
               name="descricao"
@@ -190,7 +200,8 @@ export function EmpresaPage() {
               <tr>
                 <th className="px-6 py-4 text-sm font-semibold text-[#2B2C40]">Ações</th>
                 <th className="px-6 py-4 text-sm font-semibold text-[#2B2C40]">Código</th>
-                <th className="px-6 py-4 text-sm font-semibold text-[#2B2C40]">Razão Social</th>
+                <th className="px-6 py-4 text-sm font-semibold text-[#2B2C40]">Cnpj</th>
+                <th className="px-6 py-4 text-sm font-semibold text-[#2B2C40]">Nome Fantasia</th>
                 <th className="px-6 py-4 text-sm font-semibold text-[#2B2C40]">Descrição</th>
                 <th className="px-6 py-4 text-sm font-semibold text-[#2B2C40]">Data de Criação</th>
               </tr>
@@ -218,7 +229,8 @@ export function EmpresaPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4 align-top text-sm text-[#6C7287]">{empresa.id}</td>
-                  <td className="px-6 py-4 align-top text-sm text-[#2B2C40]">{empresa.razaoSocial}</td>
+                  <td className="px-6 py-4 align-top text-sm text-[#2B2C40]">{empresa.cnpj}</td>
+                  <td className="px-6 py-4 align-top text-sm text-[#2B2C40]">{empresa.nomeFantasia}</td>
                   <td className="px-6 py-4 align-top text-sm text-[#6C7287]">{empresa.descricao || '—'}</td>
                   <td className="px-6 py-4 align-top text-sm text-[#6C7287]">{formatDate(empresa.createdAt)}</td>
                 </tr>
@@ -313,7 +325,8 @@ export function EmpresaPage() {
 
 type EmpresaNode = {
   id: string;
-  razaoSocial: string;
+  cnpj: string;
+  nomeFantasia: string;
   descricao?: string;
   createdAt?: string;
 };
