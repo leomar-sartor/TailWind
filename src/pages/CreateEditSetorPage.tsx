@@ -18,8 +18,6 @@ type SetorFormValues = {
   descricao: string;
 };
 
-const PAGE_SIZE = 10;
-
 export function CreateEditSetorPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -41,7 +39,7 @@ export function CreateEditSetorPage() {
   // Query para empresas com paginação
   const { data: empresasData, loading: empresasLoading, fetchMore: fetchMoreEmpresas } = useQuery<{
     empresas: {
-      nodes: Array<{ id: string | number; razaoSocial: string }>;
+      nodes: Array<{ id: string | number; nomeFantasia: string }>;
       pageInfo: {
         hasNextPage: boolean;
         endCursor?: string;
@@ -52,7 +50,7 @@ export function CreateEditSetorPage() {
     {
       variables: {
         first: 10,
-        where: empresasSearchQuery ? { razaoSocial: { contains: empresasSearchQuery } } : null,
+        where: empresasSearchQuery ? { nomeFantasia: { contains: empresasSearchQuery } } : null,
       },
     }
   );
@@ -62,7 +60,7 @@ export function CreateEditSetorPage() {
     if (empresasData?.empresas?.nodes) {
       const items = empresasData.empresas.nodes.map((emp: any) => ({
         id: emp.id,
-        label: emp.razaoSocial,
+        label: emp.nomeFantasia,
       }));
       setEmpresasItems(items);
     }
@@ -79,13 +77,13 @@ export function CreateEditSetorPage() {
         variables: {
           first: 10,
           after: endCursor,
-          where: empresasSearchQuery ? { razaoSocial: { contains: empresasSearchQuery } } : null,
+          where: empresasSearchQuery ? { nomeFantasia: { contains: empresasSearchQuery } } : null,
         },
         updateQuery: (prev, { fetchMoreResult }) => {
           if (!fetchMoreResult) return prev;
           const newItems = fetchMoreResult.empresas.nodes.map((emp: any) => ({
             id: emp.id,
-            label: emp.razaoSocial,
+            label: emp.nomeFantasia,
           }));
           setEmpresasItems((prev) => [...prev, ...newItems]);
           return fetchMoreResult;
@@ -130,8 +128,8 @@ export function CreateEditSetorPage() {
         descricao: setor.descricao ?? '',
       });
       // Carregar empresa do setor se existir
-      if (setor.empresaSetores[0]?.empresa?.id) {
-        setSelectedEmpresaId(setor.empresaSetores[0].empresa.id);
+      if (setor.empresa?.id) {
+        setSelectedEmpresaId(setor.empresa.id);
       }
     }
   }, [setorData, setorForm, setorId]);
@@ -231,7 +229,6 @@ export function CreateEditSetorPage() {
                 name="descricao"
                 placeholder="Descrição do setor"
                 registration={setorForm.register('descricao', {
-                  required: 'Descrição obrigatória',
                 })}
                 error={setorForm.formState.errors.descricao}
               />

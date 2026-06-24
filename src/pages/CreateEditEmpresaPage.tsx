@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, type ChangeEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { useForm, SubmitHandler } from 'react-hook-form';
@@ -10,12 +10,26 @@ import {
   UPDATE_EMPRESA_MUTATION,
 } from '../graphql/mutations/empresa.mutations';
 import { GET_EMPRESA_BY_ID } from '../graphql/queries/empresa.queries';
+import { formatCnpj, stripCnpjMask } from '../utils/cnpj';
 
 type EmpresaFormValues = {
   id?: string;
   cnpj: string;
   nomeFantasia: string;
   descricao?: string;
+};
+
+type GetEmpresaByIdData = {
+  empresaById: {
+    id: string;
+    cnpj: string;
+    nomeFantasia: string;
+    descricao?: string | null;
+  } | null;
+};
+
+type GetEmpresaByIdVars = {
+  id: number;
 };
 
 export function CreateEditEmpresaPage() {
@@ -32,7 +46,7 @@ export function CreateEditEmpresaPage() {
   const [updateEmpresa, { loading: updating }] = useMutation(UPDATE_EMPRESA_MUTATION);
 
   // Buscar dados da empresa se for edição
-  const { data: empresaData, loading: loadingEmpresa, refetch } = useQuery(
+  const { data: empresaData, loading: loadingEmpresa, refetch } = useQuery<GetEmpresaByIdData, GetEmpresaByIdVars>(
     GET_EMPRESA_BY_ID,
     {
       variables: {
@@ -55,16 +69,21 @@ export function CreateEditEmpresaPage() {
       const empresa = empresaData.empresaById;
       empresaForm.reset({
         id: empresa.id,
-        cnpj: empresa.cnpj,
+        cnpj: formatCnpj(empresa.cnpj),
         nomeFantasia: empresa.nomeFantasia,
         descricao: empresa.descricao ?? '',
       });
     }
   }, [empresaData, empresaForm, empresaId]);
 
+  const handleCnpjChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCnpj(event.target.value);
+    empresaForm.setValue('cnpj', formatted, { shouldValidate: true, shouldDirty: true });
+  };
+
   const handleSubmit: SubmitHandler<EmpresaFormValues> = async (values) => {
     const payload = {
-      cnpj: values.cnpj.trim(),
+      cnpj: stripCnpjMask(values.cnpj.trim()),
       nomeFantasia: values.nomeFantasia.trim(),
       descricao: values.descricao?.trim(),
     };
@@ -142,6 +161,7 @@ export function CreateEditEmpresaPage() {
                 placeholder="CNPJ"
                 registration={empresaForm.register('cnpj', {
                   required: 'CNPJ obrigatório',
+                  onChange: handleCnpjChange,
                 })}
                 error={empresaForm.formState.errors.cnpj}
               />

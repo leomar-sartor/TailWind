@@ -38,11 +38,11 @@ export function StepSelecionarDestinatarios({ onNext, onBack }: Props) {
 
   // ── Setores da empresa selecionada ──────────────────────────────────────────
   const { data: setoresData, loading: loadingSetores } = useQuery<GetSetoresData>(GET_SETORES_BY_EMPRESA, {
-    // variables: { first: 100, where: empresaId ? { empresaId: { eq: Number(empresaId) } } : null },
-    variables: { first: 50, 
-      where: empresaId ? { empresaSetores: { all: {
-        empresaId: { eq: Number(empresaId) }       
-      } } } : null },
+    variables: { first: 100, where: empresaId ? { empresaId: { eq: Number(empresaId) } } : null },
+    // variables: { first: 50, 
+    //   where: empresaId ? { empresaSetores: { all: {
+    //     empresaId: { eq: Number(empresaId) }       
+    //   } } } : null },
     skip: !empresaId,
     fetchPolicy: 'cache-first',
   });
@@ -84,7 +84,7 @@ export function StepSelecionarDestinatarios({ onNext, onBack }: Props) {
                 <button
                   key={e.id}
                   type="button"
-                  onClick={() => selecionarEmpresa(String(e.id), e.razaoSocial)}
+                  onClick={() => selecionarEmpresa(String(e.id), e.nomeFantasia)}
                   className={[
                     'px-4 py-2 rounded-xl text-sm font-medium border transition-all',
                     isSelected
@@ -92,7 +92,7 @@ export function StepSelecionarDestinatarios({ onNext, onBack }: Props) {
                       : 'bg-white text-[#384551] border-[#E4E6E8] hover:border-[#696CFF] hover:bg-[#F4F6FA]',
                   ].join(' ')}
                 >
-                  {e.razaoSocial}
+                  {e.nomeFantasia}
                 </button>
               );
             })}

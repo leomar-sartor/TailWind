@@ -1,34 +1,34 @@
 
+# FEITOS
+
 1. Trocar Ícone e Título no Login - seguir recomendação e ferramenta do curso;
  - https://realfavicongenerator.net
+2. Não está autenticando, usei qualquer coisa e entra normalmente no sistema;
+3. Empresa e Setor
+ - Adicionado campo cnpj - Validação na API;
+ - Nome Fantasia como opcional;
+ - Descrição como opcional;
+ - Máscara de CNPJ númerico e alphanumérico ao criar, editar e listagem;
+4. Colaborador
+ - Obrigatório Empresa e Setor;
+ - Máscara de CPF ao criar, editar e listagem;
+5. Adicionado Ativo para Empresa/Setor/Colaborador/Usuario
+6. Deleção empresa, setor e colaborador - É necessário ir removendo um a um.
+    - Uma empresa não pode ser apagada se tiver vínculo com Setor ou Usuário;
+    - Um Setor não pode ser apagado se tiver vínculo com Colaborador;
+7. Filtros
+    - Busca considerando parte do texto;
+8. Exibição da Mensagem de erro - Exceptions - Na exclusão por exemplo - EMPRESA;
 
-Cassio
-- Não está autenticando, usei qualquer coisa e entra normalmente no sistema.
-- Cadastro Empresa:
-    - Melhorar filtros:
-        - Precisam ser dinamicos, sem a necessidade de clicar em um botão para executar.
-        - A regra de busca não me parece correta. ao buscar por razão social parcialmente não encontra. Isso dificulta quando o nome da empresa é grande.
-    - Nova empresa:
-        - Falta CNPJ
-        - Nome Fantasia (opcional)
-        - Os campos precisam ter Label, place holder não é label
-        - Campo descrição não deve ser obrigatório
+# A FAZER
 
-- Cadastro de Setor:
-    - Melhorar filtros:
-        - O mesmo se aplica aos filtros das empresas
-    - Novo Setor:
-        - Os campos precisam ter Label, place holder não é label      
+### Filtros
 
-- Cadastro de colaborador:
-    - Melhorar filtros:
-        - O mesmo se aplica aos filtros das empresas
-    - Novo Colaborador:
-        - É possível vincular o colaborador a um setor que não está atrelado a uma empresa
-        - Campo CPF sem máscara e validação
-        - Os campos precisam ter Label, place holder não é label
+- Precisam ser dinamicos, sem a necessidade de clicar em um botão para executar;
+- Novo componente input com label - diferente do de login;
 
-- GERAL:
-    - Ao apagar uma empresa o colaborador também é apagado
-    - Ao apagar uma empresa o setor NÃO é apagado
-    - Ao apagar um setor o colaborador também é apagado
+### Outros
+    - Adicionar Autorizations
+    - Normalizar dados para gravar - tudo minusculo ou maiusculo, isso ajuda nos filtros também
+    - Validação de CPF e CNPJ no FRONT
+    - Substituir o alert de exclusão por algo mais legal.

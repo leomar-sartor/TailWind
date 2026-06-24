@@ -9,16 +9,16 @@ export const GET_COLABORADORES = gql`
         cpf
         email
         ativo
-        setorId
-        empresa{
-			id
-			razaoSocial
-		}
-		setor{
-			id
-			nome
-		}
         empresaId
+        empresa{
+          id
+          nomeFantasia
+        }
+        setorId
+        setor{
+          id
+          nome
+        }
         createdAt
       }
       pageInfo {

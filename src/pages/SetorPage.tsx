@@ -17,28 +17,15 @@ type SearchFormValues = {
   empresaId: string;
 };
 
-type EmpresaNode = {
-  id: string;
-  razaoSocial: string;
-};
-
-type EmpresaSetorNode = {
-  empresa: EmpresaNode;
-};
-
-
 type SetorNode = {
   id: string;
   nome: string;
   descricao?: string;
   createdAt?: string;
-  // empresaSetores: EmpresaSetorNode[];
-  empresaSetores?: {
-    empresa?: {
-      id?: string;
-      razaoSocial?: string;
-    };
-  }[];
+  empresa?: {
+    id?: string;
+    nomeFantasia?: string;
+  };
 };
 
 const PAGE_SIZE = 10;
@@ -47,11 +34,11 @@ function buildWhere(values: SearchFormValues) {
   const where: Record<string, any> = {};
 
   if (values.nome?.trim()) {
-    where.nome = { eq: values.nome.trim() };
+    where.nome = {contains: values.nome.trim() };
   }
 
   if (values.descricao?.trim()) {
-    where.descricao = { eq: values.descricao.trim() };
+    where.descricao = { contains: values.descricao.trim() };
   }
 
   if (values.empresaId?.trim()) {
@@ -77,7 +64,7 @@ export function SetorPage() {
   // Query para empresas com paginação
   const { data: empresasData, loading: empresasLoading, fetchMore: fetchMoreEmpresas } = useQuery<{
     empresas: {
-      nodes: Array<{ id: string | number; razaoSocial: string }>;
+      nodes: Array<{ id: string | number; nomeFantasia: string }>;
       pageInfo: {
         hasNextPage: boolean;
         endCursor?: string;
@@ -88,7 +75,7 @@ export function SetorPage() {
     {
       variables: {
         first: 10,
-        where: empresasSearchQuery ? { razaoSocial: { contains: empresasSearchQuery } } : null,
+        where: empresasSearchQuery ? { nomeFantasia: { contains: empresasSearchQuery } } : null,
       },
     }
   );
@@ -98,7 +85,7 @@ export function SetorPage() {
     if (empresasData?.empresas?.nodes) {
       const items = empresasData.empresas.nodes.map((emp: any) => ({
         id: emp.id,
-        label: emp.razaoSocial,
+        label: emp.nomeFantasia,
       }));
       setEmpresasItems(items);
     }
@@ -120,13 +107,13 @@ export function SetorPage() {
         variables: {
           first: 10,
           after: endCursor,
-          where: empresasSearchQuery ? { razaoSocial: { contains: empresasSearchQuery } } : null,
+          where: empresasSearchQuery ? { nomeFantasia: { contains: empresasSearchQuery } } : null,
         },
         updateQuery: (prev, { fetchMoreResult }) => {
           if (!fetchMoreResult) return prev;
           const newItems = fetchMoreResult.empresas.nodes.map((emp: any) => ({
             id: emp.id,
-            label: emp.razaoSocial,
+            label: emp.nomeFantasia,
           }));
           setEmpresasItems((prev) => [...prev, ...newItems]);
           return fetchMoreResult;
@@ -325,7 +312,7 @@ export function SetorPage() {
                   <td className="px-6 py-4 align-top text-sm text-[#6C7287]">{setor.id}</td>
                   <td className="px-6 py-4 align-top text-sm text-[#2B2C40]">{setor.nome}</td>
                   <td className="px-6 py-4 align-top text-sm text-[#6C7287]">{setor.descricao || '—'}</td>
-                  <td className="px-6 py-4 align-top text-sm text-[#2B2C40]">{setor.empresaSetores[0]?.empresa?.razaoSocial || '—'}</td>
+                  <td className="px-6 py-4 align-top text-sm text-[#2B2C40]">{setor.empresa?.nomeFantasia || '—'}</td>
                 </tr>
               ))}
               {!setores.length && (

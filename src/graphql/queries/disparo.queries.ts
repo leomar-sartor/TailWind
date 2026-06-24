@@ -27,7 +27,7 @@ export const GET_EMPRESAS_DISPARO = gql`
     empresas(first: $first, after: $after, where: $where) {
       nodes {
         id
-        razaoSocial
+        nomeFantasia
       }
       pageInfo {
         hasNextPage

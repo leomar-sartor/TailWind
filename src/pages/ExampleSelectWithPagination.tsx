@@ -15,7 +15,7 @@ export function SelectEmpresaComPaginacao() {
     GET_EMPRESAS_PAGINATED,
     {
       variables: {
-        where: searchQuery ? { razaoSocial: { contains: searchQuery } } : null,
+        where: searchQuery ? { nomeFantasia: { contains: searchQuery } } : null,
         first: 10,
       },
     }
@@ -30,7 +30,7 @@ export function SelectEmpresaComPaginacao() {
     if (initialData?.empresas?.nodes && empresasItems.length === 0) {
       const items = initialData.empresas.nodes.map((emp: any) => ({
         id: emp.id,
-        label: emp.razaoSocial,
+        label: emp.nomeFantasia,
       }));
       setEmpresasItems(items);
       return true;
@@ -52,7 +52,7 @@ export function SelectEmpresaComPaginacao() {
     try {
       await fetchMore({
         variables: {
-          where: searchQuery ? { razaoSocial: { contains: searchQuery } } : null,
+          where: searchQuery ? { nomeFantasia: { contains: searchQuery } } : null,
           first: 10,
           after: nextCursor,
         },
@@ -61,7 +61,7 @@ export function SelectEmpresaComPaginacao() {
 
           const newItems = fetchMoreResult.empresas.nodes.map((emp: any) => ({
             id: emp.id,
-            label: emp.razaoSocial,
+            label: emp.nomeFantasia,
           }));
 
           setEmpresasItems((prev) => [...prev, ...newItems]);

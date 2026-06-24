@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ChangeEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { useForm, SubmitHandler } from 'react-hook-form';
@@ -9,6 +9,7 @@ import { SelectWithSearch, SelectItem } from '../components/Select/SelectWithSea
 import { GET_COLABORADOR_BY_ID } from '../graphql/queries/colaborador.queries';
 import { GET_EMPRESAS_PAGINATED, GET_SETORS } from '../graphql/queries/setor.queries';
 import { CREATE_COLABORADOR_MUTATION, UPDATE_COLABORADOR_MUTATION } from '../graphql/mutations/colaborador.mutations';
+import { formatCpf, stripCpfMask } from '../utils/cpf';
 
 type ColaboradorFormValues = {
   id: string;
@@ -42,7 +43,7 @@ export function CreateEditColaboradorPage() {
   // Query para empresas com paginação
   const { data: empresasData, loading: empresasLoading, fetchMore: fetchMoreEmpresas } = useQuery<{
     empresas: {
-      nodes: Array<{ id: string | number; razaoSocial: string }>;
+      nodes: Array<{ id: string | number; nomeFantasia: string }>;
       pageInfo: {
         hasNextPage: boolean;
         endCursor?: string;
@@ -53,7 +54,7 @@ export function CreateEditColaboradorPage() {
     {
       variables: {
         first: 10,
-        where: empresasSearchQuery ? { razaoSocial: { contains: empresasSearchQuery } } : null,
+        where: empresasSearchQuery ? { nomeFantasia: { contains: empresasSearchQuery } } : null,
       },
     }
   );
@@ -102,7 +103,7 @@ export function CreateEditColaboradorPage() {
     if (empresasData?.empresas?.nodes) {
       const items = empresasData.empresas.nodes.map((emp: any) => ({
         id: emp.id,
-        label: emp.razaoSocial,
+        label: emp.nomeFantasia,
       }));
       setEmpresasItems(items);
     }
@@ -138,13 +139,13 @@ export function CreateEditColaboradorPage() {
         variables: {
           first: 10,
           after: endCursor,
-          where: empresasSearchQuery ? { razaoSocial: { contains: empresasSearchQuery } } : null,
+          where: empresasSearchQuery ? { nomeFantasia: { contains: empresasSearchQuery } } : null,
         },
         updateQuery: (prev, { fetchMoreResult }) => {
           if (!fetchMoreResult) return prev;
           const newItems = fetchMoreResult.empresas.nodes.map((emp: any) => ({
             id: emp.id,
-            label: emp.razaoSocial,
+            label: emp.nomeFantasia,
           }));
           setEmpresasItems((prev) => [...prev, ...newItems]);
           return fetchMoreResult;
@@ -195,13 +196,18 @@ export function CreateEditColaboradorPage() {
     setSelectedSetorId(undefined);
   };
 
+  const handleCpfChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCpf(event.target.value);
+    colaboradorForm.setValue('cpf', formatted, { shouldValidate: true, shouldDirty: true });
+  };
+
   useEffect(() => {
     if (colaboradorData?.colaboradorById) {
       const colaborador = colaboradorData.colaboradorById;
       colaboradorForm.reset({
         id: colaborador.id,
         nome: colaborador.nome,
-        cpf: colaborador.cpf,
+        cpf: formatCpf(colaborador.cpf),
         email: colaborador.email,
         empresaId: String(colaborador.empresaId),
         setorId: String(colaborador.setorId),
@@ -215,7 +221,7 @@ export function CreateEditColaboradorPage() {
     try {
       const input = {
         nome: values.nome,
-        cpf: values.cpf,
+        cpf: stripCpfMask(values.cpf),
         email: values.email,
         empresaId: Number(values.empresaId),
         setorId: Number(values.setorId),
@@ -271,6 +277,7 @@ export function CreateEditColaboradorPage() {
               placeholder="CPF"
               registration={colaboradorForm.register('cpf', {
                 required: 'CPF obrigatório',
+                onChange: handleCpfChange,
               })}
               error={colaboradorForm.formState.errors.cpf}
             />

@@ -53,7 +53,7 @@ export function SetorPageComSelect() {
   const { data, loading, fetchMore } = useQuery(GET_EMPRESAS_PAGINATED, {
     variables: {
       first: 10,
-      where: searchQuery ? { razaoSocial: { contains: searchQuery } } : null,
+      where: searchQuery ? { nomeFantasia: { contains: searchQuery } } : null,
     },
   });
 
@@ -63,7 +63,7 @@ export function SetorPageComSelect() {
       setItems(
         data.empresas.nodes.map((emp) => ({
           id: emp.id,
-          label: emp.razaoSocial,
+          label: emp.nomeFantasia,
         }))
       );
     }
@@ -79,13 +79,13 @@ export function SetorPageComSelect() {
       variables: {
         first: 10,
         after: endCursor,
-        where: searchQuery ? { razaoSocial: { contains: searchQuery } } : null,
+        where: searchQuery ? { nomeFantasia: { contains: searchQuery } } : null,
       },
       updateQuery: (prev, { fetchMoreResult }) => {
         if (!fetchMoreResult) return prev;
         const newItems = fetchMoreResult.empresas.nodes.map((emp) => ({
           id: emp.id,
-          label: emp.razaoSocial,
+          label: emp.nomeFantasia,
         }));
         setItems((prev) => [...prev, ...newItems]);
         return fetchMoreResult;

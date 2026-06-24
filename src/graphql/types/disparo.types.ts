@@ -10,7 +10,7 @@ export interface PesquisaNode {
 
 export interface EmpresaNode {
   id: number;
-  razaoSocial: string;
+  nomeFantasia: string;
 }
 
 export interface SetorNode {

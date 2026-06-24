@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, type ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { useForm, SubmitHandler } from 'react-hook-form';
@@ -10,6 +10,7 @@ import { SelectWithSearch, SelectItem } from '../components/Select/SelectWithSea
 import { GET_COLABORADORES } from '../graphql/queries/colaborador.queries';
 import { GET_EMPRESAS_PAGINATED, GET_SETORS } from '../graphql/queries/setor.queries';
 import { REMOVE_COLABORADOR_MUTATION } from '../graphql/mutations/colaborador.mutations';
+import { formatCpfForDisplay, formatCpf, stripCpfMask } from '../utils/cpf';
 
 type SearchFormValues = {
   nome: string;
@@ -30,7 +31,7 @@ type ColaboradorNode = {
   empresaId: string;
   empresa?: {
     id?: string;
-    razaoSocial?: string;
+    nomeFantasia?: string;
   };
   setor?: {
     id?: string;
@@ -45,15 +46,15 @@ function buildWhere(values: SearchFormValues) {
   const where: Record<string, any> = {};
 
   if (values.nome?.trim()) {
-    where.nome = { eq: values.nome.trim() };
+    where.nome = { contains: values.nome.trim() };
   }
 
   if (values.cpf?.trim()) {
-    where.cpf = { eq: values.cpf.trim() };
+    where.cpf = { contains: stripCpfMask(values.cpf.trim()) };
   }
 
   if (values.email?.trim()) {
-    where.email = { eq: values.email.trim() };
+    where.email = { contains: values.email.trim() };
   }
 
   if (values.empresaId?.trim()) {
@@ -92,7 +93,7 @@ export function ColaboradorPage() {
   // Query para empresas com paginação
   const { data: empresasData, loading: empresasLoading, fetchMore: fetchMoreEmpresas } = useQuery<{
     empresas: {
-      nodes: Array<{ id: string | number; razaoSocial: string }>;
+      nodes: Array<{ id: string | number; nomeFantasia: string }>;
       pageInfo: {
         hasNextPage: boolean;
         endCursor?: string;
@@ -103,7 +104,7 @@ export function ColaboradorPage() {
     {
       variables: {
         first: 10,
-        where: empresasSearchQuery ? { razaoSocial: { contains: empresasSearchQuery } } : null,
+        where: empresasSearchQuery ? { nomeFantasia: { contains: empresasSearchQuery } } : null,
       },
     }
   );
@@ -132,7 +133,7 @@ export function ColaboradorPage() {
     if (empresasData?.empresas?.nodes) {
       const items = empresasData.empresas.nodes.map((emp: any) => ({
         id: emp.id,
-        label: emp.razaoSocial,
+        label: emp.nomeFantasia,
       }));
       setEmpresasItems(items);
     }
@@ -168,13 +169,13 @@ export function ColaboradorPage() {
         variables: {
           first: 10,
           after: endCursor,
-          where: empresasSearchQuery ? { razaoSocial: { contains: empresasSearchQuery } } : null,
+          where: empresasSearchQuery ? { nomeFantasia: { contains: empresasSearchQuery } } : null,
         },
         updateQuery: (prev, { fetchMoreResult }) => {
           if (!fetchMoreResult) return prev;
           const newItems = fetchMoreResult.empresas.nodes.map((emp: any) => ({
             id: emp.id,
-            label: emp.razaoSocial,
+            label: emp.nomeFantasia,
           }));
           setEmpresasItems((prev) => [...prev, ...newItems]);
           return fetchMoreResult;
@@ -223,6 +224,11 @@ export function ColaboradorPage() {
     setSetoresSearchQuery(query);
     setSetoresItems([]);
     setSelectedSetorId(undefined);
+  };
+
+  const handleSearchCpfChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCpf(event.target.value);
+    searchForm.setValue('cpf', formatted, { shouldDirty: true, shouldValidate: true });
   };
 
   const variables = useMemo(
@@ -343,7 +349,9 @@ export function ColaboradorPage() {
             <Input
               name="cpf"
               placeholder="CPF"
-              registration={searchForm.register('cpf')}
+              registration={searchForm.register('cpf', {
+                onChange: handleSearchCpfChange,
+              })}
               error={searchForm.formState.errors.cpf}
             />
             <Input
@@ -435,10 +443,10 @@ export function ColaboradorPage() {
                       </button>
                     </div>
                   </td>
-                  <td className="px-6 py-4 align-top text-sm text-[#6C7287]">{colaborador.cpf}</td>
+                  <td className="px-6 py-4 align-top text-sm text-[#6C7287]">{formatCpfForDisplay(colaborador.cpf)}</td>
                   <td className="px-6 py-4 align-top text-sm text-[#2B2C40]">{colaborador.nome}</td>
                   <td className="px-6 py-4 align-top text-sm text-[#6C7287]">{colaborador.email}</td>
-                  <td className="px-6 py-4 align-top text-sm text-[#2B2C40]">{colaborador.empresa?.razaoSocial || '—'}</td>
+                  <td className="px-6 py-4 align-top text-sm text-[#2B2C40]">{colaborador.empresa?.nomeFantasia || '—'}</td>
                   <td className="px-6 py-4 align-top text-sm text-[#2B2C40]">{colaborador.setor?.nome || '—'}</td>
                   <td className="px-6 py-4 align-top text-sm text-[#2B2C40]">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colaborador.ativo

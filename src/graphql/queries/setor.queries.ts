@@ -8,12 +8,10 @@ export const GET_SETORS = gql`
         nome
         descricao
         createdAt
-        empresaSetores {
-          empresa{
-						id
-						razaoSocial						
-					}
-        }
+        empresa {
+					id
+					nomeFantasia
+				}
       }
       pageInfo {
         hasNextPage
@@ -33,11 +31,9 @@ export const GET_SETOR_BY_ID = gql`
       nome
       descricao
       createdAt
-      empresaSetores {
-        empresa{
-						id
-						razaoSocial						
-				}
+      empresa{
+        id
+        nomeFantasia
       }
     }
   }
@@ -48,7 +44,7 @@ export const GET_EMPRESAS = gql`
     empresas {
       nodes {
         id
-        razaoSocial
+        nomeFantasia
       }
       pageInfo {
         hasNextPage
@@ -63,7 +59,7 @@ export const GET_EMPRESAS_PAGINATED = gql`
     empresas(where: $where, first: $first, after: $after) {
       nodes {
         id
-        razaoSocial
+        nomeFantasia
       }
       pageInfo {
         hasNextPage

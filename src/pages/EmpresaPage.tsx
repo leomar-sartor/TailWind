@@ -1,14 +1,38 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { Edit3, PlusCircle, Search, Trash2 } from 'lucide-react';
+
+function getGraphQLErrorMessage(error: unknown): string | null {
+  if (!error) return null;
+
+  const err = error as any;
+  const possibleErrors = err.errors ?? err.graphQLErrors;
+
+  if (Array.isArray(possibleErrors) && possibleErrors.length > 0) {
+    const firstError = possibleErrors[0];
+    return (
+      firstError?.extensions?.message ??
+      firstError?.message ??
+      null
+    );
+  }
+
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return null;
+}
+
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { GET_EMPRESAS } from '../graphql/queries/empresa.queries';
 import {
   REMOVE_EMPRESA_MUTATION,
 } from '../graphql/mutations/empresa.mutations';
+import { formatCnpj, stripCnpjMask } from '../utils/cnpj';
 
 type SearchFormValues = {
   cnpj: string;
@@ -18,11 +42,17 @@ type SearchFormValues = {
 
 const PAGE_SIZE = 10;
 
+type EmpresaWhereInput = {
+  cnpj?: { contains: string };
+  nomeFantasia?: { contains: string };
+  descricao?: { contains: string };
+};
+
 function buildWhere(values: SearchFormValues) {
-  const where: Record<string, any> = {};
+  const where: EmpresaWhereInput = {};
 
   if (values.cnpj?.trim()) {
-    where.cnpj = { contains: values.cnpj.trim() };
+    where.cnpj = { contains: stripCnpjMask(values.cnpj.trim()) };
   }
 
   if (values.nomeFantasia?.trim()) {
@@ -53,6 +83,11 @@ export function EmpresaPage() {
 
   const searchForm = useForm<SearchFormValues>({ defaultValues: currentFilters });
 
+  const handleSearchCnpjChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCnpj(event.target.value);
+    searchForm.setValue('cnpj', formatted, { shouldDirty: true, shouldValidate: true });
+  };
+
   const variables = useMemo(
     () => ({
       where: buildWhere(currentFilters),
@@ -79,6 +114,7 @@ export function EmpresaPage() {
   });
 
   const [removeEmpresa, { loading: removing }] = useMutation(REMOVE_EMPRESA_MUTATION);
+  const [removeErrorMessage, setRemoveErrorMessage] = useState<string | null>(null);
 
   const empresas: EmpresaNode[] = data?.empresas?.nodes ?? [];
   const pageInfo = data?.empresas?.pageInfo;
@@ -112,10 +148,24 @@ export function EmpresaPage() {
     const confirmed = window.confirm('Deseja excluir esta empresa?');
     if (!confirmed) return;
 
+    setRemoveErrorMessage(null);
+
     try {
-      await removeEmpresa({ variables: { id: Number(id) } });
+      const result = await removeEmpresa({ variables: { id: Number(id) } });
+      const mutationErrorMessage = getGraphQLErrorMessage(result.error);
+
+      if (mutationErrorMessage) {
+        setRemoveErrorMessage(mutationErrorMessage);
+        return;
+      }
+
       await refetch(variables);
-    } catch (err) {
+    } catch (err: unknown) {
+      const message =
+        getGraphQLErrorMessage(err) ??
+        'Não é possível remover a empresa. Tente novamente.';
+
+      setRemoveErrorMessage(message);
       console.error(err);
     }
   };
@@ -163,7 +213,9 @@ export function EmpresaPage() {
             <Input
               name="cnpj"
               placeholder="CNPJ"
-              registration={searchForm.register('cnpj')}
+              registration={searchForm.register('cnpj', {
+                onChange: handleSearchCnpjChange,
+              })}
               error={searchForm.formState.errors.cnpj}
             />
             <Input
@@ -229,7 +281,7 @@ export function EmpresaPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4 align-top text-sm text-[#6C7287]">{empresa.id}</td>
-                  <td className="px-6 py-4 align-top text-sm text-[#2B2C40]">{empresa.cnpj}</td>
+                  <td className="px-6 py-4 align-top text-sm text-[#2B2C40]">{formatCnpj(empresa.cnpj)}</td>
                   <td className="px-6 py-4 align-top text-sm text-[#2B2C40]">{empresa.nomeFantasia}</td>
                   <td className="px-6 py-4 align-top text-sm text-[#6C7287]">{empresa.descricao || '—'}</td>
                   <td className="px-6 py-4 align-top text-sm text-[#6C7287]">{formatDate(empresa.createdAt)}</td>
@@ -313,6 +365,12 @@ export function EmpresaPage() {
           </div>
         </div>
       </section>
+
+      {removeErrorMessage && (
+        <div className="rounded-3xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+          {removeErrorMessage}
+        </div>
+      )}
 
       {error && (
         <div className="rounded-3xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
