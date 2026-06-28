@@ -19,16 +19,18 @@
 7. Filtros
     - Busca considerando parte do texto;
 8. Exibição da Mensagem de erro - Exceptions - Na exclusão por exemplo - EMPRESA;
+9. Normalização da API para buscas com Case Insensitive;
+10. Filtros dinamicos;
+11. Unique Key para Cnpj e Cpf no banco;
+12. Adicionado ToastFy para Exclusão;
+13. Ajustado Light e Dark Theme - ainda tem coisa a melhorar;
 
 # A FAZER
 
 ### Filtros
 
-- Precisam ser dinamicos, sem a necessidade de clicar em um botão para executar;
 - Novo componente input com label - diferente do de login;
 
 ### Outros
     - Adicionar Autorizations
-    - Normalizar dados para gravar - tudo minusculo ou maiusculo, isso ajuda nos filtros também
-    - Validação de CPF e CNPJ no FRONT
-    - Substituir o alert de exclusão por algo mais legal.
+    - Validação de CPF e CNPJ no FRONT - Validação única

@@ -1,69 +1,38 @@
-import { useMemo, useState, type ChangeEvent } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { useForm, SubmitHandler } from 'react-hook-form';
-import { Edit3, PlusCircle, Search, Trash2 } from 'lucide-react';
-
-function getGraphQLErrorMessage(error: unknown): string | null {
-  if (!error) return null;
-
-  const err = error as any;
-  const possibleErrors = err.errors ?? err.graphQLErrors;
-
-  if (Array.isArray(possibleErrors) && possibleErrors.length > 0) {
-    const firstError = possibleErrors[0];
-    return (
-      firstError?.extensions?.message ??
-      firstError?.message ??
-      null
-    );
-  }
-
-  if (error instanceof Error && error.message) {
-    return error.message;
-  }
-
-  return null;
-}
+import { Edit3, PlusCircle, Trash2 } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 import { Button } from '../components/Button';
-import { Input } from '../components/Input';
 import { GET_EMPRESAS } from '../graphql/queries/empresa.queries';
 import {
   REMOVE_EMPRESA_MUTATION,
 } from '../graphql/mutations/empresa.mutations';
 import { formatCnpj, stripCnpjMask } from '../utils/cnpj';
-
-type SearchFormValues = {
-  cnpj: string;
-  nomeFantasia: string;
-  descricao: string;
-};
+import { confirmDeletion, getGraphQLErrorMessage } from '../utils/confirmToast';
 
 const PAGE_SIZE = 10;
 
-type EmpresaWhereInput = {
-  cnpj?: { contains: string };
-  nomeFantasia?: { contains: string };
-  descricao?: { contains: string };
-};
+function buildWhere(filter: string) {
+  const normalized = filter.trim();
+  if (!normalized) return null;
 
-function buildWhere(values: SearchFormValues) {
-  const where: EmpresaWhereInput = {};
+  const stripped = stripCnpjMask(normalized);
+  const or: any[] = [
+    { nomeFantasia: { contains: normalized } },
+    { descricao: { contains: normalized } },
+  ];
 
-  if (values.cnpj?.trim()) {
-    where.cnpj = { contains: stripCnpjMask(values.cnpj.trim()) };
+  if (stripped) {
+    or.unshift({ cnpj: { contains: stripped } });
   }
 
-  if (values.nomeFantasia?.trim()) {
-    where.nomeFantasia = { contains: values.nomeFantasia.trim() };
+  if (/^\d+$/.test(normalized)) {
+    or.unshift({ id: { eq: Number(normalized) } });
   }
 
-  if (values.descricao?.trim()) {
-    where.descricao = { contains: values.descricao.trim() };
-  }
-
-  return Object.keys(where).length ? where : null;
+  return { or };
 }
 
 function formatDate(value?: string) {
@@ -77,24 +46,28 @@ function formatDate(value?: string) {
 
 export function EmpresaPage() {
   const navigate = useNavigate();
-  const [currentFilters, setCurrentFilters] = useState<SearchFormValues>({ cnpj: '', nomeFantasia: '', descricao: '' });
   const [cursorStack, setCursorStack] = useState<Array<string | null>>([null]);
   const [currentCursorIndex, setCurrentCursorIndex] = useState(0);
+  const [globalFilter, setGlobalFilter] = useState('');
+  const [debouncedGlobalFilter, setDebouncedGlobalFilter] = useState('');
 
-  const searchForm = useForm<SearchFormValues>({ defaultValues: currentFilters });
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedGlobalFilter(globalFilter), 300);
+    return () => clearTimeout(handler);
+  }, [globalFilter]);
 
-  const handleSearchCnpjChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatCnpj(event.target.value);
-    searchForm.setValue('cnpj', formatted, { shouldDirty: true, shouldValidate: true });
-  };
+  useEffect(() => {
+    setCursorStack([null]);
+    setCurrentCursorIndex(0);
+  }, [debouncedGlobalFilter]);
 
   const variables = useMemo(
     () => ({
-      where: buildWhere(currentFilters),
+      where: buildWhere(debouncedGlobalFilter),
       first: PAGE_SIZE,
       after: cursorStack[currentCursorIndex],
     }),
-    [currentFilters, cursorStack, currentCursorIndex],
+    [debouncedGlobalFilter, cursorStack, currentCursorIndex],
   );
 
   const { data, loading, error, refetch } = useQuery<{
@@ -123,18 +96,6 @@ export function EmpresaPage() {
   const hasPreviousPage = currentCursorIndex > 0;
   const hasNextPage = !!pageInfo?.hasNextPage;
 
-  const handleSearch: SubmitHandler<SearchFormValues> = async (values) => {
-    setCurrentFilters(values);
-    setCursorStack([null]);
-    setCurrentCursorIndex(0);
-  };
-
-  const handleClearSearch = () => {
-    searchForm.reset({ cnpj: '', nomeFantasia: '', descricao: '' });
-    setCurrentFilters({ cnpj: '', nomeFantasia: '', descricao: '' });
-    setCursorStack([null]);
-    setCurrentCursorIndex(0);
-  };
 
   const handleStartCreate = () => {
     navigate('/dashboard/empresa/create');
@@ -145,29 +106,36 @@ export function EmpresaPage() {
   };
 
   const handleRemove = async (id: string) => {
-    const confirmed = window.confirm('Deseja excluir esta empresa?');
-    if (!confirmed) return;
-
     setRemoveErrorMessage(null);
 
-    try {
-      const result = await removeEmpresa({ variables: { id: Number(id) } });
-      const mutationErrorMessage = getGraphQLErrorMessage(result.error);
+    confirmDeletion({
+      title: 'Excluir empresa',
+      message: 'Esta ação não pode ser desfeita. Deseja continuar?',
+      confirmLabel: 'Sim, excluir',
+      onConfirm: async () => {
+        try {
+          const result = await removeEmpresa({ variables: { id: Number(id) } });
+          const mutationErrorMessage = getGraphQLErrorMessage((result as any)?.error ?? (result as any)?.errors);
 
-      if (mutationErrorMessage) {
-        setRemoveErrorMessage(mutationErrorMessage);
-        return;
-      }
+          if (mutationErrorMessage) {
+            setRemoveErrorMessage(mutationErrorMessage);
+            toast.error(mutationErrorMessage);
+            return;
+          }
 
-      await refetch(variables);
-    } catch (err: unknown) {
-      const message =
-        getGraphQLErrorMessage(err) ??
-        'Não é possível remover a empresa. Tente novamente.';
+          await refetch(variables);
+          toast.success('Empresa excluída com sucesso!');
+        } catch (err: unknown) {
+          const message =
+            getGraphQLErrorMessage(err) ??
+            'Não é possível remover a empresa. Tente novamente.';
 
-      setRemoveErrorMessage(message);
-      console.error(err);
-    }
+          setRemoveErrorMessage(message);
+          toast.error(message);
+          console.error(err);
+        }
+      },
+    });
   };
 
   const handlePreviousPage = () => {
@@ -204,43 +172,18 @@ export function EmpresaPage() {
       </div>
 
       <section className="dashboard-card rounded-[28px] border p-6 shadow-xl">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+        <div className="flex items-center justify-between gap-4">
           <div>
-            <h3 className="text-lg font-semibold text-[#2B2C40]">Buscar empresas</h3>
-            <p className="mt-1 text-sm dashboard-text-muted">Filtre a lista por razão social ou descrição.</p>
+            <h3 className="text-lg font-semibold text-[#2B2C40]">Buscar</h3>
+            <p className="mt-1 text-sm dashboard-text-muted">Pesquise em todas as colunas.</p>
           </div>
-          <div className="grid w-full gap-4 sm:grid-cols-3">
-            <Input
-              name="cnpj"
-              placeholder="CNPJ"
-              registration={searchForm.register('cnpj', {
-                onChange: handleSearchCnpjChange,
-              })}
-              error={searchForm.formState.errors.cnpj}
+          <div className="w-full sm:w-80">
+            <input
+              value={globalFilter}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              placeholder="Pesquisar..."
+              className="w-full rounded-3xl border border-slate-200 px-4 py-2"
             />
-            <Input
-              name="nomeFantasia"
-              placeholder="Nome fantasia"
-              registration={searchForm.register('nomeFantasia')}
-              error={searchForm.formState.errors.nomeFantasia}
-            />
-            <Input
-              name="descricao"
-              placeholder="Descrição"
-              registration={searchForm.register('descricao')}
-              error={searchForm.formState.errors.descricao}
-            />
-          </div>
-        </div>
-
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-between">
-          <div className="flex flex-1 gap-3 flex-wrap justify-center">
-            <Button type="button" onClick={handleClearSearch} className="rounded-3xl border border-slate-200 bg-white text-[#2B2C40] hover:bg-[#F4F6FA] px-5 py-3">
-              Limpar filtros
-            </Button>
-            <Button type="button" onClick={searchForm.handleSubmit(handleSearch)} className="rounded-3xl px-5 py-3">
-              <Search className="h-4 w-4" /> Buscar
-            </Button>
           </div>
         </div>
       </section>
@@ -311,7 +254,7 @@ export function EmpresaPage() {
             >
               «
             </button>
-            
+
             <button
               type="button"
               onClick={handlePreviousPage}
@@ -320,7 +263,7 @@ export function EmpresaPage() {
             >
               ‹ Anterior
             </button>
-            
+
             {Array.from({ length: Math.ceil(totalCount / PAGE_SIZE) }, (_, i) => i + 1).map((pageNum) => (
               <button
                 key={pageNum}
@@ -341,7 +284,7 @@ export function EmpresaPage() {
                 {pageNum}
               </button>
             ))}
-            
+
             <button
               type="button"
               onClick={handleNextPage}

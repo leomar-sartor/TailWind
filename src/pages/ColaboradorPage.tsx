@@ -1,25 +1,13 @@
-import { useMemo, useState, useEffect, type ChangeEvent } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { useForm, SubmitHandler } from 'react-hook-form';
-import { Edit3, PlusCircle, Search, Trash2 } from 'lucide-react';
+import { Edit3, PlusCircle, Trash2 } from 'lucide-react';
+import { toast } from 'react-toastify';
 import { Button } from '../components/Button';
-import { Input } from '../components/Input';
-import { Select } from '../components/Select';
-import { SelectWithSearch, SelectItem } from '../components/Select/SelectWithSearch';
 import { GET_COLABORADORES } from '../graphql/queries/colaborador.queries';
-import { GET_EMPRESAS_PAGINATED, GET_SETORS } from '../graphql/queries/setor.queries';
 import { REMOVE_COLABORADOR_MUTATION } from '../graphql/mutations/colaborador.mutations';
-import { formatCpfForDisplay, formatCpf, stripCpfMask } from '../utils/cpf';
-
-type SearchFormValues = {
-  nome: string;
-  cpf: string;
-  email: string;
-  empresaId: string;
-  setorId: string;
-  ativo: string;
-};
+import { formatCpfForDisplay, stripCpfMask } from '../utils/cpf';
+import { confirmDeletion, getGraphQLErrorMessage } from '../utils/confirmToast';
 
 type ColaboradorNode = {
   id: string;
@@ -42,202 +30,53 @@ type ColaboradorNode = {
 
 const PAGE_SIZE = 10;
 
-function buildWhere(values: SearchFormValues) {
-  const where: Record<string, any> = {};
+function buildWhere(filter: string) {
+  const normalized = filter.trim();
+  if (!normalized) return null;
 
-  if (values.nome?.trim()) {
-    where.nome = { contains: values.nome.trim() };
+  const strippedCpf = stripCpfMask(normalized);
+  const or: any[] = [
+    { nome: { contains: normalized } },
+    { email: { contains: normalized } },
+    { empresa: { nomeFantasia: { contains: normalized } } },
+    { setor: { nome: { contains: normalized } } },
+  ];
+
+  if (strippedCpf) {
+    or.unshift({ cpf: { contains: strippedCpf } });
   }
 
-  if (values.cpf?.trim()) {
-    where.cpf = { contains: stripCpfMask(values.cpf.trim()) };
+  if (/^\d+$/.test(normalized)) {
+    or.unshift({ id: { eq: Number(normalized) } });
   }
 
-  if (values.email?.trim()) {
-    where.email = { contains: values.email.trim() };
-  }
-
-  if (values.empresaId?.trim()) {
-    where.empresaId = { eq: Number(values.empresaId) };
-  }
-
-  if (values.setorId?.trim()) {
-    where.setorId = { eq: Number(values.setorId) };
-  }
-
-  if (values.ativo?.trim()) {
-    where.ativo = { eq: values.ativo === 'true' };
-  }
-
-  return Object.keys(where).length ? where : null;
+  return { or };
 }
 
 export function ColaboradorPage() {
   const navigate = useNavigate();
-  const [currentFilters, setCurrentFilters] = useState<SearchFormValues>({ nome: '', cpf: '', email: '', empresaId: '', setorId: '', ativo: '' });
   const [cursorStack, setCursorStack] = useState<Array<string | null>>([null]);
   const [currentCursorIndex, setCurrentCursorIndex] = useState(0);
-
-  // Estados para SelectWithSearch de empresas
-  const [empresasItems, setEmpresasItems] = useState<SelectItem[]>([]);
-  const [empresasSearchQuery, setEmpresasSearchQuery] = useState('');
-  const [selectedEmpresaId, setSelectedEmpresaId] = useState<string | number>();
-
-  // Estados para SelectWithSearch de setores
-  const [setoresItems, setSetoresItems] = useState<SelectItem[]>([]);
-  const [setoresSearchQuery, setSetoresSearchQuery] = useState('');
-  const [selectedSetorId, setSelectedSetorId] = useState<string | number>();
-
-  const searchForm = useForm<SearchFormValues>({ defaultValues: currentFilters });
-
-  // Query para empresas com paginação
-  const { data: empresasData, loading: empresasLoading, fetchMore: fetchMoreEmpresas } = useQuery<{
-    empresas: {
-      nodes: Array<{ id: string | number; nomeFantasia: string }>;
-      pageInfo: {
-        hasNextPage: boolean;
-        endCursor?: string;
-      };
-    };
-  }>(
-    GET_EMPRESAS_PAGINATED,
-    {
-      variables: {
-        first: 10,
-        where: empresasSearchQuery ? { nomeFantasia: { contains: empresasSearchQuery } } : null,
-      },
-    }
-  );
-
-  // Query para setores com paginação
-  const { data: setoresData, loading: setoresLoading, fetchMore: fetchMoreSetores } = useQuery<{
-    setores: {
-      nodes: Array<{ id: string | number; nome: string }>;
-      pageInfo: {
-        hasNextPage: boolean;
-        endCursor?: string;
-      };
-    };
-  }>(
-    GET_SETORS,
-    {
-      variables: {
-        first: 10,
-        where: setoresSearchQuery ? { nome: { contains: setoresSearchQuery } } : null,
-      },
-    }
-  );
-
-  // Atualizar items quando dados chegam
-  useEffect(() => {
-    if (empresasData?.empresas?.nodes) {
-      const items = empresasData.empresas.nodes.map((emp: any) => ({
-        id: emp.id,
-        label: emp.nomeFantasia,
-      }));
-      setEmpresasItems(items);
-    }
-  }, [empresasData?.empresas?.nodes]);
+  const [globalFilter, setGlobalFilter] = useState('');
+  const [debouncedGlobalFilter, setDebouncedGlobalFilter] = useState('');
 
   useEffect(() => {
-    if (setoresData?.setores?.nodes) {
-      const items = setoresData.setores.nodes.map((setor: any) => ({
-        id: setor.id,
-        label: setor.nome,
-      }));
-      setSetoresItems(items);
-    }
-  }, [setoresData?.setores?.nodes]);
-
-  // Sync com formulário
-  useEffect(() => {
-    searchForm.setValue('empresaId', String(selectedEmpresaId || ''));
-  }, [selectedEmpresaId, searchForm]);
+    const handler = setTimeout(() => setDebouncedGlobalFilter(globalFilter), 300);
+    return () => clearTimeout(handler);
+  }, [globalFilter]);
 
   useEffect(() => {
-    searchForm.setValue('setorId', String(selectedSetorId || ''));
-  }, [selectedSetorId, searchForm]);
-
-  const handleLoadMoreEmpresas = async () => {
-    const hasMore = empresasData?.empresas?.pageInfo?.hasNextPage;
-    const endCursor = empresasData?.empresas?.pageInfo?.endCursor;
-
-    if (!hasMore || !endCursor) return;
-
-    try {
-      await fetchMoreEmpresas({
-        variables: {
-          first: 10,
-          after: endCursor,
-          where: empresasSearchQuery ? { nomeFantasia: { contains: empresasSearchQuery } } : null,
-        },
-        updateQuery: (prev, { fetchMoreResult }) => {
-          if (!fetchMoreResult) return prev;
-          const newItems = fetchMoreResult.empresas.nodes.map((emp: any) => ({
-            id: emp.id,
-            label: emp.nomeFantasia,
-          }));
-          setEmpresasItems((prev) => [...prev, ...newItems]);
-          return fetchMoreResult;
-        },
-      });
-    } catch (err) {
-      console.error('Erro ao carregar mais empresas:', err);
-    }
-  };
-
-  const handleLoadMoreSetores = async () => {
-    const hasMore = setoresData?.setores?.pageInfo?.hasNextPage;
-    const endCursor = setoresData?.setores?.pageInfo?.endCursor;
-
-    if (!hasMore || !endCursor) return;
-
-    try {
-      await fetchMoreSetores({
-        variables: {
-          first: 10,
-          after: endCursor,
-          where: setoresSearchQuery ? { nome: { contains: setoresSearchQuery } } : null,
-        },
-        updateQuery: (prev, { fetchMoreResult }) => {
-          if (!fetchMoreResult) return prev;
-          const newItems = fetchMoreResult.setores.nodes.map((setor: any) => ({
-            id: setor.id,
-            label: setor.nome,
-          }));
-          setSetoresItems((prev) => [...prev, ...newItems]);
-          return fetchMoreResult;
-        },
-      });
-    } catch (err) {
-      console.error('Erro ao carregar mais setores:', err);
-    }
-  };
-
-  const handleSearchEmpresas = (query: string) => {
-    setEmpresasSearchQuery(query);
-    setEmpresasItems([]);
-    setSelectedEmpresaId(undefined);
-  };
-
-  const handleSearchSetores = (query: string) => {
-    setSetoresSearchQuery(query);
-    setSetoresItems([]);
-    setSelectedSetorId(undefined);
-  };
-
-  const handleSearchCpfChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatCpf(event.target.value);
-    searchForm.setValue('cpf', formatted, { shouldDirty: true, shouldValidate: true });
-  };
+    setCursorStack([null]);
+    setCurrentCursorIndex(0);
+  }, [debouncedGlobalFilter]);
 
   const variables = useMemo(
     () => ({
-      where: buildWhere(currentFilters),
+      where: buildWhere(debouncedGlobalFilter),
       first: PAGE_SIZE,
       after: cursorStack[currentCursorIndex],
     }),
-    [currentFilters, cursorStack, currentCursorIndex],
+    [debouncedGlobalFilter, cursorStack, currentCursorIndex],
   );
 
   const { data, loading, error, refetch } = useQuery<{
@@ -265,20 +104,6 @@ export function ColaboradorPage() {
   const hasPreviousPage = currentCursorIndex > 0;
   const hasNextPage = !!pageInfo?.hasNextPage;
 
-  const handleSearch: SubmitHandler<SearchFormValues> = async (values) => {
-    setCurrentFilters(values);
-    setCursorStack([null]);
-    setCurrentCursorIndex(0);
-  };
-
-  const handleClearSearch = () => {
-    searchForm.reset({ nome: '', cpf: '', email: '', empresaId: '', setorId: '', ativo: '' });
-    setCurrentFilters({ nome: '', cpf: '', email: '', empresaId: '', setorId: '', ativo: '' });
-    setCursorStack([null]);
-    setCurrentCursorIndex(0);
-    setSelectedEmpresaId(undefined);
-    setSelectedSetorId(undefined);
-  };
 
   const handleStartCreate = () => {
     navigate('/dashboard/colaboradores/create');
@@ -289,15 +114,29 @@ export function ColaboradorPage() {
   };
 
   const handleRemove = async (id: string) => {
-    const confirmed = window.confirm('Deseja excluir este colaborador?');
-    if (!confirmed) return;
+    confirmDeletion({
+      title: 'Excluir colaborador',
+      message: 'Esta ação não pode ser desfeita. Deseja continuar?',
+      confirmLabel: 'Sim, excluir',
+      onConfirm: async () => {
+        try {
+          const result = await removeColaborador({ variables: { id: Number(id) } });
+          const mutationErrorMessage = getGraphQLErrorMessage((result as any)?.error ?? (result as any)?.errors);
 
-    try {
-      await removeColaborador({ variables: { id: Number(id) } });
-      await refetch(variables);
-    } catch (err) {
-      console.error(err);
-    }
+          if (mutationErrorMessage) {
+            toast.error(mutationErrorMessage);
+            return;
+          }
+
+          await refetch(variables);
+          toast.success('Colaborador excluído com sucesso!');
+        } catch (err) {
+          const message = getGraphQLErrorMessage(err) ?? 'Não foi possível excluir o colaborador. Tente novamente.';
+          toast.error(message);
+          console.error(err);
+        }
+      },
+    });
   };
 
   const handlePreviousPage = () => {
@@ -334,74 +173,18 @@ export function ColaboradorPage() {
       </div>
 
       <section className="dashboard-card rounded-[28px] border p-6 shadow-xl">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+        <div className="flex items-center justify-between gap-4">
           <div>
-            <h3 className="text-lg font-semibold text-[#2B2C40]">Buscar colaboradores</h3>
-            <p className="mt-1 text-sm dashboard-text-muted">Filtre a lista por nome, CPF, e-mail, empresa, setor ou status.</p>
+            <h3 className="text-lg font-semibold text-[#2B2C40]">Buscar</h3>
+            <p className="mt-1 text-sm dashboard-text-muted">Pesquise em todas as colunas.</p>
           </div>
-          <div className="grid w-full gap-4 sm:grid-cols-3">
-            <Input
-              name="nome"
-              placeholder="Nome"
-              registration={searchForm.register('nome')}
-              error={searchForm.formState.errors.nome}
+          <div className="w-full sm:w-80">
+            <input
+              value={globalFilter}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              placeholder="Pesquisar..."
+              className="w-full rounded-3xl border border-slate-200 px-4 py-2"
             />
-            <Input
-              name="cpf"
-              placeholder="CPF"
-              registration={searchForm.register('cpf', {
-                onChange: handleSearchCpfChange,
-              })}
-              error={searchForm.formState.errors.cpf}
-            />
-            <Input
-              name="email"
-              placeholder="E-mail"
-              registration={searchForm.register('email')}
-              error={searchForm.formState.errors.email}
-            />
-            <SelectWithSearch
-              items={empresasItems}
-              selectedId={selectedEmpresaId}
-              placeholder="Todas as empresas"
-              searchPlaceholder="Buscar empresa..."
-              isLoading={empresasLoading}
-              hasMore={empresasData?.empresas?.pageInfo?.hasNextPage ?? false}
-              onLoadMore={handleLoadMoreEmpresas}
-              onSearch={handleSearchEmpresas}
-              onChange={(item) => setSelectedEmpresaId(item.id)}
-            />
-            <SelectWithSearch
-              items={setoresItems}
-              selectedId={selectedSetorId}
-              placeholder="Todos os setores"
-              searchPlaceholder="Buscar setor..."
-              isLoading={setoresLoading}
-              hasMore={setoresData?.setores?.pageInfo?.hasNextPage ?? false}
-              onLoadMore={handleLoadMoreSetores}
-              onSearch={handleSearchSetores}
-              onChange={(item) => setSelectedSetorId(item.id)}
-            />
-            <Select
-              name="ativo"
-              registration={searchForm.register('ativo')}
-              error={searchForm.formState.errors.ativo}
-            >
-              <option value="">Todos os status</option>
-              <option value="true">Ativos</option>
-              <option value="false">Inativos</option>
-            </Select>
-          </div>
-        </div>
-
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-between">
-          <div className="flex flex-1 gap-3 flex-wrap justify-center">
-            <Button type="button" onClick={handleClearSearch} className="rounded-3xl border border-slate-200 bg-white text-[#2B2C40] hover:bg-[#F4F6FA] px-5 py-3">
-              Limpar filtros
-            </Button>
-            <Button type="button" onClick={searchForm.handleSubmit(handleSearch)} className="rounded-3xl px-5 py-3">
-              <Search className="h-4 w-4" /> Buscar
-            </Button>
           </div>
         </div>
       </section>

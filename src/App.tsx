@@ -22,7 +22,7 @@ export function App() {
 
   useEffect(() => {
     const htmlElement = document.documentElement;
-    htmlElement.classList.toggle('dark');
+    htmlElement.classList.toggle('dark', htmlElement.classList.contains('dark'));
   }, []);
 
   const toggleShowPasswordButton = (): void => {

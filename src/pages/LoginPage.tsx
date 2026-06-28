@@ -1,5 +1,5 @@
 import { Button } from '../components/Button'
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { SplitScreenLayout } from '../layouts/SplitScreenLayout';
 import loginImage from '@/assets/wallpaper/Professional.png'
 // import headerImage from '@/assets/logos/LogoHeaderFormSample.png';
@@ -20,14 +20,6 @@ export function LoginPage() {
   const { login } = useAuth(); // ← hook de auth
   const [authError, setAuthError] = useState<string | null>(null);
   const [loadedLogo, setLoadedLogo] = useState(false);
-  
-  useEffect(() => {
-    const htmlElement = document.documentElement;
-    htmlElement.classList.toggle('dark');
-
-    return () => {
-    };
-  }, []);
 
   const {
     register,

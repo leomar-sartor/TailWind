@@ -10,8 +10,8 @@
   --color-funcional: var(--color-primary);
 
   /* ===== GLOBAL ===== */
-  --color-background: var(--color-bg);
-  --color-foreground: var(--color-text);
+  --color-bg: var(--color-bg);
+  --color-text: var(--color-text);
 
   /* ===== PRIMARY ===== */
   --color-primary-green: var(--color-primary);
@@ -28,24 +28,32 @@
   --color-link-hover: #525BFF;
 }
 
-/* DARK MODE */
+/* DARK MODE — charcoal palette inspired by modern dark dashboards */
 .dark {
-  --color-funcional: var(--color-primary);
-   /* ===== GLOBAL ===== */
-  --color-background: var(--color-dark);
-  --color-foreground: #ffffff;
+  --color-funcional: #00b87c;
+
+  /* ===== GLOBAL ===== */
+  --color-bg: #121212;
+  --color-text: #ffffff;
+  --color-border: #2e2e2e;
+  --color-surface: #1e1e1e;
+  --color-surface-soft: #2a2a2a;
+  --color-text-muted: #888888;
+  --color-shadow: rgba(0, 0, 0, 0.45);
 
   /* ===== PRIMARY ===== */
-  --color-primary-green: #4D52D7;
+  --color-primary: #696CFF;
+  --color-primary-soft: rgba(105, 108, 255, 0.15);
+  --color-primary-green: #00b87c;
   --color-primary-green-foreground: #ffffff;
-  --color-primary-green-hover: #5B63F9;
-  
+  --color-primary-green-hover: #00a06d;
+
   /* ===== DESTRUCTIVE ===== */
-  --color-destructive: #E53935;
-  --color-destructive-hover: #D32F2F;
+  --color-danger: #ff4d4d;
+  --color-destructive-hover: #ef4444;
   --color-destructive-foreground: #ffffff;
 
   /* ===== LINK ===== */
-  --color-link: #9EA6FF;
-  --color-link-hover: #ffffff;
+  --color-link: #00b87c;
+  --color-link-hover: #00d492;
 }

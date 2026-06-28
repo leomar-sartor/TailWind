@@ -21,6 +21,24 @@ type ColaboradorFormValues = {
   ativo: string;
 };
 
+function getGraphQLErrorMessage(error: unknown): string | null {
+  if (!error) return null;
+
+  const err = error as any;
+  const possibleErrors = err.errors ?? err.graphQLErrors;
+
+  if (Array.isArray(possibleErrors) && possibleErrors.length > 0) {
+    const firstError = possibleErrors[0];
+    return firstError?.extensions?.message ?? firstError?.message ?? null;
+  }
+
+  if (err?.message) {
+    return err.message;
+  }
+
+  return null;
+}
+
 export function CreateEditColaboradorPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -97,6 +115,7 @@ export function CreateEditColaboradorPage() {
 
   const [createColaborador, { loading: creating }] = useMutation(CREATE_COLABORADOR_MUTATION);
   const [updateColaborador, { loading: updating }] = useMutation(UPDATE_COLABORADOR_MUTATION);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Atualizar items quando dados chegam
   useEffect(() => {
@@ -218,6 +237,8 @@ export function CreateEditColaboradorPage() {
   }, [colaboradorData, colaboradorForm, colaboradorId]);
 
   const handleSubmit: SubmitHandler<ColaboradorFormValues> = async (values) => {
+    setSubmitError(null);
+
     try {
       const input = {
         nome: values.nome,
@@ -227,21 +248,35 @@ export function CreateEditColaboradorPage() {
         setorId: Number(values.setorId),
       };
 
+      let result: any;
+
       if (colaboradorId) {
-        await updateColaborador({
+        result = await updateColaborador({
           variables: {
             id: Number(colaboradorId),
             input,
           },
         });
       } else {
-        await createColaborador({
+        result = await createColaborador({
           variables: { input },
         });
       }
 
-      navigate('/dashboard/colaboradores');
+      const mutationErrorMessage = getGraphQLErrorMessage((result as any)?.error ?? (result as any)?.errors);
+
+      if (mutationErrorMessage) {
+        setSubmitError(mutationErrorMessage);
+        return;
+      }
+
+      navigate('/dashboard/colaboradores', {
+        replace: true,
+        state: { message: colaboradorId ? 'Colaborador atualizado com sucesso!' : 'Colaborador cadastrado com sucesso!' },
+      });
     } catch (err) {
+      const message = getGraphQLErrorMessage(err) ?? 'Não foi possível salvar o colaborador. Tente novamente.';
+      setSubmitError(message);
       console.error(err);
     }
   };
@@ -262,6 +297,12 @@ export function CreateEditColaboradorPage() {
       </div>
 
       <section className="dashboard-card rounded-[28px] border p-6 shadow-xl">
+        {submitError ? (
+          <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
+            {submitError}
+          </div>
+        ) : null}
+
         <form onSubmit={colaboradorForm.handleSubmit(handleSubmit)} className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-2">
             <Input

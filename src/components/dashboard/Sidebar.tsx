@@ -61,7 +61,7 @@ export function Sidebar({ collapsed, activePage, onSelectPage, onToggleSidebar }
   return (
     <aside className={wrapperClasses}>
       <div className={contentClasses}>
-        <div className="flex h-[65.5px] items-center justify-between gap-2 border-b-2 border-slate-200 bg-white shadow px-4">
+        <div className="flex h-[65.5px] items-center justify-between gap-2 border-b-2 dashboard-border bg-white shadow px-4 dark:bg-[var(--color-surface)]">
 
 
           {/* shadow-xl shadow-[0_20px_60px_-40px_rgba(43,44,64,0.12)] */}
@@ -71,7 +71,7 @@ export function Sidebar({ collapsed, activePage, onSelectPage, onToggleSidebar }
                 <span className="text-lg font-bold">F</span>
               </div>
               <div>
-                <p className="text-sm font-semibold text-[#384551]">Funcional</p>
+                <p className="text-sm font-semibold dashboard-text">Funcional</p>
                 <p className="text-xs dashboard-text-muted">Painel</p>
               </div>
             </div>
@@ -79,7 +79,7 @@ export function Sidebar({ collapsed, activePage, onSelectPage, onToggleSidebar }
           <button
             type="button"
             onClick={onToggleSidebar}
-            className="inline-flex h-10 w-11 items-center justify-center rounded-2xl border dashboard-border bg-white text-[#384551] transition hover:bg-[#F4F6FA]"
+            className="inline-flex h-10 w-11 items-center justify-center rounded-2xl border dashboard-border bg-white dashboard-text transition hover:bg-[#F4F6FA] dark:bg-[var(--color-surface-soft)] dark:hover:bg-[var(--color-surface)]"
             aria-label="Alternar menu"
           >
             <Menu className="h-5 w-5" />
@@ -95,10 +95,10 @@ export function Sidebar({ collapsed, activePage, onSelectPage, onToggleSidebar }
                   key={item.page}
                   type="button"
                   onClick={() => onSelectPage(item.page)}
-                  className={`group flex w-full items-center gap-3 rounded-3xl px-3 py-2 text-sm font-medium transition shadow-[0_20px_60px_-40px_rgba(43,44,64,0.12)] ${
+                  className={`group flex w-full items-center gap-3 rounded-3xl px-3 py-2 text-sm font-medium transition ${
                     active
-                      ? 'bg-[#E6E7FF] text-[#696CFF] ring-1 ring-[#D7D8FF]'
-                      : 'text-[#646E78] hover:bg-[#F4F6FA] hover:text-[#384551]'
+                      ? 'bg-[#E6E7FF] text-[#696CFF] ring-1 ring-[#D7D8FF] dark:bg-[rgba(0,184,124,0.15)] dark:text-[#00b87c] dark:ring-[rgba(0,184,124,0.3)]'
+                      : 'text-[#646E78] hover:bg-[#F4F6FA] hover:text-[#384551] dark:text-[var(--color-text-muted)] dark:hover:bg-[var(--color-surface-soft)] dark:hover:text-[var(--color-text)]'
                   } ${collapsed ? 'justify-center' : ''}`}
                 >
                   {item.icon}
@@ -112,7 +112,7 @@ export function Sidebar({ collapsed, activePage, onSelectPage, onToggleSidebar }
             {groups.map((group) => {
               const open = openGroups[group.title];
               return (
-                <div key={group.title} className="rounded-3xl border dashboard-border bg-[#F5F7FC] px-2 py-1.5 pb-2">
+                <div key={group.title} className="rounded-3xl border dashboard-border bg-[#F5F7FC] px-2 py-1.5 pb-2 dark:bg-[var(--color-surface)]">
                   {(() => {
                     const groupActive = activePage === group.page || group.children.some((child) => child.page === activePage);
                     return (
@@ -123,7 +123,7 @@ export function Sidebar({ collapsed, activePage, onSelectPage, onToggleSidebar }
                             onSelectPage(group.page as MenuPage);
                             handleGroupToggle(group.title);
                           }}
-                          className={`group w-full rounded-3xl px-3 transition ${collapsed ? 'flex flex-col items-center justify-center gap-2 py-2' : 'flex items-center gap-3 py-2 hover:bg-[#E6E7FF]'} ${groupActive ? 'bg-[#E6E7FF] text-[#696CFF]' : 'text-[#646E78]'}`}
+                          className={`group w-full rounded-3xl px-3 transition ${collapsed ? 'flex flex-col items-center justify-center gap-2 py-2' : 'flex items-center gap-3 py-2 hover:bg-[#E6E7FF] dark:hover:bg-[var(--color-surface-soft)]'} ${groupActive ? 'bg-[#E6E7FF] text-[#696CFF] dark:bg-[rgba(0,184,124,0.15)] dark:text-[#00b87c]' : 'text-[#646E78] dark:text-[var(--color-text-muted)]'}`}
                           title={group.title}
                         >
                           {group.icon}
@@ -134,7 +134,7 @@ export function Sidebar({ collapsed, activePage, onSelectPage, onToggleSidebar }
                             />
                           )}
                           {collapsed && groupActive && (
-                            <span className="mt-1 h-2 w-2 rounded-full bg-[#696CFF]" />
+                            <span className="mt-1 h-2 w-2 rounded-full bg-[#696CFF] dark:bg-[#00b87c]" />
                           )}
                         </button>
 
@@ -147,7 +147,7 @@ export function Sidebar({ collapsed, activePage, onSelectPage, onToggleSidebar }
                                   key={child.page}
                                   type="button"
                                   onClick={() => onSelectPage(child.page)}
-                                  className={`h-9 w-9 rounded-2xl border dashboard-border bg-white flex items-center justify-center transition ${active ? 'bg-[#E6E7FF] text-[#696CFF]' : 'text-[#8592A3] hover:bg-[#F4F6FA]'}`}
+                                  className={`h-9 w-9 rounded-2xl border dashboard-border bg-white flex items-center justify-center transition ${active ? 'bg-[#E6E7FF] text-[#696CFF] dark:bg-[rgba(0,184,124,0.15)] dark:text-[#00b87c]' : 'text-[#8592A3] hover:bg-[#F4F6FA] dark:text-[var(--color-text-muted)] dark:hover:bg-[var(--color-surface-soft)]'}`}
                                   title={child.label}
                                 >
                                   {child.icon}
@@ -159,8 +159,8 @@ export function Sidebar({ collapsed, activePage, onSelectPage, onToggleSidebar }
                                   onClick={() => onSelectPage(child.page)}
                                   className={`flex w-full items-center gap-2 rounded-2xl px-3 py-2 text-sm transition ${
                                     active
-                                      ? 'bg-[#E6E7FF] text-[#696CFF]'
-                                      : 'text-[#646E78] hover:bg-[#F4F6FA] hover:text-[#384551]'
+                                      ? 'bg-[#E6E7FF] text-[#696CFF] dark:bg-[rgba(0,184,124,0.15)] dark:text-[#00b87c]'
+                                      : 'text-[#646E78] hover:bg-[#F4F6FA] hover:text-[#384551] dark:text-[var(--color-text-muted)] dark:hover:bg-[var(--color-surface-soft)] dark:hover:text-[var(--color-text)]'
                                   }`}
                                 >
                                   {child.icon}

@@ -1,4 +1,4 @@
-import { useEffect, type ChangeEvent } from 'react';
+import { useEffect, useState, type ChangeEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { useForm, SubmitHandler } from 'react-hook-form';
@@ -32,6 +32,29 @@ type GetEmpresaByIdVars = {
   id: number;
 };
 
+function getGraphQLErrorMessage(error: unknown): string | null {
+  if (!error) return null;
+
+  if (Array.isArray(error)) {
+    const firstError = error[0];
+    return firstError?.extensions?.message ?? firstError?.message ?? null;
+  }
+
+  const err = error as any;
+  const possibleErrors = err.errors ?? err.graphQLErrors;
+
+  if (Array.isArray(possibleErrors) && possibleErrors.length > 0) {
+    const firstError = possibleErrors[0];
+    return firstError?.extensions?.message ?? firstError?.message ?? null;
+  }
+
+  if (err?.message) {
+    return err.message;
+  }
+
+  return null;
+}
+
 export function CreateEditEmpresaPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -44,6 +67,7 @@ export function CreateEditEmpresaPage() {
 
   const [createEmpresa, { loading: creating }] = useMutation(CREATE_EMPRESA_MUTATION);
   const [updateEmpresa, { loading: updating }] = useMutation(UPDATE_EMPRESA_MUTATION);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Buscar dados da empresa se for edição
   const { data: empresaData, loading: loadingEmpresa, refetch } = useQuery<GetEmpresaByIdData, GetEmpresaByIdVars>(
@@ -82,6 +106,8 @@ export function CreateEditEmpresaPage() {
   };
 
   const handleSubmit: SubmitHandler<EmpresaFormValues> = async (values) => {
+    setSubmitError(null);
+
     const payload = {
       cnpj: stripCnpjMask(values.cnpj.trim()),
       nomeFantasia: values.nomeFantasia.trim(),
@@ -89,31 +115,37 @@ export function CreateEditEmpresaPage() {
     };
 
     try {
+      let result: any;
+
       if (isEditing && empresaId) {
-        await updateEmpresa({
+        result = await updateEmpresa({
           variables: {
             id: Number(empresaId),
             input: payload,
           },
         });
-        // Navegar para EmpresaPage com mensagem de sucesso
-        navigate('/dashboard/empresa', {
-          replace: true,
-          state: { message: 'Empresa atualizada com sucesso!' },
-        });
       } else {
-        await createEmpresa({
+        result = await createEmpresa({
           variables: {
             input: payload,
           },
         });
-        // Navegar para EmpresaPage com mensagem de sucesso
-        navigate('/dashboard/empresa', {
-          replace: true,
-          state: { message: 'Empresa cadastrada com sucesso!' },
-        });
       }
+
+      const mutationErrorMessage = getGraphQLErrorMessage((result as any)?.error ?? (result as any)?.errors);
+
+      if (mutationErrorMessage) {
+        setSubmitError(mutationErrorMessage);
+        return;
+      }
+
+      navigate('/dashboard/empresa', {
+        replace: true,
+        state: { message: isEditing ? 'Empresa atualizada com sucesso!' : 'Empresa cadastrada com sucesso!' },
+      });
     } catch (err) {
+      const message = getGraphQLErrorMessage(err) ?? 'Não foi possível salvar a empresa. Tente novamente.';
+      setSubmitError(message);
       console.error(err);
     }
   };
@@ -146,6 +178,12 @@ export function CreateEditEmpresaPage() {
       {/* Form Card */}
       <div>
         <article className="dashboard-card rounded-[28px] border p-6 shadow-xl">
+          {submitError ? (
+            <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
+              {submitError}
+            </div>
+          ) : null}
+
           <form className="space-y-6" onSubmit={empresaForm.handleSubmit(handleSubmit)}>
             <div className="space-y-4">
               <Input

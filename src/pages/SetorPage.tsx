@@ -1,21 +1,14 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { useForm, SubmitHandler } from 'react-hook-form';
-import { Edit3, PlusCircle, Search, Trash2 } from 'lucide-react';
+import { Edit3, PlusCircle, Trash2 } from 'lucide-react';
+import { toast } from 'react-toastify';
 import { Button } from '../components/Button';
-import { Input } from '../components/Input';
-import { SelectWithSearch, SelectItem } from '../components/Select/SelectWithSearch';
-import { GET_SETORS, GET_EMPRESAS_PAGINATED } from '../graphql/queries/setor.queries';
+import { GET_SETORS } from '../graphql/queries/setor.queries';
 import {
   REMOVE_SETOR_MUTATION,
 } from '../graphql/mutations/setor.mutations';
-
-type SearchFormValues = {
-  nome: string;
-  descricao: string;
-  empresaId: string;
-};
+import { confirmDeletion, getGraphQLErrorMessage } from '../utils/confirmToast';
 
 type SetorNode = {
   id: string;
@@ -30,113 +23,48 @@ type SetorNode = {
 
 const PAGE_SIZE = 10;
 
-function buildWhere(values: SearchFormValues) {
-  const where: Record<string, any> = {};
+function buildWhere(filter: string) {
+  const normalized = filter.trim();
+  if (!normalized) return null;
 
-  if (values.nome?.trim()) {
-    where.nome = {contains: values.nome.trim() };
+  const or: any[] = [
+    { nome: { contains: normalized } },
+    { descricao: { contains: normalized } },
+    { empresa: { nomeFantasia: { contains: normalized } } },
+  ];
+
+  if (/^\d+$/.test(normalized)) {
+    or.unshift({ id: { eq: Number(normalized) } });
   }
 
-  if (values.descricao?.trim()) {
-    where.descricao = { contains: values.descricao.trim() };
-  }
-
-  if (values.empresaId?.trim()) {
-    where.empresaId = { eq: Number(values.empresaId) };
-  }
-
-  return Object.keys(where).length ? where : null;
+  return { or };
 }
 
 export function SetorPage() {
   const navigate = useNavigate();
-  const [currentFilters, setCurrentFilters] = useState<SearchFormValues>({ nome: '', descricao: '', empresaId: '' });
   const [cursorStack, setCursorStack] = useState<Array<string | null>>([null]);
   const [currentCursorIndex, setCurrentCursorIndex] = useState(0);
 
-  // Estados para SelectWithSearch de empresas
-  const [empresasItems, setEmpresasItems] = useState<SelectItem[]>([]);
-  const [empresasSearchQuery, setEmpresasSearchQuery] = useState('');
-  const [selectedEmpresaId, setSelectedEmpresaId] = useState<string | number>();
+  const [globalFilter, setGlobalFilter] = useState('');
+  const [debouncedGlobalFilter, setDebouncedGlobalFilter] = useState('');
 
-  const searchForm = useForm<SearchFormValues>({ defaultValues: currentFilters });
-  
-  // Query para empresas com paginação
-  const { data: empresasData, loading: empresasLoading, fetchMore: fetchMoreEmpresas } = useQuery<{
-    empresas: {
-      nodes: Array<{ id: string | number; nomeFantasia: string }>;
-      pageInfo: {
-        hasNextPage: boolean;
-        endCursor?: string;
-      };
-    };
-  }>(
-    GET_EMPRESAS_PAGINATED,
-    {
-      variables: {
-        first: 10,
-        where: empresasSearchQuery ? { nomeFantasia: { contains: empresasSearchQuery } } : null,
-      },
-    }
-  );
-
-  // Atualizar items quando dados chegam
   useEffect(() => {
-    if (empresasData?.empresas?.nodes) {
-      const items = empresasData.empresas.nodes.map((emp: any) => ({
-        id: emp.id,
-        label: emp.nomeFantasia,
-      }));
-      setEmpresasItems(items);
-    }
-  }, [empresasData?.empresas?.nodes]);
+    const handler = setTimeout(() => setDebouncedGlobalFilter(globalFilter), 300);
+    return () => clearTimeout(handler);
+  }, [globalFilter]);
 
-  // Sync com formulário
   useEffect(() => {
-    searchForm.setValue('empresaId', String(selectedEmpresaId || ''));
-  }, [selectedEmpresaId, searchForm]);
-
-  const handleLoadMoreEmpresas = async () => {
-    const hasMore = empresasData?.empresas?.pageInfo?.hasNextPage;
-    const endCursor = empresasData?.empresas?.pageInfo?.endCursor;
-
-    if (!hasMore || !endCursor) return;
-
-    try {
-      await fetchMoreEmpresas({
-        variables: {
-          first: 10,
-          after: endCursor,
-          where: empresasSearchQuery ? { nomeFantasia: { contains: empresasSearchQuery } } : null,
-        },
-        updateQuery: (prev, { fetchMoreResult }) => {
-          if (!fetchMoreResult) return prev;
-          const newItems = fetchMoreResult.empresas.nodes.map((emp: any) => ({
-            id: emp.id,
-            label: emp.nomeFantasia,
-          }));
-          setEmpresasItems((prev) => [...prev, ...newItems]);
-          return fetchMoreResult;
-        },
-      });
-    } catch (err) {
-      console.error('Erro ao carregar mais empresas:', err);
-    }
-  };
-
-  const handleSearchEmpresas = (query: string) => {
-    setEmpresasSearchQuery(query);
-    setEmpresasItems([]);
-    setSelectedEmpresaId(undefined);
-  };
+    setCursorStack([null]);
+    setCurrentCursorIndex(0);
+  }, [debouncedGlobalFilter]);
 
   const variables = useMemo(
     () => ({
-      where: buildWhere(currentFilters),
+      where: buildWhere(debouncedGlobalFilter),
       first: PAGE_SIZE,
       after: cursorStack[currentCursorIndex],
     }),
-    [currentFilters, cursorStack, currentCursorIndex],
+    [debouncedGlobalFilter, cursorStack, currentCursorIndex],
   );
 
   const { data, loading, error, refetch } = useQuery<{
@@ -164,18 +92,6 @@ export function SetorPage() {
   const hasPreviousPage = currentCursorIndex > 0;
   const hasNextPage = !!pageInfo?.hasNextPage;
 
-  const handleSearch: SubmitHandler<SearchFormValues> = async (values) => {
-    setCurrentFilters(values);
-    setCursorStack([null]);
-    setCurrentCursorIndex(0);
-  };
-
-  const handleClearSearch = () => {
-    searchForm.reset({ nome: '', descricao: '', empresaId: '' });
-    setCurrentFilters({ nome: '', descricao: '', empresaId: '' });
-    setCursorStack([null]);
-    setCurrentCursorIndex(0);
-  };
 
   const handleStartCreate = () => {
     navigate('/dashboard/setor/create');
@@ -186,15 +102,29 @@ export function SetorPage() {
   };
 
   const handleRemove = async (id: string) => {
-    const confirmed = window.confirm('Deseja excluir este setor?');
-    if (!confirmed) return;
+    confirmDeletion({
+      title: 'Excluir setor',
+      message: 'Esta ação não pode ser desfeita. Deseja continuar?',
+      confirmLabel: 'Sim, excluir',
+      onConfirm: async () => {
+        try {
+          const result = await removeSetor({ variables: { id: Number(id) } });
+          const mutationErrorMessage = getGraphQLErrorMessage((result as any)?.error ?? (result as any)?.errors);
 
-    try {
-      await removeSetor({ variables: { id: Number(id) } });
-      await refetch(variables);
-    } catch (err) {
-      console.error(err);
-    }
+          if (mutationErrorMessage) {
+            toast.error(mutationErrorMessage);
+            return;
+          }
+
+          await refetch(variables);
+          toast.success('Setor excluído com sucesso!');
+        } catch (err) {
+          const message = getGraphQLErrorMessage(err) ?? 'Não foi possível excluir o setor. Tente novamente.';
+          toast.error(message);
+          console.error(err);
+        }
+      },
+    });
   };
 
   const handlePreviousPage = () => {
@@ -231,46 +161,18 @@ export function SetorPage() {
       </div>
 
       <section className="dashboard-card rounded-[28px] border p-6 shadow-xl">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+        <div className="flex items-center justify-between gap-4">
           <div>
-            <h3 className="text-lg font-semibold text-[#2B2C40]">Buscar setores</h3>
-            <p className="mt-1 text-sm dashboard-text-muted">Filtre a lista por nome ou descrição.</p>
+            <h3 className="text-lg font-semibold text-[#2B2C40]">Buscar</h3>
+            <p className="mt-1 text-sm dashboard-text-muted">Pesquise em todas as colunas.</p>
           </div>
-          <div className="grid w-full gap-4 sm:grid-cols-3">
-            <Input
-              name="nome"
-              placeholder="Nome do setor"
-              registration={searchForm.register('nome')}
-              error={searchForm.formState.errors.nome}
+          <div className="w-full sm:w-80">
+            <input
+              value={globalFilter}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              placeholder="Pesquisar..."
+              className="w-full rounded-3xl border border-slate-200 px-4 py-2"
             />
-            <Input
-              name="descricao"
-              placeholder="Descrição"
-              registration={searchForm.register('descricao')}
-              error={searchForm.formState.errors.descricao}
-            />
-            <SelectWithSearch
-              items={empresasItems}
-              selectedId={selectedEmpresaId}
-              placeholder="Todas as empresas"
-              searchPlaceholder="Buscar empresa..."
-              isLoading={empresasLoading}
-              hasMore={empresasData?.empresas?.pageInfo?.hasNextPage ?? false}
-              onLoadMore={handleLoadMoreEmpresas}
-              onSearch={handleSearchEmpresas}
-              onChange={(item) => setSelectedEmpresaId(item.id)}
-            />
-          </div>
-        </div>
-
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-between">
-          <div className="flex flex-1 gap-3 flex-wrap justify-center">
-            <Button type="button" onClick={handleClearSearch} className="rounded-3xl border border-slate-200 bg-white text-[#2B2C40] hover:bg-[#F4F6FA] px-5 py-3">
-              Limpar filtros
-            </Button>
-            <Button type="button" onClick={searchForm.handleSubmit(handleSearch)} className="rounded-3xl px-5 py-3">
-              <Search className="h-4 w-4" /> Buscar
-            </Button>
           </div>
         </div>
       </section>
@@ -339,7 +241,7 @@ export function SetorPage() {
             >
               «
             </button>
-            
+
             <button
               type="button"
               onClick={handlePreviousPage}
@@ -348,7 +250,7 @@ export function SetorPage() {
             >
               ‹ Anterior
             </button>
-            
+
             {Array.from({ length: Math.ceil(totalCount / PAGE_SIZE) }, (_, i) => i + 1).map((pageNum) => (
               <button
                 key={pageNum}
@@ -369,7 +271,7 @@ export function SetorPage() {
                 {pageNum}
               </button>
             ))}
-            
+
             <button
               type="button"
               onClick={handleNextPage}

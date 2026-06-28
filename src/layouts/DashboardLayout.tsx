@@ -16,7 +16,7 @@ export function DashboardLayout({
   children,
 }: DashboardLayoutProps) {
   return (
-    <div className="min-h-screen flex flex-col dashboard-bg text-[#384551]">
+    <div className="min-h-screen flex flex-col dashboard-bg dashboard-text">
       <div className="fixed inset-x-0 top-0 h-1 bg-orange-500 z-50" />
       {sidebar}
       {header}

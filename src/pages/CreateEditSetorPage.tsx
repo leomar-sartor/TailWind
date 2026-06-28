@@ -18,6 +18,24 @@ type SetorFormValues = {
   descricao: string;
 };
 
+function getGraphQLErrorMessage(error: unknown): string | null {
+  if (!error) return null;
+
+  const err = error as any;
+  const possibleErrors = err.errors ?? err.graphQLErrors;
+
+  if (Array.isArray(possibleErrors) && possibleErrors.length > 0) {
+    const firstError = possibleErrors[0];
+    return firstError?.extensions?.message ?? firstError?.message ?? null;
+  }
+
+  if (err?.message) {
+    return err.message;
+  }
+
+  return null;
+}
+
 export function CreateEditSetorPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -35,6 +53,7 @@ export function CreateEditSetorPage() {
 
   const [createSetor, { loading: creating }] = useMutation(CREATE_SETOR_MUTATION);
   const [updateSetor, { loading: updating }] = useMutation(UPDATE_SETOR_MUTATION);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Query para empresas com paginação
   const { data: empresasData, loading: empresasLoading, fetchMore: fetchMoreEmpresas } = useQuery<{
@@ -135,8 +154,10 @@ export function CreateEditSetorPage() {
   }, [setorData, setorForm, setorId]);
 
   const handleSubmit: SubmitHandler<SetorFormValues> = async (values) => {
+    setSubmitError(null);
+
     if (!selectedEmpresaId) {
-      alert('Por favor, selecione uma empresa');
+      setSubmitError('Por favor, selecione uma empresa');
       return;
     }
 
@@ -146,32 +167,38 @@ export function CreateEditSetorPage() {
     };
 
     try {
+      let result: any;
+
       if (isEditing && setorId) {
-        await updateSetor({
+        result = await updateSetor({
           variables: {
             id: Number(setorId),
             input: payload,
           },
         });
-        // Navegar para SetorPage com mensagem de sucesso
-        navigate('/dashboard/setor', {
-          replace: true,
-          state: { message: 'Setor atualizado com sucesso!' },
-        });
       } else {
-        await createSetor({
+        result = await createSetor({
           variables: {
             empresaId: Number(selectedEmpresaId),
             input: payload,
           },
         });
-        // Navegar para SetorPage com mensagem de sucesso
-        navigate('/dashboard/setor', {
-          replace: true,
-          state: { message: 'Setor cadastrado com sucesso!' },
-        });
       }
+
+      const mutationErrorMessage = getGraphQLErrorMessage((result as any)?.error ?? (result as any)?.errors);
+
+      if (mutationErrorMessage) {
+        setSubmitError(mutationErrorMessage);
+        return;
+      }
+
+      navigate('/dashboard/setor', {
+        replace: true,
+        state: { message: isEditing ? 'Setor atualizado com sucesso!' : 'Setor cadastrado com sucesso!' },
+      });
     } catch (err) {
+      const message = getGraphQLErrorMessage(err) ?? 'Não foi possível salvar o setor. Tente novamente.';
+      setSubmitError(message);
       console.error(err);
     }
   };
@@ -204,6 +231,12 @@ export function CreateEditSetorPage() {
       {/* Form Card */}
       <div>
         <article className="dashboard-card rounded-[28px] border p-6 shadow-xl">
+          {submitError ? (
+            <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
+              {submitError}
+            </div>
+          ) : null}
+
           <form className="space-y-6" onSubmit={setorForm.handleSubmit(handleSubmit)}>
             <div className="space-y-4">
               <SelectWithSearch

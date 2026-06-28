@@ -31,10 +31,10 @@ export function PageContainer({ loading, title, description, children }: PageCon
     <section className="px-2 py-2 sm:px-4 lg:px-6">
       <div className="max-w-7xl mx-auto pb-24 pt-2">
         <div className="mb-2 flex flex-col gap- rounded-3xl border dashboard-border dashboard-card p-2 ps-4 shadow-xl shadow-[0_20px_60px_-40px_rgba(43,44,64,0.12)] backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between">
-          <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-sm text-[#6C7287]">
+          <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-sm dashboard-text-muted">
             <span className="uppercase tracking-[0.32em] text-orange-400/90">{title}</span>
-            <span className="text-[#CBD5E1]">/</span>
-            <span className="font-semibold text-[#384551]">{description}</span>
+            <span className="text-[#CBD5E1] dark:text-[var(--color-border)]">/</span>
+            <span className="font-semibold dashboard-text">{description}</span>
           </nav>
         </div>
         {children}
