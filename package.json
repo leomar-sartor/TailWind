@@ -5,13 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "vite build",
+    "buildtsc": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
     "@apollo/client": "^4.1.6",
     "@tailwindcss/vite": "^4.1.18",
+    "firebase": "^12.15.0",
     "graphql": "^16.13.1",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^1.0.1",
