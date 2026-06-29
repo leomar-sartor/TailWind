@@ -4,7 +4,7 @@ import { useMutation, useQuery } from '@apollo/client/react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '../components/Button';
-import { Input } from '../components/Input';
+import { LabeledInput } from '../components/LabeledInput';
 import {
   CREATE_EMPRESA_MUTATION,
   UPDATE_EMPRESA_MUTATION,
@@ -186,26 +186,28 @@ export function CreateEditEmpresaPage() {
 
           <form className="space-y-6" onSubmit={empresaForm.handleSubmit(handleSubmit)}>
             <div className="space-y-4">
-              <Input
+              <LabeledInput
                 name="nomeFantasia"
-                placeholder="Nome fantasia"
+                label="Nome fantasia"
+                required
                 registration={empresaForm.register('nomeFantasia', {
                   required: 'Nome fantasia obrigatório',
                 })}
                 error={empresaForm.formState.errors.nomeFantasia}
               />
-              <Input
+              <LabeledInput
                 name="cnpj"
-                placeholder="CNPJ"
+                label="CNPJ"
+                required
                 registration={empresaForm.register('cnpj', {
                   required: 'CNPJ obrigatório',
                   onChange: handleCnpjChange,
                 })}
                 error={empresaForm.formState.errors.cnpj}
               />
-              <Input
+              <LabeledInput
                 name="descricao"
-                placeholder="Descrição da empresa"
+                label="Descrição da empresa"
                 registration={empresaForm.register('descricao', {
                 })}
                 error={empresaForm.formState.errors.descricao}

@@ -24,12 +24,9 @@
 11. Unique Key para Cnpj e Cpf no banco;
 12. Adicionado ToastFy para Exclusão;
 13. Ajustado Light e Dark Theme - ainda tem coisa a melhorar;
+14. Novo componente input com label - diferente do de login;
 
 # A FAZER
-
-### Filtros
-
-- Novo componente input com label - diferente do de login;
 
 ### Outros
     - Adicionar Autorizations

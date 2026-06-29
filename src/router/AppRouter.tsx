@@ -18,7 +18,7 @@ import { PesquisaPageWrapper } from '../pages/PesquisaPageWrapper';
 import { ColaboradorPageWrapper } from '../pages/ColaboradorPageWrapper';
 import { CreateEditColaboradorPageWithLayout } from '../pages/CreateEditColaboradorPageWithLayout';
 import { SurveyPage } from '../pages/SurveyPage';
-import { DispararPesquisaPage } from '@/pages/DispararPesquisaPage';
+import { DispararPesquisaPageWithLayout } from '../pages/DispararPesquisaPageWithLayout';
 
 // ─── AppRouter ────────────────────────────────────────────────────────────────
 // Hierarquia de providers:
@@ -56,7 +56,7 @@ export function AppRouter() {
                 <Route path="/dashboard/pesquisa/create" element={<CreateEditPesquisaPageWithLayout />} />
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                                 {/* ← Nova rota de disparo */}
-                <Route path="/dashboard/pesquisa/disparar" element={<DispararPesquisaPage />} />
+                <Route path="/dashboard/pesquisa/disparar" element={<DispararPesquisaPageWithLayout />} />
 
               </Route>
 

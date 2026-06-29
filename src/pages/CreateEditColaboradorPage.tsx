@@ -3,9 +3,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { Button } from '../components/Button';
-import { Input } from '../components/Input';
-import { Select } from '../components/Select';
-import { SelectWithSearch, SelectItem } from '../components/Select/SelectWithSearch';
+import { LabeledInput } from '../components/LabeledInput';
+import { LabeledSelect } from '../components/LabeledSelect';
+import { LabeledSelectWithSearch } from '../components/LabeledSelect/LabeledSelectWithSearch';
+import type { SelectItem } from '../components/Select/SelectWithSearch';
 import { GET_COLABORADOR_BY_ID } from '../graphql/queries/colaborador.queries';
 import { GET_EMPRESAS_PAGINATED, GET_SETORS } from '../graphql/queries/setor.queries';
 import { CREATE_COLABORADOR_MUTATION, UPDATE_COLABORADOR_MUTATION } from '../graphql/mutations/colaborador.mutations';
@@ -305,32 +306,37 @@ export function CreateEditColaboradorPage() {
 
         <form onSubmit={colaboradorForm.handleSubmit(handleSubmit)} className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Input
+            <LabeledInput
               name="nome"
-              placeholder="Nome completo"
+              label="Nome completo"
+              required
               registration={colaboradorForm.register('nome', {
                 required: 'Nome obrigatório',
               })}
               error={colaboradorForm.formState.errors.nome}
             />
-            <Input
+            <LabeledInput
               name="cpf"
-              placeholder="CPF"
+              label="CPF"
+              required
               registration={colaboradorForm.register('cpf', {
                 required: 'CPF obrigatório',
                 onChange: handleCpfChange,
               })}
               error={colaboradorForm.formState.errors.cpf}
             />
-            <Input
+            <LabeledInput
               name="email"
-              placeholder="E-mail"
+              label="E-mail"
+              required
               registration={colaboradorForm.register('email', {
                 required: 'E-mail obrigatório',
               })}
               error={colaboradorForm.formState.errors.email}
             />
-            <SelectWithSearch
+            <LabeledSelectWithSearch
+              label="Empresa"
+              required
               items={empresasItems}
               selectedId={selectedEmpresaId}
               placeholder="Selecione a empresa"
@@ -342,7 +348,9 @@ export function CreateEditColaboradorPage() {
               onChange={(item) => setSelectedEmpresaId(item.id)}
               error={colaboradorForm.formState.errors.empresaId}
             />
-            <SelectWithSearch
+            <LabeledSelectWithSearch
+              label="Setor"
+              required
               items={setoresItems}
               selectedId={selectedSetorId}
               placeholder="Selecione o setor"
@@ -354,16 +362,19 @@ export function CreateEditColaboradorPage() {
               onChange={(item) => setSelectedSetorId(item.id)}
               error={colaboradorForm.formState.errors.setorId}
             />
-            <Select
-              name="ativo"
+            <LabeledSelect
+              label="Status"
+              required
+              defaultValue="true"
+              options={[
+                { value: 'true', label: 'Ativo' },
+                { value: 'false', label: 'Inativo' },
+              ]}
               registration={colaboradorForm.register('ativo', {
                 required: 'Informe se está ativo',
               })}
               error={colaboradorForm.formState.errors.ativo}
-            >
-              <option value="true">Ativo</option>
-              <option value="false">Inativo</option>
-            </Select>
+            />
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">

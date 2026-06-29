@@ -7,14 +7,14 @@ import { Sidebar } from '../components/dashboard/Sidebar';
 import { DashboardLayout } from '../layouts/DashboardLayout';
 import { PageContainer } from '../components/dashboard/PageContainer';
 import { useDashboardPageConfig, type MenuPage } from '../hooks/useDashboardPageConfig';
-import { CreateEditPesquisaPage } from './CreateEditPesquisaPage';
+import { DispararPesquisaPage } from './DispararPesquisaPage';
 
-export function CreateEditPesquisaPageWithLayout() {
+export function DispararPesquisaPageWithLayout() {
   const user = useAuthStore(selectUser);
   const { logout } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const selectedPage: MenuPage = 'pesquisa';
+  const selectedPage: MenuPage = 'enviar';
   const { pageInfo, handlePageChange } = useDashboardPageConfig(selectedPage);
 
   useEffect(() => {
@@ -84,7 +84,7 @@ export function CreateEditPesquisaPageWithLayout() {
         title={pageInfo[selectedPage].title}
         description={pageInfo[selectedPage].description}
       >
-        <CreateEditPesquisaPage />
+        <DispararPesquisaPage />
       </PageContainer>
     </DashboardLayout>
   );

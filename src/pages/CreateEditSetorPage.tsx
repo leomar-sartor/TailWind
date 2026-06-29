@@ -4,8 +4,9 @@ import { useMutation, useQuery } from '@apollo/client/react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '../components/Button';
-import { Input } from '../components/Input';
-import { SelectWithSearch, SelectItem } from '../components/Select/SelectWithSearch';
+import { LabeledInput } from '../components/LabeledInput';
+import { LabeledSelectWithSearch } from '../components/LabeledSelect/LabeledSelectWithSearch';
+import type { SelectItem } from '../components/Select/SelectWithSearch';
 import {
   CREATE_SETOR_MUTATION,
   UPDATE_SETOR_MUTATION,
@@ -239,7 +240,9 @@ export function CreateEditSetorPage() {
 
           <form className="space-y-6" onSubmit={setorForm.handleSubmit(handleSubmit)}>
             <div className="space-y-4">
-              <SelectWithSearch
+              <LabeledSelectWithSearch
+                label="Empresa"
+                required
                 items={empresasItems}
                 selectedId={selectedEmpresaId}
                 placeholder="Selecione uma empresa"
@@ -250,17 +253,18 @@ export function CreateEditSetorPage() {
                 onSearch={handleSearchEmpresas}
                 onChange={(item) => setSelectedEmpresaId(item.id)}
               />
-              <Input
+              <LabeledInput
                 name="nome"
-                placeholder="Nome do setor"
+                label="Nome do setor"
+                required
                 registration={setorForm.register('nome', {
                   required: 'Nome obrigatório',
                 })}
                 error={setorForm.formState.errors.nome}
               />
-              <Input
+              <LabeledInput
                 name="descricao"
-                placeholder="Descrição do setor"
+                label="Descrição do setor"
                 registration={setorForm.register('descricao', {
                 })}
                 error={setorForm.formState.errors.descricao}
