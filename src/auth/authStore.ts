@@ -11,6 +11,26 @@ export interface AuthUser {
   roles: string[];
 }
 
+/** Shape returned by GraphQL auth payloads (`userName` from the API schema). */
+export interface AuthUserFromApi {
+  id: string;
+  email: string;
+  userName: string;
+  roles: string[];
+}
+
+/**
+ * Maps the GraphQL auth user payload to the in-app AuthUser shape.
+ */
+export function mapAuthUser(user: AuthUserFromApi): AuthUser {
+  return {
+    id: user.id,
+    email: user.email,
+    username: user.userName,
+    roles: user.roles,
+  };
+}
+
 interface AuthState {
   // State
   accessToken: string | null;
@@ -38,7 +58,7 @@ export const useAuthStore = create<AuthState>()(
       isRefreshing: false,
 
       // Login bem-sucedido: popula o estado
-       setAuth: (accessToken, user) => {
+      setAuth: (accessToken, user) => {
         // Persiste no sessionStorage E atualiza o Zustand
         authStorage.setToken(accessToken);
         authStorage.setUser(user);
@@ -61,15 +81,20 @@ export const useAuthStore = create<AuthState>()(
 
       // Logout: limpa tudo da memória
       clearAuth: () => {
-         authStorage.clear();
+        authStorage.clear();
         set(
-          { accessToken: null, user: null, isAuthenticated: false, isRefreshing: false },
+          {
+            accessToken: null,
+            user: null,
+            isAuthenticated: false,
+            isRefreshing: false,
+          },
           false,
           'auth/clearAuth'
         );
       },
     }),
-    { name: 'AuthStore' }
+    { name: 'AuthStore', enabled: import.meta.env.DEV }
   )
 );
 

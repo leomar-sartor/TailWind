@@ -10,7 +10,14 @@ export const authStorage = {
 
   getUser: <T>(): T | null => {
     const raw = sessionStorage.getItem(USER_KEY);
-    return raw ? (JSON.parse(raw) as T) : null;
+    if (!raw) return null;
+
+    try {
+      return JSON.parse(raw) as T;
+    } catch {
+      sessionStorage.removeItem(USER_KEY);
+      return null;
+    }
   },
 
   setUser: <T>(user: T): void =>

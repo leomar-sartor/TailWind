@@ -9,6 +9,7 @@ import { AuthGuard } from '../auth/AuthGuard';
 // Pages — substitua pelos seus componentes reais
 import { LoginPage } from '../pages/LoginPage';
 import { DashboardPage } from '../pages/DashboardPage';
+import { UnauthorizedPage } from '../pages/UnauthorizedPage';
 import { CreateEditSetorPageWithLayout } from '../pages/CreateEditSetorPageWithLayout';
 import { SetorPageWrapper } from '../pages/SetorPageWrapper';
 import { CreateEditEmpresaPageWithLayout } from '../pages/CreateEditEmpresaPageWithLayout';
@@ -36,15 +37,13 @@ export function AppRouter() {
             <Routes>
               {/* Rotas públicas */}
               <Route path="/login" element={<LoginPage />} />
-              <Route path="/dash" element={<DashboardPage />} />
-
               <Route path="/survey" element={<SurveyPage />} />
-              
-              {/* Redireciona raiz para login enquanto não há mais páginas */}
-              <Route path="/" element={<Navigate to="/login" replace />} />
-              
+              <Route path="/unauthorized" element={<UnauthorizedPage />} />
+
               {/* Rotas protegidas — qualquer usuário autenticado */}
               <Route element={<ProtectedRoute />}>
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/dash" element={<Navigate to="/dashboard" replace />} />
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/dashboard/setor" element={<SetorPageWrapper />} />
                 <Route path="/dashboard/setor/create" element={<CreateEditSetorPageWithLayout />} />
@@ -54,16 +53,8 @@ export function AppRouter() {
                 <Route path="/dashboard/colaboradores/create" element={<CreateEditColaboradorPageWithLayout />} />
                 <Route path="/dashboard/pesquisa" element={<PesquisaPageWrapper />} />
                 <Route path="/dashboard/pesquisa/create" element={<CreateEditPesquisaPageWithLayout />} />
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                                {/* ← Nova rota de disparo */}
                 <Route path="/dashboard/pesquisa/disparar" element={<DispararPesquisaPageWithLayout />} />
-
               </Route>
-
-              {/* Rotas protegidas por role */}
-              {/* <Route element={<ProtectedRoute requiredRoles={['Admin']} />}>
-                <Route path="/admin" element={<AdminPage />} />
-              </Route> */}
             </Routes>
           </AuthGuard>
         </AuthProvider>

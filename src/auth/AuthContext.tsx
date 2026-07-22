@@ -9,7 +9,11 @@ import {
 } from 'react';
 import { useMutation } from '@apollo/client/react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuthStore, AuthUser } from './authStore';
+import {
+  useAuthStore,
+  mapAuthUser,
+  type AuthUserFromApi,
+} from './authStore';
 import { apolloClient } from '../graphql/client';
 import {
   LOGIN_MUTATION,
@@ -17,10 +21,18 @@ import {
   REFRESH_TOKEN_MUTATION,
 } from '../graphql/mutations/auth.mutation';
 import { jwtDecode } from 'jwt-decode';
+
 interface JwtPayload {
   sub: string;
   email: string;
   exp: number; // expiração em Unix timestamp (segundos)
+}
+
+interface AuthPayload {
+  success: boolean;
+  message: string;
+  accessToken: string;
+  user: AuthUserFromApi;
 }
 
 // Retorna true se o token ainda é válido por mais de 30 segundos
@@ -32,6 +44,22 @@ function isTokenValid(token: string): boolean {
   } catch {
     return false;
   }
+}
+
+/**
+ * Accepts only same-origin relative paths to avoid open redirects after login.
+ */
+function getSafeRedirectPath(pathname: unknown): string {
+  if (
+    typeof pathname === 'string' &&
+    pathname.startsWith('/') &&
+    !pathname.startsWith('//') &&
+    !pathname.includes('://')
+  ) {
+    return pathname;
+  }
+
+  return '/dashboard';
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -58,15 +86,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [loginMutation] = useMutation<{
-    login: { accessToken: string; success: boolean; message: string; user: AuthUser };
-  }>(LOGIN_MUTATION);
+  const [loginMutation] = useMutation<{ login: AuthPayload }>(LOGIN_MUTATION);
 
   const [logoutMutation] = useMutation(LOGOUT_MUTATION);
 
-  const [refreshMutation] = useMutation<{
-    refreshToken: { accessToken: string; user: AuthUser };
-  }>(REFRESH_TOKEN_MUTATION);
+  const [refreshMutation] = useMutation<{ refreshToken: AuthPayload }>(
+    REFRESH_TOKEN_MUTATION
+  );
 
   // ── Tentativa de restaurar sessão na inicialização do app ──────────────────
   // O access token não está em nenhum storage — vive apenas em memória.
@@ -77,12 +103,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const hasRestoredSession = useRef(false);
 
   useEffect(() => {
-
     if (hasRestoredSession.current) return;
     hasRestoredSession.current = true;
 
     const tryRestoreSession = async () => {
-
       const currentToken = useAuthStore.getState().accessToken;
 
       // Token veio do sessionStorage e ainda é válido — não precisa de refresh
@@ -92,11 +116,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        const { data } = await refreshMutation();
+        const { data, error } = await refreshMutation();
+        const payload = data?.refreshToken;
 
-        if (data?.refreshToken) {
-          const { accessToken, user } = data.refreshToken;
-          setAuth(accessToken, user);// ← seta os dois no Zustand
+        if (
+          !error &&
+          payload?.success === true &&
+          payload.accessToken &&
+          isTokenValid(payload.accessToken) &&
+          payload.user
+        ) {
+          setAuth(payload.accessToken, mapAuthUser(payload.user));
+        } else {
+          clearAuth();
         }
       } catch {
         // Cookie expirado ou inexistente — estado já é "não autenticado"
@@ -107,7 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     tryRestoreSession();
-  }, []);
+  }, [clearAuth, refreshMutation, setAuth]);
 
   // ── Login ──────────────────────────────────────────────────────────────────
   // MutateResult não expõe 'errors' — no Apollo Client 4, erros de mutation
@@ -115,16 +147,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (input: LoginInput) => {
     const result = await loginMutation({ variables: { input } });
+    const payload = result.data?.login;
 
-    if (!result.data?.login?.success ) {
-      throw new Error('Erro durante o login.');
+    if (result.error || !payload?.success || !payload.accessToken || !payload.user) {
+      throw new Error(payload?.message || 'Erro durante o login.');
     }
 
-    const { accessToken, user } = result.data.login;
-    setAuth(accessToken, user);
+    setAuth(payload.accessToken, mapAuthUser(payload.user));
 
     // Redireciona para a rota que o usuário tentou acessar antes do login
-    const from = (location.state as { from?: { pathname: string } })?.from?.pathname ?? '/dashboard';
+    const from = getSafeRedirectPath(
+      (location.state as { from?: { pathname?: unknown } } | null)?.from?.pathname
+    );
     navigate(from, { replace: true });
   };
 
