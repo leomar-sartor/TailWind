@@ -1,0 +1,139 @@
+---
+description: Convenções obrigatórias do frontend ARP
+alwaysApply: true
+---
+
+# Frontend ARP
+
+## Propósito
+
+Este projeto é o frontend do Sistema de Análise de Riscos Psicossociais. Ele oferece autenticação, dashboard e cadastros de empresas, setores, colaboradores e pesquisas, além dos fluxos de disparo e resposta de pesquisas. A aplicação consome uma API GraphQL; regras de negócio persistentes e acesso ao banco pertencem ao backend.
+
+## Stack real
+
+- React 19 + TypeScript 5.9 em modo `strict`.
+- Vite 7 com React SWC; entrada em `src/main.tsx`.
+- React Router 7 em `src/router/AppRouter.tsx`.
+- Apollo Client 4 + GraphQL 16 para dados remotos.
+- Zustand 5 com `devtools` para estado global de autenticação e fluxos.
+- React Hook Form 7 para formulários.
+- Tailwind CSS 4 via plugin do Vite, complementado por CSS em `src/styles`.
+- React Toastify para feedback; Lucide React para ícones; `jwt-decode` para validar expiração.
+- Firebase possui configuração de hospedagem, mas o SDK não é importado pelo código da aplicação. Não introduza APIs Firebase sem requisito explícito.
+- Módulos funcionais atuais: autenticação, dashboard, empresa, setor, colaborador, pesquisa, disparo e survey público.
+
+## Estrutura e responsabilidades
+
+- `src/main.tsx`: montagem global, tema, roteador e `ToastContainer`.
+- `src/router/`: providers e rotas públicas/protegidas. Preserve a ordem `ApolloProvider -> BrowserRouter -> AuthProvider -> AuthGuard`.
+- `src/auth/`: contexto, guards, store Zustand e persistência da sessão.
+- `src/graphql/client.ts`: endpoint, cache, headers, refresh de token e links Apollo.
+- `src/graphql/queries/` e `src/graphql/mutations/`: documentos `gql` separados por domínio, com nomes `*.queries.ts` e `*.mutations.ts`.
+- `src/pages/`: telas e fluxos. CRUDs usam página de lista, página create/edit e, quando necessário, wrapper de layout.
+- `src/pages/<Feature>/`: use pasta para fluxos com múltiplas etapas/subtelas, como `SurveyPage` e `DispararPesquisaPage`.
+- `src/components/`: UI reutilizável; componentes compostos ficam em pasta própria com `index.tsx`, tipos e estilos quando aplicável.
+- `src/layouts/`: composição estrutural sem regras de negócio.
+- `src/hooks/`: comportamento reutilizável; nomes começam com `use`.
+- `src/store/`: stores Zustand de fluxos; autenticação permanece em `src/auth`.
+- `src/utils/`: funções puras, máscaras e helpers compartilhados.
+- `src/styles/`: base, tema e CSS específico de componentes.
+
+O repositório é organizado horizontalmente, não em módulos NestJS ou camadas de backend. Ao ampliar uma feature existente, mantenha seus documentos GraphQL, página, tipos e estado nos diretórios já usados.
+
+## Convenções de código
+
+- Escreva componentes como funções nomeadas em PascalCase e hooks em camelCase com prefixo `use`.
+- Use TypeScript estrito. Prefira `unknown` em erros e tipos explícitos para dados/variáveis GraphQL; não introduza `any` quando o formato puder ser modelado.
+- Use `import type` para imports exclusivamente de tipos.
+- O alias `@/* -> src/*` existe. Siga o estilo do arquivo tocado e evite cadeias profundas de `../../`.
+- Mantenha identificadores técnicos em inglês. Preserve nomes de domínio já definidos pelo schema (`empresa`, `setor`, `pesquisa`, etc.).
+- Use estado local para estado exclusivo da tela; Context para capacidades transversais com ciclo React; Zustand para estado global ou compartilhado entre etapas.
+- Em Zustand, faça atualizações imutáveis, exponha actions e prefira selectors para reduzir renderizações. Nomeie ações do `devtools` como `feature/action`.
+- Em formulários, use `react-hook-form`, normalize valores no submit e derive `isBusy` dos estados `loading`.
+- Em listas GraphQL, preserve paginação por cursor (`first`, `after`, `pageInfo`) e debounce de filtros quando já adotados pela feature.
+- Reuse `Button`, `Input`, `LabeledInput`, `Select` e componentes de dashboard antes de criar markup duplicado.
+- Preserve tokens/classes do tema e suporte a dark mode; não crie uma segunda solução de styling.
+
+### Composição e DI
+
+Não há contêiner de DI nem classes de serviço. Dependências são compostas por providers, hooks, props e imports de módulos.
+
+```tsx
+// ✅ Dependência explícita e testável
+function ResultsPanel({ onRetry }: { onRetry: () => void }) {
+  return <Button onClick={onRetry}>Retry</Button>;
+}
+
+// ❌ Service locator ou instância global nova dentro da renderização
+function ResultsPanel() {
+  const client = new ApolloClient(/* ... */);
+  return null;
+}
+```
+
+Não crie outro `ApolloClient`, `AuthProvider`, store ou `ToastContainer`; use as instâncias/providers existentes.
+
+### Assíncrono, erros e logging
+
+- Prefira `async/await` a cadeias `.then()`.
+- Use `try/catch/finally` quando houver recuperação, feedback ou limpeza.
+- Com `errorPolicy: 'all'`, trate tanto exceções quanto erros retornados pela mutation antes de navegar ou exibir sucesso.
+- Use `getGraphQLErrorMessage` de `src/utils/confirmToast.tsx`; não duplique parsers de erro.
+- Mostre mensagens acionáveis ao usuário via estado da tela ou `toast.error`; use `toast.success` somente após confirmação da operação.
+- `console.error` é aceitável para diagnóstico de falhas capturadas. Não deixe `console.log`, dados de formulário, tokens ou logs de clique no código final.
+- Em logout, preserve a limpeza local em `finally`.
+- A interoperabilidade `Observable`/`subscribe` do Apollo é exceção válida à preferência por `async/await`.
+
+```ts
+// ✅
+try {
+  const result = await saveEntity({ variables: { input } });
+  const message = getGraphQLErrorMessage(result.error);
+  if (message) {
+    toast.error(message);
+    return;
+  }
+  toast.success('Entity saved successfully.');
+} catch (error: unknown) {
+  console.error(error);
+  toast.error(getGraphQLErrorMessage(error) ?? 'Unable to save entity.');
+}
+
+// ❌
+saveEntity({ variables: { input } })
+  .then(() => console.log('saved'))
+  .catch(() => {});
+```
+
+## Acesso a dados e autenticação
+
+- O frontend acessa dados exclusivamente pela API GraphQL usando `useQuery`, `useMutation` e documentos em `src/graphql`.
+- Não há TypeORM, entidades, repositories, SQL raw ou conexão direta com banco neste projeto.
+- Configure a URL somente por `VITE_ARP_GRAPHQL_API_URL`; não espalhe URLs hardcoded.
+- Preserve `credentials: 'include'`: o refresh token depende de cookie `httpOnly`.
+- O access token é gerenciado por `authStore`/`authStorage`; obtenha-o pelo store, nunca lendo ou escrevendo chaves avulsas.
+- Preserve a ordem dos links: `errorLink -> authLink -> RemoveTypenameFromVariablesLink -> removeTypenameLink -> httpLink`.
+- Depois de mutations, atualize o cache Apollo ou faça `refetch` explícito conforme o padrão da tela.
+
+```ts
+// ✅
+const { data, loading, error } = useQuery(GET_EMPRESAS, { variables });
+
+// ❌ Acesso direto ao banco ou transporte paralelo
+await dataSource.query('SELECT * FROM empresa');
+await fetch('http://localhost:5084/empresas');
+```
+
+## Não fazer
+
+- ❌ Não adicionar TypeORM, SQL raw, repositories ou conexões de banco ao frontend.
+- ❌ Não colocar documentos `gql` inline em páginas quando pertencem a uma feature existente.
+- ❌ Não duplicar layout de dashboard, parser de GraphQL error, máscaras ou componentes reutilizáveis.
+- ❌ Não usar `any` para evitar modelar respostas GraphQL; crie tipos de data e variables.
+- ❌ Não mutar arrays/objetos do estado Zustand; retorne novas estruturas.
+- ❌ Não disparar efeitos assíncronos durante a renderização; use handlers ou `useEffect` com cleanup.
+- ❌ Não exibir sucesso antes de validar o resultado da mutation.
+- ❌ Não persistir refresh token em `localStorage`/`sessionStorage` nem registrar credenciais.
+- ❌ Não criar rotas protegidas fora de `ProtectedRoute` ou alterar a hierarquia de providers.
+- ❌ Não ampliar `src/App.tsx`: a entrada real usa `AppRouter`; trate esse arquivo como demo legado até remoção explícita.
+- ✅ Antes de finalizar, execute `npm run lint` e `npm run buildtsc` para validar lint, tipos e build.
