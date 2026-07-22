@@ -21,10 +21,8 @@ type UseSelectPaginationReturn = {
 };
 
 export function useSelectPagination(
-  options: UseSelectPaginationOptions = {}
+  _options: UseSelectPaginationOptions = {}
 ): UseSelectPaginationReturn {
-  const { pageSize = 10 } = options;
-
   const [items, setItems] = useState<SelectItem[]>([]);
   const [selectedId, setSelectedId] = useState<string | number | undefined>();
   const [searchQuery, setSearchQuery] = useState('');

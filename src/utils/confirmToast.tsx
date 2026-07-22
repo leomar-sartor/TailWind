@@ -61,10 +61,28 @@ export function confirmDeletion({
   );
 }
 
+type GraphQLErrorLike = {
+  message?: string;
+  extensions?: { message?: string };
+};
+
+/**
+ * Extracts a user-facing message from Apollo/GraphQL error shapes
+ * (single error, error arrays, or mutation result.error).
+ */
 export function getGraphQLErrorMessage(error: unknown): string | null {
   if (!error) return null;
 
-  const err = error as any;
+  if (Array.isArray(error)) {
+    const firstError = error[0] as GraphQLErrorLike | undefined;
+    return firstError?.extensions?.message ?? firstError?.message ?? null;
+  }
+
+  const err = error as {
+    message?: string;
+    errors?: GraphQLErrorLike[];
+    graphQLErrors?: GraphQLErrorLike[];
+  };
   const possibleErrors = err.errors ?? err.graphQLErrors;
 
   if (Array.isArray(possibleErrors) && possibleErrors.length > 0) {

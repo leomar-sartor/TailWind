@@ -31,12 +31,10 @@ export function Input({
   const { onChange, onBlur, name, ref } = registration || {};
 
   function handleInputFocus() {
-    console.log("handleInputFocus", new Date().toLocaleTimeString());
     setIsFocused(true);
   }
 
   function handleInputBlur(e: React.FocusEvent<HTMLInputElement>) {
-    console.log("handleInputBlur", new Date().toLocaleTimeString());
     setIsFocused(false);
     setIsFilled(e.target.value.length > 0);
   }

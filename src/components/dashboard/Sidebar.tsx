@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Building2, ChevronDown, FileSearch, Layers, LayoutDashboard, Menu, Search, Send, Users } from 'lucide-react';
-
-type MenuPage = 'dashboard' | 'cadastros' | 'pesquisas' | 'pesquisa' | 'empresa' | 'setor' | 'colaboradores' | 'consultar' | 'enviar';
+import type { MenuPage } from '../../hooks/useDashboardPageConfig';
 
 type SidebarProps = {
   collapsed: boolean;

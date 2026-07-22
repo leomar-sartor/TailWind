@@ -28,9 +28,6 @@ export function LoginPage() {
     formState: { errors, isSubmitting },
   } = useForm<LoginInputs>();
 
-  // const onSubmit: SubmitHandler<Inputs> = (data) => console.log(data)
-
-  // onSubmit agora chama o backend de verdade
   const onSubmit: SubmitHandler<LoginInputs> = async (data) => {
     setAuthError(null);
     try {
@@ -99,10 +96,8 @@ export function LoginPage() {
                   type="submit"
                   disabled={isSubmitting}
                   className='w-full rounded-2xl my-4 p-4 justify-center'
-                  onClick={() => console.log("Acessar Portal", new Date())}
                 >
                   Entrar
-                  {/* {isSubmitting ? 'Entrando...' : 'Entrar'} */}
                 </Button>
               </div>
 
@@ -114,7 +109,6 @@ export function LoginPage() {
                 <button
                   type="button"
                   className="w-full text-link hover:text-link-hover"
-                  onClick={() => console.log("Esqueci minha senha", new Date())}
                 >
                   Esqueci minha senha
                 </button>

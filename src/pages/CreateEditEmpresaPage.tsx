@@ -11,6 +11,7 @@ import {
 } from '../graphql/mutations/empresa.mutations';
 import { GET_EMPRESA_BY_ID } from '../graphql/queries/empresa.queries';
 import { formatCnpj, stripCnpjMask } from '../utils/cnpj';
+import { getGraphQLErrorMessage } from '../utils/confirmToast';
 
 type EmpresaFormValues = {
   id?: string;
@@ -31,29 +32,6 @@ type GetEmpresaByIdData = {
 type GetEmpresaByIdVars = {
   id: number;
 };
-
-function getGraphQLErrorMessage(error: unknown): string | null {
-  if (!error) return null;
-
-  if (Array.isArray(error)) {
-    const firstError = error[0];
-    return firstError?.extensions?.message ?? firstError?.message ?? null;
-  }
-
-  const err = error as any;
-  const possibleErrors = err.errors ?? err.graphQLErrors;
-
-  if (Array.isArray(possibleErrors) && possibleErrors.length > 0) {
-    const firstError = possibleErrors[0];
-    return firstError?.extensions?.message ?? firstError?.message ?? null;
-  }
-
-  if (err?.message) {
-    return err.message;
-  }
-
-  return null;
-}
 
 export function CreateEditEmpresaPage() {
   const navigate = useNavigate();

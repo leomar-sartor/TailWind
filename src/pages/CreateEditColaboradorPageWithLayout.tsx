@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuthStore, selectUser } from '../auth/authStore';
 import { useAuth } from '../auth/AuthContext';
 import { DashboardHeader } from '../components/dashboard/DashboardHeader';
@@ -7,28 +6,16 @@ import { DashboardFooter } from '../components/dashboard/DashboardFooter';
 import { Sidebar } from '../components/dashboard/Sidebar';
 import { DashboardLayout } from '../layouts/DashboardLayout';
 import { PageContainer } from '../components/dashboard/PageContainer';
+import { useDashboardPageConfig, type MenuPage } from '../hooks/useDashboardPageConfig';
 import { CreateEditColaboradorPage } from './CreateEditColaboradorPage';
 
-type MenuPage = 'dashboard' | 'cadastros' | 'pesquisas' | 'pesquisa' | 'empresa' | 'setor' | 'consultar' | 'colaboradores';
-
-const pageInfo: Record<MenuPage, { title: string; description: string }> = {
-  dashboard: { title: 'Dashboard', description: 'Visão geral do painel administrativo' },
-  cadastros: { title: 'Cadastros', description: 'Visão geral dos cadastros' },
-  pesquisas: { title: 'Pesquisas', description: 'Visão geral das pesquisas' },
-  pesquisa: { title: 'Pesquisa', description: 'Cadastro de pesquisas e questões' },
-  empresa: { title: 'Cadastros', description: 'Cadastro de empresas' },
-  setor: { title: 'Cadastros', description: 'Cadastro de setores' },
-  consultar: { title: 'Pesquisas', description: 'Consulta de dados' },
-  colaboradores: { title: 'Cadastros', description: 'Cadastro de colaboradores' },
-};
-
 export function CreateEditColaboradorPageWithLayout() {
-  const navigate = useNavigate();
   const user = useAuthStore(selectUser);
   const { logout } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [selectedPage] = useState<MenuPage>('colaboradores');
+  const selectedPage: MenuPage = 'colaboradores';
+  const { pageInfo, handlePageChange } = useDashboardPageConfig(selectedPage);
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 639.98px)');
@@ -57,27 +44,6 @@ export function CreateEditColaboradorPageWithLayout() {
 
   const handleToggleSidebar = () => {
     setSidebarCollapsed((prev) => !prev);
-  };
-
-  const handlePageChange = (page: MenuPage) => {
-    if (page === 'colaboradores') return;
-    if (page === 'dashboard') {
-      navigate('/dashboard');
-      return;
-    }
-    if (page === 'empresa') {
-      navigate('/dashboard/empresa');
-      return;
-    }
-    if (page === 'setor') {
-      navigate('/dashboard/setor');
-      return;
-    }
-    if (page === 'pesquisa') {
-      navigate('/dashboard/pesquisa');
-      return;
-    }
-    navigate('/dashboard');
   };
 
   const handleLogout = async () => {

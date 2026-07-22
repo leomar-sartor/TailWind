@@ -17,8 +17,7 @@ createRoot(document.getElementById('root')!).render(
       pauseOnHover
       theme="colored"
       style={{ top: '50%', transform: 'translateY(-50%)' }}
-      toastClassName="bg-white border border-slate-200 shadow-2xl rounded-3xl dark:bg-[var(--color-surface)] dark:border-[var(--color-border)]"
-      bodyClassName="px-4 py-3 text-slate-900 dark:text-[var(--color-text)]"
+      toastClassName="bg-white border border-slate-200 shadow-2xl rounded-3xl px-4 py-3 text-slate-900 dark:bg-[var(--color-surface)] dark:border-[var(--color-border)] dark:text-[var(--color-text)]"
     />
   </>
 )

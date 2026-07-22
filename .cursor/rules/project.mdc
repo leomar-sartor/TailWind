@@ -135,5 +135,5 @@ await fetch('http://localhost:5084/empresas');
 - ❌ Não exibir sucesso antes de validar o resultado da mutation.
 - ❌ Não persistir refresh token em `localStorage`/`sessionStorage` nem registrar credenciais.
 - ❌ Não criar rotas protegidas fora de `ProtectedRoute` ou alterar a hierarquia de providers.
-- ❌ Não ampliar `src/App.tsx`: a entrada real usa `AppRouter`; trate esse arquivo como demo legado até remoção explícita.
+- ❌ Não recriar demos legados (`App.tsx`, `ExampleSelectWithPagination`); a entrada real é `AppRouter`.
 - ✅ Antes de finalizar, execute `npm run lint` e `npm run buildtsc` para validar lint, tipos e build.
