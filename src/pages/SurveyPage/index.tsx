@@ -12,7 +12,6 @@ import { Loader } from 'lucide-react';
 import headerImage from '@/assets/logos/LogoHeaderFormSample.png';
 import { ServerError } from '@apollo/client/errors';
 
-// Add this interface for the query data type
 interface GetSessaoPesquisaData {
   sessaoPesquisa: {
     pesquisa: Pesquisa;
@@ -25,7 +24,10 @@ export function SurveyPage() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
 
-  const { inicializar, isFinished } = useSurveyStore();
+  const inicializar = useSurveyStore((s) => s.inicializar);
+  const reset = useSurveyStore((s) => s.reset);
+  const isFinished = useSurveyStore((s) => s.isFinished);
+  const hasPesquisa = useSurveyStore((s) => s.pesquisa !== null);
 
   const { data, loading, error } = useQuery<GetSessaoPesquisaData>(GET_SESSAO_PESQUISA, {
     variables: { token },
@@ -33,15 +35,22 @@ export function SurveyPage() {
     fetchPolicy: 'network-only',
   });
 
-  const pesquisaJaCarregada = useSurveyStore((s) => s.pesquisa !== null);
-
+  // Limpa estado ao trocar de token e no unmount (evita vazamento entre pesquisas)
   useEffect(() => {
-  if (data?.sessaoPesquisa && !pesquisaJaCarregada) {
-    const { pesquisa, ultimaQuestaoRespondidaId, respostasParciais } =
-      data.sessaoPesquisa;
-    inicializar(token!, pesquisa, ultimaQuestaoRespondidaId, respostasParciais);
-  }
-}, [data?.sessaoPesquisa]);
+    reset();
+
+    return () => {
+      reset();
+    };
+  }, [token, reset]);
+
+  // Sempre inicializa para o token atual quando a sessão chega (ignora data stale enquanto loading)
+  useEffect(() => {
+    if (!token || loading || !data?.sessaoPesquisa) return;
+
+    const { pesquisa, ultimaQuestaoRespondidaId, respostasParciais } = data.sessaoPesquisa;
+    inicializar(token, pesquisa, ultimaQuestaoRespondidaId, respostasParciais);
+  }, [token, loading, data?.sessaoPesquisa, inicializar]);
 
   // ── Token ausente ──────────────────────────────────────────────────────────
   if (!token) {
@@ -49,7 +58,7 @@ export function SurveyPage() {
   }
 
   // ── Carregando ─────────────────────────────────────────────────────────────
-  if (loading) {
+  if (loading || (!error && !hasPesquisa && !isFinished)) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-6" style={{ background: 'var(--color-bg)' }}>
         <img src={headerImage} alt="Logo" className="w-48 h-12 object-contain opacity-80" />

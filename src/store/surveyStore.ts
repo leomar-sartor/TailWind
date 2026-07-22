@@ -51,6 +51,7 @@ interface SurveyState {
 
   // Actions
   inicializar: (token: string, pesquisa: Pesquisa, ultimaQuestaoRespondidaId?: string | null, respostasParciais?: string | null) => void;
+  reset: () => void;
   setRespostaTexto: (questaoId: string, texto: string) => void;
   setRespostaOpcao: (questaoId: string, opcaoId: string, multiplas: boolean) => void;
   avancar: () => void;
@@ -61,19 +62,23 @@ interface SurveyState {
   getRespostasJson: () => string;
 }
 
+const initialSurveyState = {
+  token: null as string | null,
+  pesquisa: null as Pesquisa | null,
+  questoesOrdenadas: [] as Questao[],
+  questaoAtualIndex: 0,
+  respostas: {} as Record<string, RespostaLocal>,
+  isFinished: false,
+  isLoading: false,
+  error: null as string | null,
+};
+
 // ─── Store ────────────────────────────────────────────────────────────────────
 
 export const useSurveyStore = create<SurveyState>()(
   devtools(
     (set, get) => ({
-      token: null,
-      pesquisa: null,
-      questoesOrdenadas: [],
-      questaoAtualIndex: 0,
-      respostas: {},
-      isFinished: false,
-      isLoading: false,
-      error: null,
+      ...initialSurveyState,
 
       inicializar: (token, pesquisa, ultimaQuestaoRespondidaId, respostasParciais) => {
         const questoesOrdenadas = [...pesquisa.questoes]
@@ -93,7 +98,7 @@ export const useSurveyStore = create<SurveyState>()(
         // Restaura o índice da última questão respondida
         let questaoAtualIndex = 0;
         if (ultimaQuestaoRespondidaId) {
-          const idx = questoesOrdenadas.findIndex((q) => q.id === ultimaQuestaoRespondidaId);
+          const idx = questoesOrdenadas.findIndex((q) => q.id === String(ultimaQuestaoRespondidaId));
           if (idx !== -1) {
             // Retoma na próxima questão após a última respondida
             questaoAtualIndex = Math.min(idx + 1, questoesOrdenadas.length - 1);
@@ -101,11 +106,14 @@ export const useSurveyStore = create<SurveyState>()(
         }
 
         set(
-          { token, pesquisa, questoesOrdenadas, respostas, questaoAtualIndex, isFinished: false, error: null },
+          { token, pesquisa, questoesOrdenadas, respostas, questaoAtualIndex, isFinished: false, isLoading: false, error: null },
           false,
           'survey/inicializar'
         );
       },
+
+      reset: () =>
+        set({ ...initialSurveyState }, false, 'survey/reset'),
 
       setRespostaTexto: (questaoId, texto) =>
         set(
@@ -179,7 +187,7 @@ export const useSurveyStore = create<SurveyState>()(
 
       getRespostasJson: () => JSON.stringify(get().respostas),
     }),
-    { name: 'SurveyStore' }
+    { name: 'SurveyStore', enabled: import.meta.env.DEV }
   )
 );
 

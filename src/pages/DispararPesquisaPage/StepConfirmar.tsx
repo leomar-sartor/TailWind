@@ -6,6 +6,7 @@ import { useDisparoStore } from '../../store/disparoStore';
 import { DISPARAR_PESQUISA_MUTATION } from '../../graphql/mutations/disparo.mutations';
 import { GET_COLABORADORES_BY_SETOR } from '../../graphql/queries/disparo.queries';
 import type { ColaboradorNode, GetColaboradoresData } from '../../graphql/types/disparo.types';
+import { getGraphQLErrorMessage } from '../../utils/confirmToast';
 
 interface Props {
   onBack: () => void;
@@ -45,16 +46,22 @@ export function StepConfirmar({ onBack, onSuccess }: Props) {
   async function handleDisparar() {
     setErro(null);
     try {
-      await dispararPesquisa({
+      const result = await dispararPesquisa({
         variables: {
           pesquisaId: Number(pesquisaId),
           colaboradorIds: colaboradoresSelecionados.map(Number),
         },
       });
+
+      const mutationErrorMessage = getGraphQLErrorMessage(result.error);
+      if (mutationErrorMessage) {
+        setErro(mutationErrorMessage);
+        return;
+      }
+
       setDisparado(true);
-    } catch (err: any) {
-      const msg = err?.graphQLErrors?.[0]?.message ?? 'Erro ao disparar pesquisa. Tente novamente.';
-      setErro(msg);
+    } catch (err: unknown) {
+      setErro(getGraphQLErrorMessage(err) ?? 'Erro ao disparar pesquisa. Tente novamente.');
     }
   }
 

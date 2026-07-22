@@ -2,17 +2,13 @@ import { useMutation } from '@apollo/client/react';
 import { ChevronLeft, ChevronRight, Send } from 'lucide-react';
 import { Button } from '../../components/Button';
 
-import {
-  useSurveyStore,
-  selectQuestaoAtual,
-  selectProgresso,
-  selectIsUltimaQuestao,
-} from '../../store/surveyStore';
+import { useSurveyStore } from '../../store/surveyStore';
 import {
   CREATE_RESPOSTA_MUTATION,
   AUTO_SAVE_PESQUISA_MUTATION,
   FINALIZAR_PESQUISA_MUTATION,
 } from '../../graphql/mutations/pesquisa.mutations';
+import { getGraphQLErrorMessage } from '../../utils/confirmToast';
 import headerImage from '@/assets/logos/LogoHeaderFormSample.png';
 
 export function SurveyQuestion() {
@@ -83,7 +79,7 @@ export function SurveyQuestion() {
 
     try {
       // 1. Envia a resposta da questão atual
-      await createResposta({
+      const createResult = await createResposta({
         variables: {
           token,
           questaoId: Number(questaoAtual!.id),
@@ -92,8 +88,14 @@ export function SurveyQuestion() {
         },
       });
 
+      const createError = getGraphQLErrorMessage(createResult.error);
+      if (createError) {
+        setError(createError);
+        return;
+      }
+
       // 2. Autosave do rascunho (progresso)
-      await autoSave({
+      const autoSaveResult = await autoSave({
         variables: {
           token,
           ultimaQuestaoRespondidaId: Number(questaoAtual!.id),
@@ -101,10 +103,15 @@ export function SurveyQuestion() {
         },
       });
 
+      const autoSaveError = getGraphQLErrorMessage(autoSaveResult.error);
+      if (autoSaveError) {
+        setError(autoSaveError);
+        return;
+      }
+
       avancar();
-    } catch (err: any) {
-      const msg = err?.graphQLErrors?.[0]?.message ?? 'Erro ao salvar resposta. Tente novamente.';
-      setError(msg);
+    } catch (err: unknown) {
+      setError(getGraphQLErrorMessage(err) ?? 'Erro ao salvar resposta. Tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -123,7 +130,7 @@ export function SurveyQuestion() {
 
     try {
       // 1. Salva a última resposta
-      await createResposta({
+      const createResult = await createResposta({
         variables: {
           token,
           questaoId: Number(questaoAtual!.id),
@@ -132,13 +139,24 @@ export function SurveyQuestion() {
         },
       });
 
+      const createError = getGraphQLErrorMessage(createResult.error);
+      if (createError) {
+        setError(createError);
+        return;
+      }
+
       // 2. Finaliza o convite
-      await finalizarPesquisa({ variables: { token } });
+      const finalizarResult = await finalizarPesquisa({ variables: { token } });
+
+      const finalizarError = getGraphQLErrorMessage(finalizarResult.error);
+      if (finalizarError) {
+        setError(finalizarError);
+        return;
+      }
 
       setFinished(true);
-    } catch (err: any) {
-      const msg = err?.graphQLErrors?.[0]?.message ?? 'Erro ao finalizar pesquisa. Tente novamente.';
-      setError(msg);
+    } catch (err: unknown) {
+      setError(getGraphQLErrorMessage(err) ?? 'Erro ao finalizar pesquisa. Tente novamente.');
     } finally {
       setLoading(false);
     }

@@ -101,12 +101,13 @@ export function CreateEditSetorPage() {
         },
         updateQuery: (prev, { fetchMoreResult }) => {
           if (!fetchMoreResult) return prev;
-          const newItems = fetchMoreResult.empresas.nodes.map((emp: any) => ({
-            id: emp.id,
-            label: emp.nomeFantasia,
-          }));
-          setEmpresasItems((prev) => [...prev, ...newItems]);
-          return fetchMoreResult;
+          return {
+            ...fetchMoreResult,
+            empresas: {
+              ...fetchMoreResult.empresas,
+              nodes: [...(prev.empresas?.nodes ?? []), ...fetchMoreResult.empresas.nodes],
+            },
+          };
         },
       });
     } catch (err) {

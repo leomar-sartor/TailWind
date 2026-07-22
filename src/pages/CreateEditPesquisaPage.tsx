@@ -8,6 +8,7 @@ import { Input } from '../components/Input';
 import { Select } from '../components/Select';
 import { CREATE_PESQUISA_MUTATION, UPDATE_PESQUISA_MUTATION } from '../graphql/mutations/pesquisa.mutations';
 import { GET_PESQUISA_BY_ID } from '../graphql/queries/pesquisa.queries';
+import { getGraphQLErrorMessage } from '../utils/confirmToast';
 
 type QuestaoForm = {
   titulo: string;
@@ -183,34 +184,42 @@ export function CreateEditPesquisaPage() {
         })),
       };
 
-      if (isEditing && pesquisaId) {
-        await updatePesquisa({
-          variables: {
-            id: Number(pesquisaId),
-            input: payload,
-          },
-        });
-        setSuccessMessage('Pesquisa atualizada com sucesso!');
-        navigate('/dashboard/pesquisa', {
-          replace: true,
-          state: { message: 'Pesquisa atualizada com sucesso!' },
-        });
-      } else {
-        await createPesquisa({
-          variables: {
-            input: payload,
-          },
-        });
-        setSuccessMessage('Pesquisa cadastrada com sucesso!');
-        reset({ nome: '', dataInicial: '', dataFinal: '', questoes: [{ ...defaultQuestao }] });
-        navigate('/dashboard/pesquisa', {
-          replace: true,
-          state: { message: 'Pesquisa cadastrada com sucesso!' },
-        });
+      const result = isEditing && pesquisaId
+        ? await updatePesquisa({
+            variables: {
+              id: Number(pesquisaId),
+              input: payload,
+            },
+          })
+        : await createPesquisa({
+            variables: {
+              input: payload,
+            },
+          });
+
+      const mutationErrorMessage = getGraphQLErrorMessage(result.error);
+      if (mutationErrorMessage) {
+        setErrorMessage(mutationErrorMessage);
+        return;
       }
+
+      const successMsg = isEditing
+        ? 'Pesquisa atualizada com sucesso!'
+        : 'Pesquisa cadastrada com sucesso!';
+
+      setSuccessMessage(successMsg);
+      if (!isEditing) {
+        reset({ nome: '', dataInicial: '', dataFinal: '', questoes: [{ ...defaultQuestao }] });
+      }
+      navigate('/dashboard/pesquisa', {
+        replace: true,
+        state: { message: successMsg },
+      });
     } catch (err) {
-      console.error(err);
-      setErrorMessage('Não foi possível salvar a pesquisa. Verifique os dados e tente novamente.');
+      setErrorMessage(
+        getGraphQLErrorMessage(err) ??
+          'Não foi possível salvar a pesquisa. Verifique os dados e tente novamente.'
+      );
     }
   };
 

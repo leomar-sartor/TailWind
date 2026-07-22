@@ -1,9 +1,11 @@
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client/react';
+import { toast } from 'react-toastify';
 import { Edit3, PlusCircle, Trash2 } from 'lucide-react';
 import { Button } from '../components/Button';
 import { GET_PESQUISAS } from '../graphql/queries/pesquisa.queries';
 import { DELETE_PESQUISA_MUTATION } from '../graphql/mutations/pesquisa.mutations';
+import { confirmDeletion, getGraphQLErrorMessage } from '../utils/confirmToast';
 
 type PesquisaNode = {
   id: string;
@@ -39,16 +41,30 @@ export function PesquisaPage() {
     navigate(`/dashboard/pesquisa/create?id=${pesquisaId}`);
   };
 
-  const handleDelete = async (pesquisaId: string) => {
-    const confirmed = window.confirm('Deseja excluir esta pesquisa?');
-    if (!confirmed) return;
+  const handleDelete = (pesquisaId: string) => {
+    confirmDeletion({
+      title: 'Excluir pesquisa',
+      message: 'Esta ação não pode ser desfeita. Deseja continuar?',
+      confirmLabel: 'Sim, excluir',
+      onConfirm: async () => {
+        try {
+          const result = await deletePesquisa({ variables: { id: Number(pesquisaId) } });
+          const mutationErrorMessage = getGraphQLErrorMessage(result.error);
 
-    try {
-      await deletePesquisa({ variables: { id: Number(pesquisaId) } });
-      await refetch();
-    } catch (err) {
-      console.error(err);
-    }
+          if (mutationErrorMessage) {
+            toast.error(mutationErrorMessage);
+            return;
+          }
+
+          await refetch();
+          toast.success('Pesquisa excluída com sucesso!');
+        } catch (err: unknown) {
+          toast.error(
+            getGraphQLErrorMessage(err) ?? 'Não foi possível excluir a pesquisa. Tente novamente.'
+          );
+        }
+      },
+    });
   };
 
   return (
