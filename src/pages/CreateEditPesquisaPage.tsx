@@ -1,13 +1,22 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { useFieldArray, useForm, SubmitHandler } from 'react-hook-form';
+import { useFieldArray, useForm, SubmitHandler, type FieldError } from 'react-hook-form';
 import { ArrowLeft, PlusCircle, Plus, Trash2 } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { Select } from '../components/Select';
 import { CREATE_PESQUISA_MUTATION, UPDATE_PESQUISA_MUTATION } from '../graphql/mutations/pesquisa.mutations';
 import { GET_PESQUISA_BY_ID } from '../graphql/queries/pesquisa.queries';
+import type {
+  CreatePesquisaData,
+  CreatePesquisaVars,
+  GetPesquisaByIdData,
+  GetPesquisaByIdVars,
+  TipoQuestao,
+  UpdatePesquisaData,
+  UpdatePesquisaVars,
+} from '../graphql/types/pesquisa.types';
 import { getGraphQLErrorMessage } from '../utils/confirmToast';
 
 type QuestaoForm = {
@@ -61,31 +70,17 @@ export function CreateEditPesquisaPage() {
     name: 'questoes',
   });
 
-  const [createPesquisa, { loading: creating }] = useMutation(CREATE_PESQUISA_MUTATION);
-  const [updatePesquisa, { loading: updating }] = useMutation(UPDATE_PESQUISA_MUTATION);
+  const [createPesquisa, { loading: creating }] = useMutation<CreatePesquisaData, CreatePesquisaVars>(
+    CREATE_PESQUISA_MUTATION,
+  );
+  const [updatePesquisa, { loading: updating }] = useMutation<UpdatePesquisaData, UpdatePesquisaVars>(
+    UPDATE_PESQUISA_MUTATION,
+  );
 
-  // Buscar dados da pesquisa se for edição
-  const { data: pesquisaData, loading: loadingPesquisa, refetch } = useQuery<{
-    pesquisaById: {
-      id: string;
-      nome: string;
-      dataInicial: string;
-      dataFinal: string;
-      questoes: Array<{
-        id: string;
-        titulo: string;
-        tipo: string;
-        obrigatoria: boolean;
-        multiplasRespostas: boolean;
-        maximoDeCaracteres: number | null;
-        opcoes: Array<{
-          id: string;
-          ordem: number;
-          descricao: string;
-        }>;
-      }>;
-    };
-  }>(
+  const { data: pesquisaData, loading: loadingPesquisa, refetch } = useQuery<
+    GetPesquisaByIdData,
+    GetPesquisaByIdVars
+  >(
     GET_PESQUISA_BY_ID,
     {
       variables: {
@@ -110,13 +105,13 @@ export function CreateEditPesquisaPage() {
         nome: pesquisa.nome,
         dataInicial: pesquisa.dataInicial.slice(0, 16), // Converter ISO para datetime-local
         dataFinal: pesquisa.dataFinal.slice(0, 16),
-        questoes: pesquisa.questoes.map((q: any) => ({
+        questoes: pesquisa.questoes.map((q) => ({
           titulo: q.titulo,
-          tipo: q.tipo,
+          tipo: (q.tipo === 'OPCAO' ? 'OPCAO' : 'TEXTO') as TipoQuestao,
           obrigatoria: q.obrigatoria,
           multiplasRespostas: q.multiplasRespostas,
           maximoDeCaracteres: q.maximoDeCaracteres ? String(q.maximoDeCaracteres) : '',
-          opcoes: q.opcoes.map((op: any) => ({
+          opcoes: q.opcoes.map((op) => ({
             ordem: op.ordem,
             descricao: op.descricao,
           })),
@@ -338,12 +333,12 @@ export function CreateEditPesquisaPage() {
                         registration={register(`questoes.${index}.titulo` as const, {
                           required: 'Título da questão é obrigatório',
                         })}
-                        error={formState.errors.questoes?.[index]?.titulo as any}
+                        error={formState.errors.questoes?.[index]?.titulo as FieldError | undefined}
                       />
                       <Select
                         name={`questoes.${index}.tipo`}
                         registration={register(`questoes.${index}.tipo` as const)}
-                        error={formState.errors.questoes?.[index]?.tipo as any}
+                        error={formState.errors.questoes?.[index]?.tipo as FieldError | undefined}
                       >
                         <option value="TEXTO">Texto</option>
                         <option value="OPCAO">Opção</option>
@@ -379,7 +374,7 @@ export function CreateEditPesquisaPage() {
                               || (!Number.isNaN(Number(value)) && Number(value) > 0)
                               || 'Use um número maior que zero',
                           })}
-                          error={formState.errors.questoes?.[index]?.maximoDeCaracteres as any}
+                          error={formState.errors.questoes?.[index]?.maximoDeCaracteres as FieldError | undefined}
                         />
                       )}
                     </div>
@@ -410,7 +405,7 @@ export function CreateEditPesquisaPage() {
                                 registration={register(`questoes.${index}.opcoes.${optionIndex}.descricao` as const, {
                                   required: 'Descrição da opção é obrigatória',
                                 })}
-                                error={formState.errors.questoes?.[index]?.opcoes?.[optionIndex]?.descricao as any}
+                                error={formState.errors.questoes?.[index]?.opcoes?.[optionIndex]?.descricao as FieldError | undefined}
                               />
                               <div className="flex items-center gap-2">
                                 <span className="rounded-3xl border border-slate-200 bg-[#F4F6FA] px-3 py-2 text-sm text-[#6C7287]">

@@ -12,6 +12,18 @@ import {
   UPDATE_SETOR_MUTATION,
 } from '../graphql/mutations/setor.mutations';
 import { GET_SETOR_BY_ID, GET_EMPRESAS_PAGINATED } from '../graphql/queries/setor.queries';
+import type {
+  CreateSetorData,
+  CreateSetorVars,
+  GetSetorByIdData,
+  GetSetorByIdVars,
+  UpdateSetorData,
+  UpdateSetorVars,
+} from '../graphql/types/setor.types';
+import type {
+  GetEmpresasPaginatedData,
+  GetEmpresasPaginatedVars,
+} from '../graphql/types/empresa.types';
 import { getGraphQLErrorMessage } from '../utils/confirmToast';
 
 type SetorFormValues = {
@@ -19,18 +31,6 @@ type SetorFormValues = {
   nome: string;
   descricao: string;
   empresaId: string;
-};
-
-type SetorByIdData = {
-  setorById: {
-    id: string;
-    nome: string;
-    descricao?: string;
-    empresa?: {
-      id: string;
-      nomeFantasia?: string;
-    };
-  };
 };
 
 function mergeSeedItem(items: SelectItem[], seed?: SelectItem | null): SelectItem[] {
@@ -53,19 +53,18 @@ export function CreateEditSetorPage() {
 
   const selectedEmpresaId = setorForm.watch('empresaId') || undefined;
 
-  const [createSetor, { loading: creating }] = useMutation(CREATE_SETOR_MUTATION);
-  const [updateSetor, { loading: updating }] = useMutation(UPDATE_SETOR_MUTATION);
+  const [createSetor, { loading: creating }] = useMutation<CreateSetorData, CreateSetorVars>(
+    CREATE_SETOR_MUTATION,
+  );
+  const [updateSetor, { loading: updating }] = useMutation<UpdateSetorData, UpdateSetorVars>(
+    UPDATE_SETOR_MUTATION,
+  );
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const { data: empresasData, loading: empresasLoading, fetchMore: fetchMoreEmpresas } = useQuery<{
-    empresas: {
-      nodes: Array<{ id: string | number; nomeFantasia: string }>;
-      pageInfo: {
-        hasNextPage: boolean;
-        endCursor?: string;
-      };
-    };
-  }>(
+  const { data: empresasData, loading: empresasLoading, fetchMore: fetchMoreEmpresas } = useQuery<
+    GetEmpresasPaginatedData,
+    GetEmpresasPaginatedVars
+  >(
     GET_EMPRESAS_PAGINATED,
     {
       variables: {
@@ -75,7 +74,7 @@ export function CreateEditSetorPage() {
     },
   );
 
-  const { data: setorData, loading: loadingSetor } = useQuery<SetorByIdData>(
+  const { data: setorData, loading: loadingSetor } = useQuery<GetSetorByIdData, GetSetorByIdVars>(
     GET_SETOR_BY_ID,
     {
       variables: {
@@ -143,7 +142,7 @@ export function CreateEditSetorPage() {
     if (!setor) return;
 
     setorForm.reset({
-      id: setor.id,
+      id: String(setor.id),
       nome: setor.nome,
       descricao: setor.descricao ?? '',
       empresaId: setor.empresa?.id ? String(setor.empresa.id) : '',
@@ -164,28 +163,21 @@ export function CreateEditSetorPage() {
     };
 
     try {
-      let result: unknown;
+      const result = isEditing && setorId
+        ? await updateSetor({
+            variables: {
+              id: Number(setorId),
+              input: payload,
+            },
+          })
+        : await createSetor({
+            variables: {
+              empresaId: Number(values.empresaId),
+              input: payload,
+            },
+          });
 
-      if (isEditing && setorId) {
-        result = await updateSetor({
-          variables: {
-            id: Number(setorId),
-            input: payload,
-          },
-        });
-      } else {
-        result = await createSetor({
-          variables: {
-            empresaId: Number(values.empresaId),
-            input: payload,
-          },
-        });
-      }
-
-      const mutationErrorMessage = getGraphQLErrorMessage(
-        (result as { error?: unknown; errors?: unknown })?.error
-          ?? (result as { errors?: unknown })?.errors,
-      );
+      const mutationErrorMessage = getGraphQLErrorMessage(result.error);
 
       if (mutationErrorMessage) {
         setSubmitError(mutationErrorMessage);

@@ -10,18 +10,26 @@ import { GET_EMPRESAS } from '../graphql/queries/empresa.queries';
 import {
   REMOVE_EMPRESA_MUTATION,
 } from '../graphql/mutations/empresa.mutations';
+import type {
+  EmpresaNode,
+  GetEmpresasData,
+  GetEmpresasVars,
+  RemoveEmpresaData,
+  RemoveEmpresaVars,
+} from '../graphql/types/empresa.types';
+import type { FilterClause, OrFilterInput } from '../graphql/types/common.types';
 import { useCursorPagination } from '../hooks/useCursorPagination';
 import { formatCnpj, stripCnpjMask } from '../utils/cnpj';
 import { confirmDeletion, getGraphQLErrorMessage } from '../utils/confirmToast';
 
 const PAGE_SIZE = 10;
 
-function buildWhere(filter: string) {
+function buildWhere(filter: string): OrFilterInput | null {
   const normalized = filter.trim();
   if (!normalized) return null;
 
   const stripped = stripCnpjMask(normalized);
-  const or: any[] = [
+  const or: FilterClause[] = [
     { nomeFantasia: { contains: normalized } },
     { descricao: { contains: normalized } },
   ];
@@ -69,7 +77,7 @@ export function EmpresaPage() {
     canGoToLastKnown,
   } = useCursorPagination({ resetDeps: [debouncedGlobalFilter] });
 
-  const variables = useMemo(
+  const variables = useMemo<GetEmpresasVars>(
     () => ({
       where: buildWhere(debouncedGlobalFilter),
       first: PAGE_SIZE,
@@ -78,23 +86,14 @@ export function EmpresaPage() {
     [debouncedGlobalFilter, after],
   );
 
-  const { data, loading, error, refetch } = useQuery<{
-    empresas: {
-      nodes: EmpresaNode[];
-      pageInfo: {
-        hasNextPage: boolean;
-        hasPreviousPage?: boolean;
-        startCursor?: string;
-        endCursor?: string;
-      };
-      totalCount: number;
-    };
-  }>(GET_EMPRESAS, {
+  const { data, loading, error, refetch } = useQuery<GetEmpresasData, GetEmpresasVars>(GET_EMPRESAS, {
     variables,
     notifyOnNetworkStatusChange: true,
   });
 
-  const [removeEmpresa, { loading: removing }] = useMutation(REMOVE_EMPRESA_MUTATION);
+  const [removeEmpresa, { loading: removing }] = useMutation<RemoveEmpresaData, RemoveEmpresaVars>(
+    REMOVE_EMPRESA_MUTATION,
+  );
   const [removeErrorMessage, setRemoveErrorMessage] = useState<string | null>(null);
 
   const empresas: EmpresaNode[] = data?.empresas?.nodes ?? [];
@@ -107,11 +106,11 @@ export function EmpresaPage() {
     navigate('/dashboard/empresa/create');
   };
 
-  const handleEdit = (empresaId: string) => {
+  const handleEdit = (empresaId: string | number) => {
     navigate(`/dashboard/empresa/create?id=${empresaId}`);
   };
 
-  const handleRemove = async (id: string) => {
+  const handleRemove = async (id: string | number) => {
     setRemoveErrorMessage(null);
 
     confirmDeletion({
@@ -121,7 +120,7 @@ export function EmpresaPage() {
       onConfirm: async () => {
         try {
           const result = await removeEmpresa({ variables: { id: Number(id) } });
-          const mutationErrorMessage = getGraphQLErrorMessage((result as any)?.error ?? (result as any)?.errors);
+          const mutationErrorMessage = getGraphQLErrorMessage(result.error);
 
           if (mutationErrorMessage) {
             setRemoveErrorMessage(mutationErrorMessage);
@@ -266,11 +265,3 @@ export function EmpresaPage() {
     </div>
   );
 }
-
-type EmpresaNode = {
-  id: string;
-  cnpj: string;
-  nomeFantasia: string;
-  descricao?: string;
-  createdAt?: string;
-};

@@ -5,7 +5,13 @@ import { Button } from '../../components/Button';
 import { useDisparoStore } from '../../store/disparoStore';
 import { DISPARAR_PESQUISA_MUTATION } from '../../graphql/mutations/disparo.mutations';
 import { GET_COLABORADORES_BY_SETOR } from '../../graphql/queries/disparo.queries';
-import type { ColaboradorNode, GetColaboradoresData } from '../../graphql/types/disparo.types';
+import type {
+  ColaboradorNode,
+  DispararPesquisaData,
+  DispararPesquisaVars,
+  GetColaboradoresBySetorVars,
+  GetColaboradoresData,
+} from '../../graphql/types/disparo.types';
 import { getGraphQLErrorMessage } from '../../utils/confirmToast';
 
 interface Props {
@@ -24,20 +30,24 @@ export function StepConfirmar({ onBack, onSuccess }: Props) {
   const [disparado, setDisparado] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
-  const [dispararPesquisa, { loading }] = useMutation(DISPARAR_PESQUISA_MUTATION);
+  const [dispararPesquisa, { loading }] = useMutation<DispararPesquisaData, DispararPesquisaVars>(
+    DISPARAR_PESQUISA_MUTATION,
+  );
 
   // Busca nomes dos colaboradores selecionados para exibição
-  const { data: colaboradoresData } = useQuery<GetColaboradoresData>(GET_COLABORADORES_BY_SETOR, {
-    variables: {
-      first: 500,
-      where: setorIdsSelecionados.length > 0
-        ? { setorId: { in: setorIdsSelecionados.map(Number) } }
-        : null,
+  const { data: colaboradoresData } = useQuery<GetColaboradoresData, GetColaboradoresBySetorVars>(
+    GET_COLABORADORES_BY_SETOR,
+    {
+      variables: {
+        first: 500,
+        where: setorIdsSelecionados.length > 0
+          ? { setorId: { in: setorIdsSelecionados.map(Number) } }
+          : null,
+      },
+      skip: setorIdsSelecionados.length === 0,
+      fetchPolicy: 'cache-first',
     },
-    skip: setorIdsSelecionados.length === 0,
-    fetchPolicy: 'cache-first',
-  });
-
+  );
   const todosColaboradores = colaboradoresData?.colaboradores?.nodes ?? [];
   const colaboradoresParaEnviar = todosColaboradores.filter((c: ColaboradorNode) =>
     colaboradoresSelecionados.includes(String(c.id))

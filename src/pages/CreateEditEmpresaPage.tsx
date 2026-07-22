@@ -10,6 +10,14 @@ import {
   UPDATE_EMPRESA_MUTATION,
 } from '../graphql/mutations/empresa.mutations';
 import { GET_EMPRESA_BY_ID } from '../graphql/queries/empresa.queries';
+import type {
+  CreateEmpresaData,
+  CreateEmpresaVars,
+  GetEmpresaByIdData,
+  GetEmpresaByIdVars,
+  UpdateEmpresaData,
+  UpdateEmpresaVars,
+} from '../graphql/types/empresa.types';
 import { formatCnpj, stripCnpjMask } from '../utils/cnpj';
 import { getGraphQLErrorMessage } from '../utils/confirmToast';
 
@@ -18,19 +26,6 @@ type EmpresaFormValues = {
   cnpj: string;
   nomeFantasia: string;
   descricao?: string;
-};
-
-type GetEmpresaByIdData = {
-  empresaById: {
-    id: string;
-    cnpj: string;
-    nomeFantasia: string;
-    descricao?: string | null;
-  } | null;
-};
-
-type GetEmpresaByIdVars = {
-  id: number;
 };
 
 export function CreateEditEmpresaPage() {
@@ -43,11 +38,14 @@ export function CreateEditEmpresaPage() {
     defaultValues: { id: '', cnpj: '', nomeFantasia: '', descricao: '' },
   });
 
-  const [createEmpresa, { loading: creating }] = useMutation(CREATE_EMPRESA_MUTATION);
-  const [updateEmpresa, { loading: updating }] = useMutation(UPDATE_EMPRESA_MUTATION);
+  const [createEmpresa, { loading: creating }] = useMutation<CreateEmpresaData, CreateEmpresaVars>(
+    CREATE_EMPRESA_MUTATION,
+  );
+  const [updateEmpresa, { loading: updating }] = useMutation<UpdateEmpresaData, UpdateEmpresaVars>(
+    UPDATE_EMPRESA_MUTATION,
+  );
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // Buscar dados da empresa se for edição
   const { data: empresaData, loading: loadingEmpresa, refetch } = useQuery<GetEmpresaByIdData, GetEmpresaByIdVars>(
     GET_EMPRESA_BY_ID,
     {
@@ -58,19 +56,17 @@ export function CreateEditEmpresaPage() {
     }
   );
 
-  // Refetch quando o ID mudar
   useEffect(() => {
     if (empresaId && refetch) {
       refetch({ id: Number(empresaId) });
     }
   }, [empresaId, refetch]);
 
-  // Preencher formulário com dados da empresa ao carregar
   useEffect(() => {
     if (empresaData?.empresaById) {
       const empresa = empresaData.empresaById;
       empresaForm.reset({
-        id: empresa.id,
+        id: String(empresa.id),
         cnpj: formatCnpj(empresa.cnpj),
         nomeFantasia: empresa.nomeFantasia,
         descricao: empresa.descricao ?? '',
@@ -93,24 +89,20 @@ export function CreateEditEmpresaPage() {
     };
 
     try {
-      let result: any;
+      const result = isEditing && empresaId
+        ? await updateEmpresa({
+            variables: {
+              id: Number(empresaId),
+              input: payload,
+            },
+          })
+        : await createEmpresa({
+            variables: {
+              input: payload,
+            },
+          });
 
-      if (isEditing && empresaId) {
-        result = await updateEmpresa({
-          variables: {
-            id: Number(empresaId),
-            input: payload,
-          },
-        });
-      } else {
-        result = await createEmpresa({
-          variables: {
-            input: payload,
-          },
-        });
-      }
-
-      const mutationErrorMessage = getGraphQLErrorMessage((result as any)?.error ?? (result as any)?.errors);
+      const mutationErrorMessage = getGraphQLErrorMessage(result.error);
 
       if (mutationErrorMessage) {
         setSubmitError(mutationErrorMessage);
@@ -132,7 +124,6 @@ export function CreateEditEmpresaPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center gap-4">
         <button
           onClick={() => navigate('/dashboard/empresa')}
@@ -153,7 +144,6 @@ export function CreateEditEmpresaPage() {
         </div>
       </div>
 
-      {/* Form Card */}
       <div>
         <article className="dashboard-card rounded-[28px] border p-6 shadow-xl">
           {submitError ? (

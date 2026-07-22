@@ -8,6 +8,14 @@ import {
   AUTO_SAVE_PESQUISA_MUTATION,
   FINALIZAR_PESQUISA_MUTATION,
 } from '../../graphql/mutations/pesquisa.mutations';
+import type {
+  AutoSavePesquisaData,
+  AutoSavePesquisaVars,
+  CreateRespostaData,
+  CreateRespostaVars,
+  FinalizarPesquisaData,
+  FinalizarPesquisaVars,
+} from '../../graphql/types/survey.types';
 import { getGraphQLErrorMessage } from '../../utils/confirmToast';
 import headerImage from '@/assets/logos/LogoHeaderFormSample.png';
 
@@ -40,9 +48,11 @@ export function SurveyQuestion() {
   };
   const respostaAtual = questaoAtual ? respostas[questaoAtual.id] : null;
 
-  const [createResposta] = useMutation(CREATE_RESPOSTA_MUTATION);
-  const [autoSave] = useMutation(AUTO_SAVE_PESQUISA_MUTATION);
-  const [finalizarPesquisa] = useMutation(FINALIZAR_PESQUISA_MUTATION);
+  const [createResposta] = useMutation<CreateRespostaData, CreateRespostaVars>(CREATE_RESPOSTA_MUTATION);
+  const [autoSave] = useMutation<AutoSavePesquisaData, AutoSavePesquisaVars>(AUTO_SAVE_PESQUISA_MUTATION);
+  const [finalizarPesquisa] = useMutation<FinalizarPesquisaData, FinalizarPesquisaVars>(
+    FINALIZAR_PESQUISA_MUTATION,
+  );
 
   if (!questaoAtual || !pesquisa)
     return null;

@@ -7,37 +7,26 @@ import { Button } from '../components/Button';
 import { CursorPagination } from '../components/CursorPagination';
 import { GET_COLABORADORES } from '../graphql/queries/colaborador.queries';
 import { REMOVE_COLABORADOR_MUTATION } from '../graphql/mutations/colaborador.mutations';
+import type {
+  ColaboradorNode,
+  GetColaboradoresData,
+  GetColaboradoresVars,
+  RemoveColaboradorData,
+  RemoveColaboradorVars,
+} from '../graphql/types/colaborador.types';
+import type { FilterClause, OrFilterInput } from '../graphql/types/common.types';
 import { useCursorPagination } from '../hooks/useCursorPagination';
 import { formatCpfForDisplay, stripCpfMask } from '../utils/cpf';
 import { confirmDeletion, getGraphQLErrorMessage } from '../utils/confirmToast';
 
-type ColaboradorNode = {
-  id: string;
-  nome: string;
-  cpf: string;
-  email: string;
-  ativo: boolean;
-  setorId: string;
-  empresaId: string;
-  empresa?: {
-    id?: string;
-    nomeFantasia?: string;
-  };
-  setor?: {
-    id?: string;
-    nome?: string;
-  };
-  createdAt?: string;
-};
-
 const PAGE_SIZE = 10;
 
-function buildWhere(filter: string) {
+function buildWhere(filter: string): OrFilterInput | null {
   const normalized = filter.trim();
   if (!normalized) return null;
 
   const strippedCpf = stripCpfMask(normalized);
-  const or: any[] = [
+  const or: FilterClause[] = [
     { nome: { contains: normalized } },
     { email: { contains: normalized } },
     { empresa: { nomeFantasia: { contains: normalized } } },
@@ -78,7 +67,7 @@ export function ColaboradorPage() {
     canGoToLastKnown,
   } = useCursorPagination({ resetDeps: [debouncedGlobalFilter] });
 
-  const variables = useMemo(
+  const variables = useMemo<GetColaboradoresVars>(
     () => ({
       where: buildWhere(debouncedGlobalFilter),
       first: PAGE_SIZE,
@@ -87,23 +76,18 @@ export function ColaboradorPage() {
     [debouncedGlobalFilter, after],
   );
 
-  const { data, loading, error, refetch } = useQuery<{
-    colaboradores: {
-      nodes: ColaboradorNode[];
-      pageInfo: {
-        hasNextPage: boolean;
-        hasPreviousPage?: boolean;
-        startCursor?: string;
-        endCursor?: string;
-      };
-      totalCount: number;
-    };
-  }>(GET_COLABORADORES, {
-    variables,
-    notifyOnNetworkStatusChange: true,
-  });
+  const { data, loading, error, refetch } = useQuery<GetColaboradoresData, GetColaboradoresVars>(
+    GET_COLABORADORES,
+    {
+      variables,
+      notifyOnNetworkStatusChange: true,
+    },
+  );
 
-  const [removeColaborador, { loading: removing }] = useMutation(REMOVE_COLABORADOR_MUTATION);
+  const [removeColaborador, { loading: removing }] = useMutation<
+    RemoveColaboradorData,
+    RemoveColaboradorVars
+  >(REMOVE_COLABORADOR_MUTATION);
 
   const colaboradores: ColaboradorNode[] = data?.colaboradores?.nodes ?? [];
   const pageInfo = data?.colaboradores?.pageInfo;
@@ -115,11 +99,11 @@ export function ColaboradorPage() {
     navigate('/dashboard/colaboradores/create');
   };
 
-  const handleEdit = (colaboradorId: string) => {
+  const handleEdit = (colaboradorId: string | number) => {
     navigate(`/dashboard/colaboradores/create?id=${colaboradorId}`);
   };
 
-  const handleRemove = async (id: string) => {
+  const handleRemove = async (id: string | number) => {
     confirmDeletion({
       title: 'Excluir colaborador',
       message: 'Esta ação não pode ser desfeita. Deseja continuar?',
@@ -127,7 +111,7 @@ export function ColaboradorPage() {
       onConfirm: async () => {
         try {
           const result = await removeColaborador({ variables: { id: Number(id) } });
-          const mutationErrorMessage = getGraphQLErrorMessage((result as any)?.error ?? (result as any)?.errors);
+          const mutationErrorMessage = getGraphQLErrorMessage(result.error);
 
           if (mutationErrorMessage) {
             toast.error(mutationErrorMessage);

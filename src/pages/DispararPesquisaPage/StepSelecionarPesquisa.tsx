@@ -5,7 +5,7 @@ import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { useDisparoStore } from '../../store/disparoStore';
 import { GET_PESQUISAS_PAGINATED } from '../../graphql/queries/disparo.queries';
-import type { GetPesquisasData, PesquisaNode } from '../../graphql/types/disparo.types';
+import type { GetPesquisasData, GetPesquisasVars, PesquisaNode } from '../../graphql/types/disparo.types';
 
 interface Props {
   onNext: () => void;
@@ -21,7 +21,7 @@ export function StepSelecionarPesquisa({ onNext }: Props) {
   const [search, setSearch] = useState('');
   const [appliedSearch, setAppliedSearch] = useState('');
 
-  const { data, loading } = useQuery<GetPesquisasData>(GET_PESQUISAS_PAGINATED, {
+  const { data, loading } = useQuery<GetPesquisasData, GetPesquisasVars>(GET_PESQUISAS_PAGINATED, {
     variables: {
       first: PAGE_SIZE,
       where: appliedSearch ? { nome: { contains: appliedSearch } } : null,

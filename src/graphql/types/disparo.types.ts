@@ -1,37 +1,63 @@
 // src/graphql/types/disparo.types.ts
 
+import type { CursorPageVars, EntityId, PaginatedResult } from './common.types';
+
 export interface PesquisaNode {
-  id: number;
+  id: EntityId;
   nome: string;
   dataInicial: string;
   dataFinal: string;
-  convites?: { id: number; status: string }[];
+  convites?: { id: EntityId; status: string }[];
 }
 
 export interface EmpresaNode {
-  id: number;
+  id: EntityId;
   nomeFantasia: string;
 }
 
 export interface SetorNode {
-  id: number;
+  id: EntityId;
   nome: string;
 }
 
 export interface ColaboradorNode {
-  id: number;
+  id: EntityId;
   nome: string;
   email: string;
-  setor?: { id: number; nome: string };
+  setor?: { id: EntityId; nome: string };
 }
 
-export interface PaginatedResult<T> {
-  nodes: T[];
-  pageInfo: { hasNextPage: boolean; endCursor: string | null };
-  totalCount?: number;
+export type { PaginatedResult };
+
+export interface GetPesquisasData {
+  pesquisas: PaginatedResult<PesquisaNode>;
 }
 
-export interface GetPesquisasData       { pesquisas:    PaginatedResult<PesquisaNode> }
-export interface GetEmpresasData        { empresas:     PaginatedResult<EmpresaNode> }
-export interface GetSetoresData         { setores:      PaginatedResult<SetorNode> }
-export interface GetColaboradoresData   { colaboradores: PaginatedResult<ColaboradorNode> }
+export type GetPesquisasVars = CursorPageVars;
+
+export interface GetEmpresasData {
+  empresas: PaginatedResult<EmpresaNode>;
+}
+
+export type GetEmpresasDisparoVars = CursorPageVars;
+
+export interface GetSetoresData {
+  setores: PaginatedResult<SetorNode>;
+}
+
+export type GetSetoresByEmpresaVars = CursorPageVars;
+
+export interface GetColaboradoresData {
+  colaboradores: PaginatedResult<ColaboradorNode>;
+}
+
+export type GetColaboradoresBySetorVars = CursorPageVars;
+
+export type DispararPesquisaData = {
+  dispararPesquisa: boolean | null;
+};
+
+export type DispararPesquisaVars = {
+  pesquisaId: number;
+  colaboradorIds: number[];
+};

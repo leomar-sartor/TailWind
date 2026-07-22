@@ -9,6 +9,23 @@ import type { SelectItem } from '../components/Select/SelectWithSearch';
 import { GET_COLABORADOR_BY_ID } from '../graphql/queries/colaborador.queries';
 import { GET_EMPRESAS_PAGINATED, GET_SETORS } from '../graphql/queries/setor.queries';
 import { CREATE_COLABORADOR_MUTATION, UPDATE_COLABORADOR_MUTATION } from '../graphql/mutations/colaborador.mutations';
+import type {
+  CreateColaboradorData,
+  CreateColaboradorVars,
+  GetColaboradorByIdData,
+  GetColaboradorByIdVars,
+  UpdateColaboradorData,
+  UpdateColaboradorVars,
+} from '../graphql/types/colaborador.types';
+import type {
+  GetEmpresasPaginatedData,
+  GetEmpresasPaginatedVars,
+} from '../graphql/types/empresa.types';
+import type {
+  GetSetoresData,
+  GetSetoresVars,
+} from '../graphql/types/setor.types';
+import type { AndFilterInput } from '../graphql/types/common.types';
 import { formatCpf, stripCpfMask } from '../utils/cpf';
 import { getGraphQLErrorMessage } from '../utils/confirmToast';
 
@@ -21,10 +38,13 @@ type ColaboradorFormValues = {
   setorId: string;
 };
 
-function buildSetoresWhere(empresaId: string | number | undefined, searchQuery: string) {
+function buildSetoresWhere(
+  empresaId: string | number | undefined,
+  searchQuery: string,
+): AndFilterInput | null {
   if (!empresaId) return null;
 
-  const and: Array<Record<string, unknown>> = [
+  const and: AndFilterInput['and'] = [
     { empresaId: { eq: Number(empresaId) } },
   ];
 
@@ -57,15 +77,10 @@ export function CreateEditColaboradorPage() {
   const selectedEmpresaId = colaboradorForm.watch('empresaId') || undefined;
   const selectedSetorId = colaboradorForm.watch('setorId') || undefined;
 
-  const { data: empresasData, loading: empresasLoading, fetchMore: fetchMoreEmpresas } = useQuery<{
-    empresas: {
-      nodes: Array<{ id: string | number; nomeFantasia: string }>;
-      pageInfo: {
-        hasNextPage: boolean;
-        endCursor?: string;
-      };
-    };
-  }>(
+  const { data: empresasData, loading: empresasLoading, fetchMore: fetchMoreEmpresas } = useQuery<
+    GetEmpresasPaginatedData,
+    GetEmpresasPaginatedVars
+  >(
     GET_EMPRESAS_PAGINATED,
     {
       variables: {
@@ -80,15 +95,10 @@ export function CreateEditColaboradorPage() {
     [selectedEmpresaId, setoresSearchQuery],
   );
 
-  const { data: setoresData, loading: setoresLoading, fetchMore: fetchMoreSetores } = useQuery<{
-    setores: {
-      nodes: Array<{ id: string | number; nome: string }>;
-      pageInfo: {
-        hasNextPage: boolean;
-        endCursor?: string;
-      };
-    };
-  }>(
+  const { data: setoresData, loading: setoresLoading, fetchMore: fetchMoreSetores } = useQuery<
+    GetSetoresData,
+    GetSetoresVars
+  >(
     GET_SETORS,
     {
       variables: {
@@ -99,18 +109,10 @@ export function CreateEditColaboradorPage() {
     },
   );
 
-  const { data: colaboradorData, loading: loadingColaborador } = useQuery<{
-    colaboradorById: {
-      id: string;
-      nome: string;
-      cpf: string;
-      email: string;
-      empresaId: string;
-      setorId: string;
-      empresa?: { id: string; nomeFantasia: string };
-      setor?: { id: string; nome: string };
-    };
-  }>(
+  const { data: colaboradorData, loading: loadingColaborador } = useQuery<
+    GetColaboradorByIdData,
+    GetColaboradorByIdVars
+  >(
     GET_COLABORADOR_BY_ID,
     {
       variables: { id: Number(colaboradorId) },
@@ -118,8 +120,14 @@ export function CreateEditColaboradorPage() {
     },
   );
 
-  const [createColaborador, { loading: creating }] = useMutation(CREATE_COLABORADOR_MUTATION);
-  const [updateColaborador, { loading: updating }] = useMutation(UPDATE_COLABORADOR_MUTATION);
+  const [createColaborador, { loading: creating }] = useMutation<
+    CreateColaboradorData,
+    CreateColaboradorVars
+  >(CREATE_COLABORADOR_MUTATION);
+  const [updateColaborador, { loading: updating }] = useMutation<
+    UpdateColaboradorData,
+    UpdateColaboradorVars
+  >(UPDATE_COLABORADOR_MUTATION);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const seedEmpresa = useMemo(() => {
@@ -236,7 +244,7 @@ export function CreateEditColaboradorPage() {
     if (!colaborador) return;
 
     colaboradorForm.reset({
-      id: colaborador.id,
+      id: String(colaborador.id),
       nome: colaborador.nome,
       cpf: formatCpf(colaborador.cpf),
       email: colaborador.email,
@@ -257,25 +265,18 @@ export function CreateEditColaboradorPage() {
         setorId: Number(values.setorId),
       };
 
-      let result: unknown;
+      const result = colaboradorId
+        ? await updateColaborador({
+            variables: {
+              id: Number(colaboradorId),
+              input,
+            },
+          })
+        : await createColaborador({
+            variables: { input },
+          });
 
-      if (colaboradorId) {
-        result = await updateColaborador({
-          variables: {
-            id: Number(colaboradorId),
-            input,
-          },
-        });
-      } else {
-        result = await createColaborador({
-          variables: { input },
-        });
-      }
-
-      const mutationErrorMessage = getGraphQLErrorMessage(
-        (result as { error?: unknown; errors?: unknown })?.error
-          ?? (result as { errors?: unknown })?.errors,
-      );
+      const mutationErrorMessage = getGraphQLErrorMessage(result.error);
 
       if (mutationErrorMessage) {
         setSubmitError(mutationErrorMessage);

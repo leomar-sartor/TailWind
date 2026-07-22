@@ -8,7 +8,17 @@ import {
   GET_SETORES_BY_EMPRESA,
   GET_COLABORADORES_BY_SETOR,
 } from '../../graphql/queries/disparo.queries';
-import type { GetEmpresasData, GetSetoresData, GetColaboradoresData, EmpresaNode, SetorNode, ColaboradorNode } from '../../graphql/types/disparo.types';
+import type {
+  GetEmpresasData,
+  GetEmpresasDisparoVars,
+  GetSetoresData,
+  GetSetoresByEmpresaVars,
+  GetColaboradoresData,
+  GetColaboradoresBySetorVars,
+  EmpresaNode,
+  SetorNode,
+  ColaboradorNode,
+} from '../../graphql/types/disparo.types';
 
 interface Props {
   onNext: () => void;
@@ -33,14 +43,20 @@ export function StepSelecionarDestinatarios({ onNext, onBack }: Props) {
   const setColaboradoresSelecionados = useDisparoStore((s) => s.setColaboradoresSelecionados);
 
   // ── Empresas ────────────────────────────────────────────────────────────────
-  const { data: empresasData, loading: loadingEmpresas } = useQuery<GetEmpresasData>(GET_EMPRESAS_DISPARO, {
+  const { data: empresasData, loading: loadingEmpresas } = useQuery<
+    GetEmpresasData,
+    GetEmpresasDisparoVars
+  >(GET_EMPRESAS_DISPARO, {
     variables: { first: 50 },
     fetchPolicy: 'cache-first',
   });
   const empresas = empresasData?.empresas?.nodes ?? [];
 
   // ── Setores da empresa selecionada ──────────────────────────────────────────
-  const { data: setoresData, loading: loadingSetores } = useQuery<GetSetoresData>(GET_SETORES_BY_EMPRESA, {
+  const { data: setoresData, loading: loadingSetores } = useQuery<
+    GetSetoresData,
+    GetSetoresByEmpresaVars
+  >(GET_SETORES_BY_EMPRESA, {
     variables: { first: 100, where: empresaId ? { empresaId: { eq: Number(empresaId) } } : null },
     skip: !empresaId,
     fetchPolicy: 'cache-first',
@@ -57,7 +73,7 @@ export function StepSelecionarDestinatarios({ onNext, onBack }: Props) {
     loading: loadingColabs,
     fetchMore: fetchMoreColaboradores,
     networkStatus,
-  } = useQuery<GetColaboradoresData>(GET_COLABORADORES_BY_SETOR, {
+  } = useQuery<GetColaboradoresData, GetColaboradoresBySetorVars>(GET_COLABORADORES_BY_SETOR, {
     variables: {
       first: COLABORADORES_PAGE_SIZE,
       where: colaboradoresWhere,

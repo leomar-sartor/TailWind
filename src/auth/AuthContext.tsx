@@ -12,7 +12,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
   useAuthStore,
   mapAuthUser,
-  type AuthUserFromApi,
 } from './authStore';
 import { apolloClient } from '../graphql/client';
 import {
@@ -20,19 +19,19 @@ import {
   LOGOUT_MUTATION,
   REFRESH_TOKEN_MUTATION,
 } from '../graphql/mutations/auth.mutation';
+import type {
+  LoginData,
+  LoginInput,
+  LoginVars,
+  LogoutData,
+  RefreshTokenData,
+} from '../graphql/types/auth.types';
 import { jwtDecode } from 'jwt-decode';
 
 interface JwtPayload {
   sub: string;
   email: string;
   exp: number; // expiração em Unix timestamp (segundos)
-}
-
-interface AuthPayload {
-  success: boolean;
-  message: string;
-  accessToken: string;
-  user: AuthUserFromApi;
 }
 
 // Retorna true se o token ainda é válido por mais de 30 segundos
@@ -62,12 +61,6 @@ function getSafeRedirectPath(pathname: unknown): string {
   return '/dashboard';
 }
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-interface LoginInput {
-  email: string;
-  password: string;
-}
-
 interface AuthContextValue {
   isLoading: boolean;
   login: (input: LoginInput) => Promise<void>;
@@ -86,13 +79,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [loginMutation] = useMutation<{ login: AuthPayload }>(LOGIN_MUTATION);
+  const [loginMutation] = useMutation<LoginData, LoginVars>(LOGIN_MUTATION);
 
-  const [logoutMutation] = useMutation(LOGOUT_MUTATION);
+  const [logoutMutation] = useMutation<LogoutData>(LOGOUT_MUTATION);
 
-  const [refreshMutation] = useMutation<{ refreshToken: AuthPayload }>(
-    REFRESH_TOKEN_MUTATION
-  );
+  const [refreshMutation] = useMutation<RefreshTokenData>(REFRESH_TOKEN_MUTATION);
 
   // ── Tentativa de restaurar sessão na inicialização do app ──────────────────
   // O access token não está em nenhum storage — vive apenas em memória.

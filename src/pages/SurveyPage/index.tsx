@@ -2,7 +2,11 @@ import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@apollo/client/react';
 import { GET_SESSAO_PESQUISA } from '../../graphql/queries/pesquisa.queries.ts';
-import { useSurveyStore, Pesquisa } from '../../store/surveyStore.ts';
+import { useSurveyStore } from '../../store/surveyStore.ts';
+import type {
+  GetSessaoPesquisaData,
+  GetSessaoPesquisaVars,
+} from '../../graphql/types/survey.types';
 
 import { SurveyQuestion } from './SurveyQuestion.tsx';
 import { SurveyFinished } from './SurveyFinished.tsx';
@@ -11,14 +15,6 @@ import { Loader } from 'lucide-react';
 
 import headerImage from '@/assets/logos/LogoHeaderFormSample.png';
 import { ServerError } from '@apollo/client/errors';
-
-interface GetSessaoPesquisaData {
-  sessaoPesquisa: {
-    pesquisa: Pesquisa;
-    ultimaQuestaoRespondidaId: string | null;
-    respostasParciais: string | null;
-  };
-}
 
 export function SurveyPage() {
   const [searchParams] = useSearchParams();
@@ -29,12 +25,14 @@ export function SurveyPage() {
   const isFinished = useSurveyStore((s) => s.isFinished);
   const hasPesquisa = useSurveyStore((s) => s.pesquisa !== null);
 
-  const { data, loading, error } = useQuery<GetSessaoPesquisaData>(GET_SESSAO_PESQUISA, {
-    variables: { token },
-    skip: !token,
-    fetchPolicy: 'network-only',
-  });
-
+  const { data, loading, error } = useQuery<GetSessaoPesquisaData, GetSessaoPesquisaVars>(
+    GET_SESSAO_PESQUISA,
+    {
+      variables: { token: token ?? '' },
+      skip: !token,
+      fetchPolicy: 'network-only',
+    },
+  );
   // Limpa estado ao trocar de token e no unmount (evita vazamento entre pesquisas)
   useEffect(() => {
     reset();

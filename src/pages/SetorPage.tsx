@@ -9,27 +9,24 @@ import { GET_SETORS } from '../graphql/queries/setor.queries';
 import {
   REMOVE_SETOR_MUTATION,
 } from '../graphql/mutations/setor.mutations';
+import type {
+  GetSetoresData,
+  GetSetoresVars,
+  RemoveSetorData,
+  RemoveSetorVars,
+  SetorNode,
+} from '../graphql/types/setor.types';
+import type { FilterClause, OrFilterInput } from '../graphql/types/common.types';
 import { useCursorPagination } from '../hooks/useCursorPagination';
 import { confirmDeletion, getGraphQLErrorMessage } from '../utils/confirmToast';
 
-type SetorNode = {
-  id: string;
-  nome: string;
-  descricao?: string;
-  createdAt?: string;
-  empresa?: {
-    id?: string;
-    nomeFantasia?: string;
-  };
-};
-
 const PAGE_SIZE = 10;
 
-function buildWhere(filter: string) {
+function buildWhere(filter: string): OrFilterInput | null {
   const normalized = filter.trim();
   if (!normalized) return null;
 
-  const or: any[] = [
+  const or: FilterClause[] = [
     { nome: { contains: normalized } },
     { descricao: { contains: normalized } },
     { empresa: { nomeFantasia: { contains: normalized } } },
@@ -65,7 +62,7 @@ export function SetorPage() {
     canGoToLastKnown,
   } = useCursorPagination({ resetDeps: [debouncedGlobalFilter] });
 
-  const variables = useMemo(
+  const variables = useMemo<GetSetoresVars>(
     () => ({
       where: buildWhere(debouncedGlobalFilter),
       first: PAGE_SIZE,
@@ -74,23 +71,14 @@ export function SetorPage() {
     [debouncedGlobalFilter, after],
   );
 
-  const { data, loading, error, refetch } = useQuery<{
-    setores: {
-      nodes: SetorNode[];
-      pageInfo: {
-        hasNextPage: boolean;
-        hasPreviousPage?: boolean;
-        startCursor?: string;
-        endCursor?: string;
-      };
-      totalCount: number;
-    };
-  }>(GET_SETORS, {
+  const { data, loading, error, refetch } = useQuery<GetSetoresData, GetSetoresVars>(GET_SETORS, {
     variables,
     notifyOnNetworkStatusChange: true,
   });
 
-  const [removeSetor, { loading: removing }] = useMutation(REMOVE_SETOR_MUTATION);
+  const [removeSetor, { loading: removing }] = useMutation<RemoveSetorData, RemoveSetorVars>(
+    REMOVE_SETOR_MUTATION,
+  );
 
   const setores: SetorNode[] = data?.setores?.nodes ?? [];
   const pageInfo = data?.setores?.pageInfo;
@@ -102,11 +90,11 @@ export function SetorPage() {
     navigate('/dashboard/setor/create');
   };
 
-  const handleEdit = (setorId: string) => {
+  const handleEdit = (setorId: string | number) => {
     navigate(`/dashboard/setor/create?id=${setorId}`);
   };
 
-  const handleRemove = async (id: string) => {
+  const handleRemove = async (id: string | number) => {
     confirmDeletion({
       title: 'Excluir setor',
       message: 'Esta ação não pode ser desfeita. Deseja continuar?',
@@ -114,7 +102,7 @@ export function SetorPage() {
       onConfirm: async () => {
         try {
           const result = await removeSetor({ variables: { id: Number(id) } });
-          const mutationErrorMessage = getGraphQLErrorMessage((result as any)?.error ?? (result as any)?.errors);
+          const mutationErrorMessage = getGraphQLErrorMessage(result.error);
 
           if (mutationErrorMessage) {
             toast.error(mutationErrorMessage);

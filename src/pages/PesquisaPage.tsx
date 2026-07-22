@@ -5,43 +5,36 @@ import { Edit3, PlusCircle, Trash2 } from 'lucide-react';
 import { Button } from '../components/Button';
 import { GET_PESQUISAS } from '../graphql/queries/pesquisa.queries';
 import { DELETE_PESQUISA_MUTATION } from '../graphql/mutations/pesquisa.mutations';
+import type {
+  DeletePesquisaData,
+  DeletePesquisaVars,
+  GetPesquisasListData,
+  PesquisaListNode,
+} from '../graphql/types/pesquisa.types';
 import { confirmDeletion, getGraphQLErrorMessage } from '../utils/confirmToast';
-
-type PesquisaNode = {
-  id: string;
-  nome: string;
-  convites: Array<{ token: string }>;
-  questoes: Array<{
-    id: string;
-    titulo: string;
-    tipo: string;
-  }>;
-};
 
 export function PesquisaPage() {
   const navigate = useNavigate();
 
-  const { data, loading, error, refetch } = useQuery<{
-    pesquisas: {
-      nodes: PesquisaNode[];
-    };
-  }>(GET_PESQUISAS, {
+  const { data, loading, error, refetch } = useQuery<GetPesquisasListData>(GET_PESQUISAS, {
     fetchPolicy: 'cache-and-network',
   });
 
-  const pesquisas = data?.pesquisas?.nodes ?? [];
+  const pesquisas: PesquisaListNode[] = data?.pesquisas?.nodes ?? [];
 
-  const [deletePesquisa, { loading: deleting }] = useMutation(DELETE_PESQUISA_MUTATION);
+  const [deletePesquisa, { loading: deleting }] = useMutation<DeletePesquisaData, DeletePesquisaVars>(
+    DELETE_PESQUISA_MUTATION,
+  );
 
   const handleCreate = () => {
     navigate('/dashboard/pesquisa/create');
   };
 
-  const handleEdit = (pesquisaId: string) => {
+  const handleEdit = (pesquisaId: string | number) => {
     navigate(`/dashboard/pesquisa/create?id=${pesquisaId}`);
   };
 
-  const handleDelete = (pesquisaId: string) => {
+  const handleDelete = (pesquisaId: string | number) => {
     confirmDeletion({
       title: 'Excluir pesquisa',
       message: 'Esta ação não pode ser desfeita. Deseja continuar?',

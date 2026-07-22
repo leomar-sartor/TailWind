@@ -11,6 +11,7 @@ import { ErrorLink } from '@apollo/client/link/error';
 import { RemoveTypenameFromVariablesLink } from '@apollo/client/link/remove-typename';
 import { useAuthStore } from '../auth/authStore';
 import { REFRESH_TOKEN_MUTATION } from './mutations/auth.mutation';
+import type { RefreshTokenData } from './types/auth.types';
 
 // ─── HTTP Link ────────────────────────────────────────────────────────────────
 
@@ -104,7 +105,7 @@ const rejectPendingRequests = (error: unknown) => {
 
 const refreshAccessToken = (): Promise<string> => {
   return apolloClient
-    .mutate<{ refreshToken: { accessToken: string; success?: boolean } }>({
+    .mutate<RefreshTokenData>({
       mutation: REFRESH_TOKEN_MUTATION,
     })
     .then(({ data, error }) => {
