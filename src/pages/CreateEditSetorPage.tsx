@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { useForm, SubmitHandler } from 'react-hook-form';
@@ -12,29 +12,31 @@ import {
   UPDATE_SETOR_MUTATION,
 } from '../graphql/mutations/setor.mutations';
 import { GET_SETOR_BY_ID, GET_EMPRESAS_PAGINATED } from '../graphql/queries/setor.queries';
+import { getGraphQLErrorMessage } from '../utils/confirmToast';
 
 type SetorFormValues = {
   id?: string;
   nome: string;
   descricao: string;
+  empresaId: string;
 };
 
-function getGraphQLErrorMessage(error: unknown): string | null {
-  if (!error) return null;
+type SetorByIdData = {
+  setorById: {
+    id: string;
+    nome: string;
+    descricao?: string;
+    empresa?: {
+      id: string;
+      nomeFantasia?: string;
+    };
+  };
+};
 
-  const err = error as any;
-  const possibleErrors = err.errors ?? err.graphQLErrors;
-
-  if (Array.isArray(possibleErrors) && possibleErrors.length > 0) {
-    const firstError = possibleErrors[0];
-    return firstError?.extensions?.message ?? firstError?.message ?? null;
-  }
-
-  if (err?.message) {
-    return err.message;
-  }
-
-  return null;
+function mergeSeedItem(items: SelectItem[], seed?: SelectItem | null): SelectItem[] {
+  if (!seed) return items;
+  if (items.some((item) => String(item.id) === String(seed.id))) return items;
+  return [seed, ...items];
 }
 
 export function CreateEditSetorPage() {
@@ -43,20 +45,18 @@ export function CreateEditSetorPage() {
   const setorId = searchParams.get('id');
   const isEditing = !!setorId;
 
-  // Estados para SelectWithSearch de empresas
-  const [empresasItems, setEmpresasItems] = useState<SelectItem[]>([]);
   const [empresasSearchQuery, setEmpresasSearchQuery] = useState('');
-  const [selectedEmpresaId, setSelectedEmpresaId] = useState<string | number>();
 
   const setorForm = useForm<SetorFormValues>({
-    defaultValues: { id: '', nome: '', descricao: '' },
+    defaultValues: { id: '', nome: '', descricao: '', empresaId: '' },
   });
+
+  const selectedEmpresaId = setorForm.watch('empresaId') || undefined;
 
   const [createSetor, { loading: creating }] = useMutation(CREATE_SETOR_MUTATION);
   const [updateSetor, { loading: updating }] = useMutation(UPDATE_SETOR_MUTATION);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // Query para empresas com paginação
   const { data: empresasData, loading: empresasLoading, fetchMore: fetchMoreEmpresas } = useQuery<{
     empresas: {
       nodes: Array<{ id: string | number; nomeFantasia: string }>;
@@ -72,19 +72,37 @@ export function CreateEditSetorPage() {
         first: 10,
         where: empresasSearchQuery ? { nomeFantasia: { contains: empresasSearchQuery } } : null,
       },
-    }
+    },
   );
 
-  // Atualizar items quando dados chegam
-  useEffect(() => {
-    if (empresasData?.empresas?.nodes) {
-      const items = empresasData.empresas.nodes.map((emp: any) => ({
-        id: emp.id,
-        label: emp.nomeFantasia,
-      }));
-      setEmpresasItems(items);
-    }
-  }, [empresasData?.empresas?.nodes]);
+  const { data: setorData, loading: loadingSetor } = useQuery<SetorByIdData>(
+    GET_SETOR_BY_ID,
+    {
+      variables: {
+        id: Number(setorId),
+      },
+      skip: !setorId,
+    },
+  );
+
+  const seedEmpresa = useMemo(() => {
+    const empresa = setorData?.setorById?.empresa;
+    return empresa?.id
+      ? { id: empresa.id, label: empresa.nomeFantasia ?? '' }
+      : null;
+  }, [setorData?.setorById?.empresa]);
+
+  const empresasItems = useMemo(
+    () =>
+      mergeSeedItem(
+        (empresasData?.empresas?.nodes ?? []).map((emp) => ({
+          id: emp.id,
+          label: emp.nomeFantasia,
+        })),
+        seedEmpresa,
+      ),
+    [empresasData?.empresas?.nodes, seedEmpresa],
+  );
 
   const handleLoadMoreEmpresas = async () => {
     const hasMore = empresasData?.empresas?.pageInfo?.hasNextPage;
@@ -115,50 +133,27 @@ export function CreateEditSetorPage() {
     }
   };
 
-  const handleSearchEmpresas = (query: string) => {
-    setEmpresasSearchQuery(query);
-    setEmpresasItems([]);
-    setSelectedEmpresaId(undefined);
+  const handleEmpresaChange = (item: SelectItem) => {
+    if (isEditing) return;
+    setorForm.setValue('empresaId', String(item.id), { shouldValidate: true, shouldDirty: true });
   };
 
-  // Buscar dados do setor se for edição
-  const { data: setorData, loading: loadingSetor, refetch } = useQuery(
-    GET_SETOR_BY_ID,
-    {
-      variables: {
-        id: Number(setorId),
-      },
-      skip: !setorId,
-    }
-  );
-
-  // Refetch quando o ID mudar
   useEffect(() => {
-    if (setorId && refetch) {
-      refetch({ id: Number(setorId) });
-    }
-  }, [setorId, refetch]);
+    const setor = setorData?.setorById;
+    if (!setor) return;
 
-  // Preencher formulário com dados do setor ao carregar
-  useEffect(() => {
-    if (setorData?.setorById) {
-      const setor = setorData.setorById;
-      setorForm.reset({
-        id: setor.id,
-        nome: setor.nome,
-        descricao: setor.descricao ?? '',
-      });
-      // Carregar empresa do setor se existir
-      if (setor.empresa?.id) {
-        setSelectedEmpresaId(setor.empresa.id);
-      }
-    }
+    setorForm.reset({
+      id: setor.id,
+      nome: setor.nome,
+      descricao: setor.descricao ?? '',
+      empresaId: setor.empresa?.id ? String(setor.empresa.id) : '',
+    });
   }, [setorData, setorForm, setorId]);
 
   const handleSubmit: SubmitHandler<SetorFormValues> = async (values) => {
     setSubmitError(null);
 
-    if (!selectedEmpresaId) {
+    if (!isEditing && !values.empresaId) {
       setSubmitError('Por favor, selecione uma empresa');
       return;
     }
@@ -169,7 +164,7 @@ export function CreateEditSetorPage() {
     };
 
     try {
-      let result: any;
+      let result: unknown;
 
       if (isEditing && setorId) {
         result = await updateSetor({
@@ -181,13 +176,16 @@ export function CreateEditSetorPage() {
       } else {
         result = await createSetor({
           variables: {
-            empresaId: Number(selectedEmpresaId),
+            empresaId: Number(values.empresaId),
             input: payload,
           },
         });
       }
 
-      const mutationErrorMessage = getGraphQLErrorMessage((result as any)?.error ?? (result as any)?.errors);
+      const mutationErrorMessage = getGraphQLErrorMessage(
+        (result as { error?: unknown; errors?: unknown })?.error
+          ?? (result as { errors?: unknown })?.errors,
+      );
 
       if (mutationErrorMessage) {
         setSubmitError(mutationErrorMessage);
@@ -209,9 +207,9 @@ export function CreateEditSetorPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center gap-4">
         <button
+          type="button"
           onClick={() => navigate('/dashboard/setor')}
           className="inline-flex items-center gap-2 text-[#696CFF] hover:text-[#384551] transition"
         >
@@ -230,7 +228,6 @@ export function CreateEditSetorPage() {
         </div>
       </div>
 
-      {/* Form Card */}
       <div>
         <article className="dashboard-card rounded-[28px] border p-6 shadow-xl">
           {submitError ? (
@@ -251,8 +248,13 @@ export function CreateEditSetorPage() {
                 isLoading={empresasLoading}
                 hasMore={empresasData?.empresas?.pageInfo?.hasNextPage ?? false}
                 onLoadMore={handleLoadMoreEmpresas}
-                onSearch={handleSearchEmpresas}
-                onChange={(item) => setSelectedEmpresaId(item.id)}
+                onSearch={setEmpresasSearchQuery}
+                onChange={handleEmpresaChange}
+                disabled={isEditing}
+                registration={setorForm.register('empresaId', {
+                  required: isEditing ? false : 'Empresa obrigatória',
+                })}
+                error={setorForm.formState.errors.empresaId}
               />
               <LabeledInput
                 name="nome"
@@ -266,8 +268,7 @@ export function CreateEditSetorPage() {
               <LabeledInput
                 name="descricao"
                 label="Descrição do setor"
-                registration={setorForm.register('descricao', {
-                })}
+                registration={setorForm.register('descricao')}
                 error={setorForm.formState.errors.descricao}
               />
             </div>

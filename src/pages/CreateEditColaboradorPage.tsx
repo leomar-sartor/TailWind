@@ -1,16 +1,16 @@
-import { useEffect, useState, type ChangeEvent } from 'react';
+import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { Button } from '../components/Button';
 import { LabeledInput } from '../components/LabeledInput';
-import { LabeledSelect } from '../components/LabeledSelect';
 import { LabeledSelectWithSearch } from '../components/LabeledSelect/LabeledSelectWithSearch';
 import type { SelectItem } from '../components/Select/SelectWithSearch';
 import { GET_COLABORADOR_BY_ID } from '../graphql/queries/colaborador.queries';
 import { GET_EMPRESAS_PAGINATED, GET_SETORS } from '../graphql/queries/setor.queries';
 import { CREATE_COLABORADOR_MUTATION, UPDATE_COLABORADOR_MUTATION } from '../graphql/mutations/colaborador.mutations';
 import { formatCpf, stripCpfMask } from '../utils/cpf';
+import { getGraphQLErrorMessage } from '../utils/confirmToast';
 
 type ColaboradorFormValues = {
   id: string;
@@ -19,25 +19,27 @@ type ColaboradorFormValues = {
   email: string;
   empresaId: string;
   setorId: string;
-  ativo: string;
 };
 
-function getGraphQLErrorMessage(error: unknown): string | null {
-  if (!error) return null;
+function buildSetoresWhere(empresaId: string | number | undefined, searchQuery: string) {
+  if (!empresaId) return null;
 
-  const err = error as any;
-  const possibleErrors = err.errors ?? err.graphQLErrors;
+  const and: Array<Record<string, unknown>> = [
+    { empresaId: { eq: Number(empresaId) } },
+  ];
 
-  if (Array.isArray(possibleErrors) && possibleErrors.length > 0) {
-    const firstError = possibleErrors[0];
-    return firstError?.extensions?.message ?? firstError?.message ?? null;
+  const normalized = searchQuery.trim();
+  if (normalized) {
+    and.push({ nome: { contains: normalized } });
   }
 
-  if (err?.message) {
-    return err.message;
-  }
+  return { and };
+}
 
-  return null;
+function mergeSeedItem(items: SelectItem[], seed?: SelectItem | null): SelectItem[] {
+  if (!seed) return items;
+  if (items.some((item) => String(item.id) === String(seed.id))) return items;
+  return [seed, ...items];
 }
 
 export function CreateEditColaboradorPage() {
@@ -45,21 +47,16 @@ export function CreateEditColaboradorPage() {
   const [searchParams] = useSearchParams();
   const colaboradorId = searchParams.get('id');
 
-  // Estados para SelectWithSearch de empresas
-  const [empresasItems, setEmpresasItems] = useState<SelectItem[]>([]);
   const [empresasSearchQuery, setEmpresasSearchQuery] = useState('');
-  const [selectedEmpresaId, setSelectedEmpresaId] = useState<string | number>();
-
-  // Estados para SelectWithSearch de setores
-  const [setoresItems, setSetoresItems] = useState<SelectItem[]>([]);
   const [setoresSearchQuery, setSetoresSearchQuery] = useState('');
-  const [selectedSetorId, setSelectedSetorId] = useState<string | number>();
 
   const colaboradorForm = useForm<ColaboradorFormValues>({
-    defaultValues: { id: '', nome: '', cpf: '', email: '', empresaId: '', setorId: '', ativo: 'true' },
+    defaultValues: { id: '', nome: '', cpf: '', email: '', empresaId: '', setorId: '' },
   });
 
-  // Query para empresas com paginação
+  const selectedEmpresaId = colaboradorForm.watch('empresaId') || undefined;
+  const selectedSetorId = colaboradorForm.watch('setorId') || undefined;
+
   const { data: empresasData, loading: empresasLoading, fetchMore: fetchMoreEmpresas } = useQuery<{
     empresas: {
       nodes: Array<{ id: string | number; nomeFantasia: string }>;
@@ -75,10 +72,14 @@ export function CreateEditColaboradorPage() {
         first: 10,
         where: empresasSearchQuery ? { nomeFantasia: { contains: empresasSearchQuery } } : null,
       },
-    }
+    },
   );
 
-  // Query para setores com paginação
+  const setoresWhere = useMemo(
+    () => buildSetoresWhere(selectedEmpresaId, setoresSearchQuery),
+    [selectedEmpresaId, setoresSearchQuery],
+  );
+
   const { data: setoresData, loading: setoresLoading, fetchMore: fetchMoreSetores } = useQuery<{
     setores: {
       nodes: Array<{ id: string | number; nome: string }>;
@@ -92,12 +93,13 @@ export function CreateEditColaboradorPage() {
     {
       variables: {
         first: 10,
-        where: setoresSearchQuery ? { nome: { contains: setoresSearchQuery } } : null,
+        where: setoresWhere,
       },
-    }
+      skip: !selectedEmpresaId,
+    },
   );
 
-  const { data: colaboradorData } = useQuery<{
+  const { data: colaboradorData, loading: loadingColaborador } = useQuery<{
     colaboradorById: {
       id: string;
       nome: string;
@@ -105,48 +107,56 @@ export function CreateEditColaboradorPage() {
       email: string;
       empresaId: string;
       setorId: string;
+      empresa?: { id: string; nomeFantasia: string };
+      setor?: { id: string; nome: string };
     };
   }>(
     GET_COLABORADOR_BY_ID,
     {
       variables: { id: Number(colaboradorId) },
       skip: !colaboradorId,
-    }
+    },
   );
 
   const [createColaborador, { loading: creating }] = useMutation(CREATE_COLABORADOR_MUTATION);
   const [updateColaborador, { loading: updating }] = useMutation(UPDATE_COLABORADOR_MUTATION);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // Atualizar items quando dados chegam
-  useEffect(() => {
-    if (empresasData?.empresas?.nodes) {
-      const items = empresasData.empresas.nodes.map((emp: any) => ({
-        id: emp.id,
-        label: emp.nomeFantasia,
-      }));
-      setEmpresasItems(items);
-    }
-  }, [empresasData?.empresas?.nodes]);
+  const seedEmpresa = useMemo(() => {
+    const empresa = colaboradorData?.colaboradorById?.empresa;
+    return empresa ? { id: empresa.id, label: empresa.nomeFantasia } : null;
+  }, [colaboradorData?.colaboradorById?.empresa]);
 
-  useEffect(() => {
-    if (setoresData?.setores?.nodes) {
-      const items = setoresData.setores.nodes.map((setor: any) => ({
+  const seedSetor = useMemo(() => {
+    const colaborador = colaboradorData?.colaboradorById;
+    if (!colaborador?.setor) return null;
+    if (String(selectedEmpresaId) !== String(colaborador.empresaId)) return null;
+    return { id: colaborador.setor.id, label: colaborador.setor.nome };
+  }, [colaboradorData?.colaboradorById, selectedEmpresaId]);
+
+  const empresasItems = useMemo(
+    () =>
+      mergeSeedItem(
+        (empresasData?.empresas?.nodes ?? []).map((emp) => ({
+          id: emp.id,
+          label: emp.nomeFantasia,
+        })),
+        seedEmpresa,
+      ),
+    [empresasData?.empresas?.nodes, seedEmpresa],
+  );
+
+  const setoresItems = useMemo(() => {
+    if (!selectedEmpresaId) return seedSetor ? [seedSetor] : [];
+
+    return mergeSeedItem(
+      (setoresData?.setores?.nodes ?? []).map((setor) => ({
         id: setor.id,
         label: setor.nome,
-      }));
-      setSetoresItems(items);
-    }
-  }, [setoresData?.setores?.nodes]);
-
-  // Sync com formulário
-  useEffect(() => {
-    colaboradorForm.setValue('empresaId', String(selectedEmpresaId || ''));
-  }, [selectedEmpresaId, colaboradorForm]);
-
-  useEffect(() => {
-    colaboradorForm.setValue('setorId', String(selectedSetorId || ''));
-  }, [selectedSetorId, colaboradorForm]);
+      })),
+      seedSetor,
+    );
+  }, [selectedEmpresaId, setoresData?.setores?.nodes, seedSetor]);
 
   const handleLoadMoreEmpresas = async () => {
     const hasMore = empresasData?.empresas?.pageInfo?.hasNextPage;
@@ -181,14 +191,14 @@ export function CreateEditColaboradorPage() {
     const hasMore = setoresData?.setores?.pageInfo?.hasNextPage;
     const endCursor = setoresData?.setores?.pageInfo?.endCursor;
 
-    if (!hasMore || !endCursor) return;
+    if (!hasMore || !endCursor || !selectedEmpresaId) return;
 
     try {
       await fetchMoreSetores({
         variables: {
           first: 10,
           after: endCursor,
-          where: setoresSearchQuery ? { nome: { contains: setoresSearchQuery } } : null,
+          where: setoresWhere,
         },
         updateQuery: (prev, { fetchMoreResult }) => {
           if (!fetchMoreResult) return prev;
@@ -206,16 +216,14 @@ export function CreateEditColaboradorPage() {
     }
   };
 
-  const handleSearchEmpresas = (query: string) => {
-    setEmpresasSearchQuery(query);
-    setEmpresasItems([]);
-    setSelectedEmpresaId(undefined);
+  const handleEmpresaChange = (item: SelectItem) => {
+    setSetoresSearchQuery('');
+    colaboradorForm.setValue('empresaId', String(item.id), { shouldValidate: true, shouldDirty: true });
+    colaboradorForm.setValue('setorId', '', { shouldValidate: true, shouldDirty: true });
   };
 
-  const handleSearchSetores = (query: string) => {
-    setSetoresSearchQuery(query);
-    setSetoresItems([]);
-    setSelectedSetorId(undefined);
+  const handleSetorChange = (item: SelectItem) => {
+    colaboradorForm.setValue('setorId', String(item.id), { shouldValidate: true, shouldDirty: true });
   };
 
   const handleCpfChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -224,19 +232,17 @@ export function CreateEditColaboradorPage() {
   };
 
   useEffect(() => {
-    if (colaboradorData?.colaboradorById) {
-      const colaborador = colaboradorData.colaboradorById;
-      colaboradorForm.reset({
-        id: colaborador.id,
-        nome: colaborador.nome,
-        cpf: formatCpf(colaborador.cpf),
-        email: colaborador.email,
-        empresaId: String(colaborador.empresaId),
-        setorId: String(colaborador.setorId),
-      });
-      setSelectedEmpresaId(colaborador.empresaId);
-      setSelectedSetorId(colaborador.setorId);
-    }
+    const colaborador = colaboradorData?.colaboradorById;
+    if (!colaborador) return;
+
+    colaboradorForm.reset({
+      id: colaborador.id,
+      nome: colaborador.nome,
+      cpf: formatCpf(colaborador.cpf),
+      email: colaborador.email,
+      empresaId: String(colaborador.empresaId),
+      setorId: String(colaborador.setorId),
+    });
   }, [colaboradorData, colaboradorForm, colaboradorId]);
 
   const handleSubmit: SubmitHandler<ColaboradorFormValues> = async (values) => {
@@ -251,7 +257,7 @@ export function CreateEditColaboradorPage() {
         setorId: Number(values.setorId),
       };
 
-      let result: any;
+      let result: unknown;
 
       if (colaboradorId) {
         result = await updateColaborador({
@@ -266,7 +272,10 @@ export function CreateEditColaboradorPage() {
         });
       }
 
-      const mutationErrorMessage = getGraphQLErrorMessage((result as any)?.error ?? (result as any)?.errors);
+      const mutationErrorMessage = getGraphQLErrorMessage(
+        (result as { error?: unknown; errors?: unknown })?.error
+          ?? (result as { errors?: unknown })?.errors,
+      );
 
       if (mutationErrorMessage) {
         setSubmitError(mutationErrorMessage);
@@ -284,7 +293,7 @@ export function CreateEditColaboradorPage() {
     }
   };
 
-  const isBusy = creating || updating;
+  const isBusy = creating || updating || loadingColaborador;
 
   return (
     <div className="space-y-6">
@@ -346,8 +355,11 @@ export function CreateEditColaboradorPage() {
               isLoading={empresasLoading}
               hasMore={empresasData?.empresas?.pageInfo?.hasNextPage ?? false}
               onLoadMore={handleLoadMoreEmpresas}
-              onSearch={handleSearchEmpresas}
-              onChange={(item) => setSelectedEmpresaId(item.id)}
+              onSearch={setEmpresasSearchQuery}
+              onChange={handleEmpresaChange}
+              registration={colaboradorForm.register('empresaId', {
+                required: 'Empresa obrigatória',
+              })}
               error={colaboradorForm.formState.errors.empresaId}
             />
             <LabeledSelectWithSearch
@@ -355,27 +367,18 @@ export function CreateEditColaboradorPage() {
               required
               items={setoresItems}
               selectedId={selectedSetorId}
-              placeholder="Selecione o setor"
+              placeholder={selectedEmpresaId ? 'Selecione o setor' : 'Selecione uma empresa primeiro'}
               searchPlaceholder="Buscar setor..."
               isLoading={setoresLoading}
               hasMore={setoresData?.setores?.pageInfo?.hasNextPage ?? false}
               onLoadMore={handleLoadMoreSetores}
-              onSearch={handleSearchSetores}
-              onChange={(item) => setSelectedSetorId(item.id)}
-              error={colaboradorForm.formState.errors.setorId}
-            />
-            <LabeledSelect
-              label="Status"
-              required
-              defaultValue="true"
-              options={[
-                { value: 'true', label: 'Ativo' },
-                { value: 'false', label: 'Inativo' },
-              ]}
-              registration={colaboradorForm.register('ativo', {
-                required: 'Informe se está ativo',
+              onSearch={setSetoresSearchQuery}
+              onChange={handleSetorChange}
+              disabled={!selectedEmpresaId}
+              registration={colaboradorForm.register('setorId', {
+                required: 'Setor obrigatório',
               })}
-              error={colaboradorForm.formState.errors.ativo}
+              error={colaboradorForm.formState.errors.setorId}
             />
           </div>
 

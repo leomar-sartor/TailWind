@@ -18,6 +18,7 @@ type LabeledSelectWithSearchProps = {
   registration?: UseFormRegisterReturn;
   error?: FieldError;
   className?: string;
+  disabled?: boolean;
 };
 
 export function LabeledSelectWithSearch({
@@ -35,6 +36,7 @@ export function LabeledSelectWithSearch({
   registration,
   error,
   className,
+  disabled = false,
 }: LabeledSelectWithSearchProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -42,7 +44,7 @@ export function LabeledSelectWithSearch({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
 
-  const selectedItem = items.find((item) => item.id === selectedId);
+  const selectedItem = items.find((item) => String(item.id) === String(selectedId));
   const hasError = !!error;
   const fieldId = registration?.name;
 
@@ -112,12 +114,17 @@ export function LabeledSelectWithSearch({
         aria-expanded={isOpen}
         aria-invalid={hasError}
         aria-required={required}
-        onClick={() => setIsOpen((current) => !current)}
+        disabled={disabled}
+        onClick={() => {
+          if (disabled) return;
+          setIsOpen((current) => !current);
+        }}
         className={[
           'flex h-10 w-full items-center justify-between rounded-md border bg-white px-3 text-left text-sm text-[#2B2C40] shadow-sm outline-none transition',
           'focus:border-[#2F80ED] focus:ring-2 focus:ring-[#2F80ED]/15',
           isOpen ? 'border-[#2F80ED] ring-2 ring-[#2F80ED]/15' : '',
           hasError ? 'border-red-500 ring-red-500/15' : 'border-[#D9DEE3]',
+          disabled ? 'cursor-not-allowed bg-[#F4F6FA] opacity-70' : '',
         ].join(' ')}
       >
         <span className={selectedItem ? 'text-[#2B2C40]' : 'text-[#A8AFBD]'}>
@@ -147,7 +154,7 @@ export function LabeledSelectWithSearch({
           <ul ref={listRef} onScroll={handleListScroll} role="listbox" className="max-h-64 overflow-y-auto">
             {items.length > 0 ? (
               items.map((item, index) => {
-                const isSelected = item.id === selectedId;
+                const isSelected = String(item.id) === String(selectedId);
 
                 return (
                   <li key={item.id} role="option" aria-selected={isSelected}>

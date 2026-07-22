@@ -5,10 +5,12 @@ import { Edit3, PlusCircle, Trash2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 import { Button } from '../components/Button';
+import { CursorPagination } from '../components/CursorPagination';
 import { GET_EMPRESAS } from '../graphql/queries/empresa.queries';
 import {
   REMOVE_EMPRESA_MUTATION,
 } from '../graphql/mutations/empresa.mutations';
+import { useCursorPagination } from '../hooks/useCursorPagination';
 import { formatCnpj, stripCnpjMask } from '../utils/cnpj';
 import { confirmDeletion, getGraphQLErrorMessage } from '../utils/confirmToast';
 
@@ -46,8 +48,6 @@ function formatDate(value?: string) {
 
 export function EmpresaPage() {
   const navigate = useNavigate();
-  const [cursorStack, setCursorStack] = useState<Array<string | null>>([null]);
-  const [currentCursorIndex, setCurrentCursorIndex] = useState(0);
   const [globalFilter, setGlobalFilter] = useState('');
   const [debouncedGlobalFilter, setDebouncedGlobalFilter] = useState('');
 
@@ -56,18 +56,26 @@ export function EmpresaPage() {
     return () => clearTimeout(handler);
   }, [globalFilter]);
 
-  useEffect(() => {
-    setCursorStack([null]);
-    setCurrentCursorIndex(0);
-  }, [debouncedGlobalFilter]);
+  const {
+    after,
+    currentCursorIndex,
+    hasPreviousPage,
+    goToFirst,
+    goToPrevious,
+    goToNext,
+    goToLastKnown,
+    goToPageIndex,
+    canGoToPage,
+    canGoToLastKnown,
+  } = useCursorPagination({ resetDeps: [debouncedGlobalFilter] });
 
   const variables = useMemo(
     () => ({
       where: buildWhere(debouncedGlobalFilter),
       first: PAGE_SIZE,
-      after: cursorStack[currentCursorIndex],
+      after,
     }),
-    [debouncedGlobalFilter, cursorStack, currentCursorIndex],
+    [debouncedGlobalFilter, after],
   );
 
   const { data, loading, error, refetch } = useQuery<{
@@ -93,9 +101,7 @@ export function EmpresaPage() {
   const pageInfo = data?.empresas?.pageInfo;
   const totalCount = data?.empresas?.totalCount ?? 0;
 
-  const hasPreviousPage = currentCursorIndex > 0;
   const hasNextPage = !!pageInfo?.hasNextPage;
-
 
   const handleStartCreate = () => {
     navigate('/dashboard/empresa/create');
@@ -136,22 +142,6 @@ export function EmpresaPage() {
         }
       },
     });
-  };
-
-  const handlePreviousPage = () => {
-    if (hasPreviousPage) {
-      setCurrentCursorIndex((prev) => Math.max(0, prev - 1));
-    }
-  };
-
-  const handleNextPage = () => {
-    if (!hasNextPage || !pageInfo?.endCursor) return;
-
-    setCursorStack((prev) => {
-      const nextStack = prev.slice(0, currentCursorIndex + 1);
-      return [...nextStack, pageInfo.endCursor ?? null];
-    });
-    setCurrentCursorIndex((prev) => prev + 1);
   };
 
   const isBusy = loading || removing;
@@ -245,67 +235,20 @@ export function EmpresaPage() {
           <div className="text-sm text-[#6C7287]">
             Página {currentCursorIndex + 1} · {totalCount} empresa{totalCount === 1 ? '' : 's'}
           </div>
-          <div className="flex items-center gap-2 flex-wrap justify-center">
-            <button
-              type="button"
-              onClick={() => setCurrentCursorIndex(0)}
-              disabled={!hasPreviousPage}
-              className="rounded-lg border border-slate-200 bg-white text-[#2B2C40] hover:bg-[#F4F6FA] disabled:opacity-50 disabled:cursor-not-allowed px-3 py-1 text-sm font-medium transition"
-            >
-              «
-            </button>
-
-            <button
-              type="button"
-              onClick={handlePreviousPage}
-              disabled={!hasPreviousPage}
-              className="rounded-lg border border-slate-200 bg-white text-[#2B2C40] hover:bg-[#F4F6FA] disabled:opacity-50 disabled:cursor-not-allowed px-3 py-1 text-sm font-medium transition"
-            >
-              ‹ Anterior
-            </button>
-
-            {Array.from({ length: Math.ceil(totalCount / PAGE_SIZE) }, (_, i) => i + 1).map((pageNum) => (
-              <button
-                key={pageNum}
-                onClick={() => {
-                  const newIndex = pageNum - 1;
-                  if (newIndex < cursorStack.length) {
-                    setCurrentCursorIndex(newIndex);
-                  } else if (newIndex === currentCursorIndex + 1 && hasNextPage) {
-                    handleNextPage();
-                  }
-                }}
-                className={`rounded-lg px-3 py-1 text-sm font-medium transition ${
-                  currentCursorIndex === pageNum - 1
-                    ? 'bg-[#696CFF] text-white'
-                    : 'border border-slate-200 bg-white text-[#2B2C40] hover:bg-[#F4F6FA]'
-                }`}
-              >
-                {pageNum}
-              </button>
-            ))}
-
-            <button
-              type="button"
-              onClick={handleNextPage}
-              disabled={!hasNextPage}
-              className="rounded-lg border border-slate-200 bg-white text-[#2B2C40] hover:bg-[#F4F6FA] disabled:opacity-50 disabled:cursor-not-allowed px-3 py-1 text-sm font-medium transition"
-            >
-              Próxima ›
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                const totalPages = Math.ceil(totalCount / PAGE_SIZE);
-                setCurrentCursorIndex(totalPages - 1);
-              }}
-              disabled={!hasNextPage}
-              className="rounded-lg border border-slate-200 bg-white text-[#2B2C40] hover:bg-[#F4F6FA] disabled:opacity-50 disabled:cursor-not-allowed px-3 py-1 text-sm font-medium transition"
-            >
-              »
-            </button>
-          </div>
+          <CursorPagination
+            pageSize={PAGE_SIZE}
+            totalCount={totalCount}
+            currentCursorIndex={currentCursorIndex}
+            hasPreviousPage={hasPreviousPage}
+            hasNextPage={hasNextPage}
+            canGoToLastKnown={canGoToLastKnown}
+            canGoToPage={canGoToPage}
+            onFirst={goToFirst}
+            onPrevious={goToPrevious}
+            onNext={() => goToNext(pageInfo?.endCursor, hasNextPage)}
+            onLastKnown={goToLastKnown}
+            onPage={(pageIndex) => goToPageIndex(pageIndex, pageInfo?.endCursor, hasNextPage)}
+          />
         </div>
       </section>
 

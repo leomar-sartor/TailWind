@@ -49,8 +49,8 @@ export const GET_SETORES_BY_EMPRESA = gql`
 `;
 
 export const GET_COLABORADORES_BY_SETOR = gql`
-  query GetColaboradoresBySetor($first: Int, $where: ColaboradorFilterInput) {
-    colaboradores(first: $first, where: $where) {
+  query GetColaboradoresBySetor($first: Int, $after: String, $where: ColaboradorFilterInput) {
+    colaboradores(first: $first, after: $after, where: $where) {
       nodes {
         id
         nome
@@ -59,6 +59,10 @@ export const GET_COLABORADORES_BY_SETOR = gql`
           id
           nome
         }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
       }
       totalCount
     }

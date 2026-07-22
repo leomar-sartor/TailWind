@@ -1,4 +1,5 @@
 import { useQuery } from '@apollo/client/react';
+import { NetworkStatus } from '@apollo/client';
 import { Building2, ChevronLeft, ChevronRight, Layers, Users, CheckSquare, Square } from 'lucide-react';
 import { Button } from '../../components/Button';
 import { useDisparoStore } from '../../store/disparoStore';
@@ -13,6 +14,8 @@ interface Props {
   onNext: () => void;
   onBack: () => void;
 }
+
+const COLABORADORES_PAGE_SIZE = 50;
 
 export function StepSelecionarDestinatarios({ onNext, onBack }: Props) {
 
@@ -39,27 +42,64 @@ export function StepSelecionarDestinatarios({ onNext, onBack }: Props) {
   // ── Setores da empresa selecionada ──────────────────────────────────────────
   const { data: setoresData, loading: loadingSetores } = useQuery<GetSetoresData>(GET_SETORES_BY_EMPRESA, {
     variables: { first: 100, where: empresaId ? { empresaId: { eq: Number(empresaId) } } : null },
-    // variables: { first: 50, 
-    //   where: empresaId ? { empresaSetores: { all: {
-    //     empresaId: { eq: Number(empresaId) }       
-    //   } } } : null },
     skip: !empresaId,
     fetchPolicy: 'cache-first',
   });
   const setores = setoresData?.setores?.nodes ?? [];
 
   // ── Colaboradores dos setores selecionados ──────────────────────────────────
-  const { data: colaboradoresData, loading: loadingColabs } = useQuery<GetColaboradoresData>(GET_COLABORADORES_BY_SETOR, {
+  const colaboradoresWhere = setorIdsSelecionados.length > 0
+    ? { setorId: { in: setorIdsSelecionados.map(Number) } }
+    : null;
+
+  const {
+    data: colaboradoresData,
+    loading: loadingColabs,
+    fetchMore: fetchMoreColaboradores,
+    networkStatus,
+  } = useQuery<GetColaboradoresData>(GET_COLABORADORES_BY_SETOR, {
     variables: {
-      first: 50,
-      where: setorIdsSelecionados.length > 0
-        ? { setorId: { in: setorIdsSelecionados.map(Number) } }
-        : null,
+      first: COLABORADORES_PAGE_SIZE,
+      where: colaboradoresWhere,
     },
     skip: setorIdsSelecionados.length === 0,
     fetchPolicy: 'network-only',
+    notifyOnNetworkStatusChange: true,
   });
   const colaboradores = colaboradoresData?.colaboradores?.nodes ?? [];
+  const colaboradoresPageInfo = colaboradoresData?.colaboradores?.pageInfo;
+  const colaboradoresTotalCount = colaboradoresData?.colaboradores?.totalCount ?? colaboradores.length;
+  const hasMoreColaboradores = !!colaboradoresPageInfo?.hasNextPage;
+  const loadingMoreColaboradores = networkStatus === NetworkStatus.fetchMore;
+
+  const handleLoadMoreColaboradores = async () => {
+    if (!hasMoreColaboradores || !colaboradoresPageInfo?.endCursor || loadingMoreColaboradores) return;
+
+    try {
+      await fetchMoreColaboradores({
+        variables: {
+          first: COLABORADORES_PAGE_SIZE,
+          after: colaboradoresPageInfo.endCursor,
+          where: colaboradoresWhere,
+        },
+        updateQuery: (prev, { fetchMoreResult }) => {
+          if (!fetchMoreResult) return prev;
+          return {
+            ...fetchMoreResult,
+            colaboradores: {
+              ...fetchMoreResult.colaboradores,
+              nodes: [
+                ...(prev.colaboradores?.nodes ?? []),
+                ...fetchMoreResult.colaboradores.nodes,
+              ],
+            },
+          };
+        },
+      });
+    } catch (err) {
+      console.error('Erro ao carregar mais colaboradores:', err);
+    }
+  };
 
   const todosSetoresSelecionados = setores.length > 0 && setorIdsSelecionados.length === setores.length;
   const todosColabsSelecionados = colaboradores.length > 0 && colaboradoresSelecionados.length === colaboradores.length;
@@ -168,7 +208,11 @@ export function StepSelecionarDestinatarios({ onNext, onBack }: Props) {
                 Colaboradores
                 {!loadingColabs && (
                   <span className="ml-2 text-xs font-normal text-[#8592A3]">
-                    ({colaboradoresSelecionados.length}/{colaboradores.length} selecionados)
+                    ({colaboradoresSelecionados.length}/{colaboradores.length} selecionados
+                    {colaboradoresTotalCount > colaboradores.length
+                      ? ` · ${colaboradores.length} de ${colaboradoresTotalCount} carregados`
+                      : ''}
+                    )
                   </span>
                 )}
               </h3>
@@ -183,12 +227,12 @@ export function StepSelecionarDestinatarios({ onNext, onBack }: Props) {
                     : selecionarTodosColaboradores(colaboradores.map((c: ColaboradorNode) => String(c.id)))
                 }
               >
-                {todosColabsSelecionados ? 'Desmarcar todos' : 'Selecionar todos'}
+                {todosColabsSelecionados ? 'Desmarcar todos' : 'Selecionar todos (carregados)'}
               </button>
             )}
           </div>
 
-          {loadingColabs && (
+          {loadingColabs && !loadingMoreColaboradores && (
             <div className="py-10 text-center text-sm text-[#8592A3]">Carregando colaboradores...</div>
           )}
 
@@ -198,7 +242,7 @@ export function StepSelecionarDestinatarios({ onNext, onBack }: Props) {
             </div>
           )}
 
-          {!loadingColabs && colaboradores.map((c: ColaboradorNode) => {
+          {(!loadingColabs || loadingMoreColaboradores) && colaboradores.map((c: ColaboradorNode) => {
             const isSelected = colaboradoresSelecionados.includes(String(c.id));
 
             return (
@@ -211,7 +255,6 @@ export function StepSelecionarDestinatarios({ onNext, onBack }: Props) {
                   isSelected ? 'bg-[#F0F0FF]' : 'hover:bg-[#F8FAFF]',
                 ].join(' ')}
               >
-                {/* Checkbox visual */}
                 <div className={[
                   'flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-all',
                   isSelected ? 'bg-[#696CFF] border-[#696CFF]' : 'border-[#C4C8CC]',
@@ -223,7 +266,6 @@ export function StepSelecionarDestinatarios({ onNext, onBack }: Props) {
                   )}
                 </div>
 
-                {/* Avatar inicial */}
                 <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#E6E7FF] text-[#696CFF] text-xs font-bold flex items-center justify-center">
                   {c.nome?.[0]?.toUpperCase() ?? '?'}
                 </div>
@@ -239,6 +281,22 @@ export function StepSelecionarDestinatarios({ onNext, onBack }: Props) {
               </button>
             );
           })}
+
+          {hasMoreColaboradores && (
+            <div className="px-6 py-4 border-t bg-[#F8FAFF] space-y-2">
+              <p className="text-xs text-[#8592A3]">
+                Há mais colaboradores além dos {colaboradores.length} carregados. Carregue todos antes de confirmar o disparo.
+              </p>
+              <button
+                type="button"
+                onClick={handleLoadMoreColaboradores}
+                disabled={loadingMoreColaboradores}
+                className="text-sm font-medium text-[#696CFF] hover:underline disabled:opacity-50"
+              >
+                {loadingMoreColaboradores ? 'Carregando...' : 'Carregar mais colaboradores'}
+              </button>
+            </div>
+          )}
         </div>
       )}
 

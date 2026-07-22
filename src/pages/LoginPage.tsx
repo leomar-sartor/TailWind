@@ -112,7 +112,7 @@ export function LoginPage() {
 
               <div className="flex mx-auto">
                 <button
-                  type="submit"
+                  type="button"
                   className="w-full text-link hover:text-link-hover"
                   onClick={() => console.log("Esqueci minha senha", new Date())}
                 >

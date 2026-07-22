@@ -42,6 +42,14 @@ export const GET_COLABORADOR_BY_ID = gql`
       ativo
       setorId
       empresaId
+      empresa {
+        id
+        nomeFantasia
+      }
+      setor {
+        id
+        nome
+      }
     }
   }
 `;

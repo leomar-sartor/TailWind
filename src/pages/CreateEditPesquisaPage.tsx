@@ -374,9 +374,10 @@ export function CreateEditPesquisaPage() {
                           type="number"
                           placeholder="Máximo de caracteres"
                           registration={register(`questoes.${index}.maximoDeCaracteres` as const, {
-                            valueAsNumber: true,
                             validate: (value) =>
-                              value === '' || Number(value) > 0 || 'Use um número maior que zero',
+                              value === ''
+                              || (!Number.isNaN(Number(value)) && Number(value) > 0)
+                              || 'Use um número maior que zero',
                           })}
                           error={formState.errors.questoes?.[index]?.maximoDeCaracteres as any}
                         />
