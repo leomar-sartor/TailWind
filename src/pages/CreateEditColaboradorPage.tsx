@@ -28,6 +28,7 @@ import type {
 import type { AndFilterInput } from '../graphql/types/common.types';
 import { formatCpf, stripCpfMask } from '../utils/cpf';
 import { getGraphQLErrorMessage } from '../utils/confirmToast';
+import { mergeConnectionNodes } from '../utils/mergeConnectionNodes';
 
 type ColaboradorFormValues = {
   id: string;
@@ -185,7 +186,7 @@ export function CreateEditColaboradorPage() {
             ...fetchMoreResult,
             empresas: {
               ...fetchMoreResult.empresas,
-              nodes: [...(prev.empresas?.nodes ?? []), ...fetchMoreResult.empresas.nodes],
+              nodes: mergeConnectionNodes(prev.empresas?.nodes, fetchMoreResult.empresas.nodes),
             },
           };
         },
@@ -214,7 +215,7 @@ export function CreateEditColaboradorPage() {
             ...fetchMoreResult,
             setores: {
               ...fetchMoreResult.setores,
-              nodes: [...(prev.setores?.nodes ?? []), ...fetchMoreResult.setores.nodes],
+              nodes: mergeConnectionNodes(prev.setores?.nodes, fetchMoreResult.setores.nodes),
             },
           };
         },

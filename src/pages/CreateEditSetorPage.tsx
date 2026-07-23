@@ -25,6 +25,7 @@ import type {
   GetEmpresasPaginatedVars,
 } from '../graphql/types/empresa.types';
 import { getGraphQLErrorMessage } from '../utils/confirmToast';
+import { mergeConnectionNodes } from '../utils/mergeConnectionNodes';
 
 type SetorFormValues = {
   id?: string;
@@ -122,7 +123,7 @@ export function CreateEditSetorPage() {
             ...fetchMoreResult,
             empresas: {
               ...fetchMoreResult.empresas,
-              nodes: [...(prev.empresas?.nodes ?? []), ...fetchMoreResult.empresas.nodes],
+              nodes: mergeConnectionNodes(prev.empresas?.nodes, fetchMoreResult.empresas.nodes),
             },
           };
         },

@@ -26,40 +26,11 @@ import type {
   LogoutData,
   RefreshTokenData,
 } from '../graphql/types/auth.types';
-import { jwtDecode } from 'jwt-decode';
-
-interface JwtPayload {
-  sub: string;
-  email: string;
-  exp: number; // expiração em Unix timestamp (segundos)
-}
-
-// Retorna true se o token ainda é válido por mais de 30 segundos
-// Os 30s de margem evitam usar um token que vai expirar durante a request
-function isTokenValid(token: string): boolean {
-  try {
-    const { exp } = jwtDecode<JwtPayload>(token);
-    return exp * 1000 > Date.now() + 30_000;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Accepts only same-origin relative paths to avoid open redirects after login.
- */
-function getSafeRedirectPath(pathname: unknown): string {
-  if (
-    typeof pathname === 'string' &&
-    pathname.startsWith('/') &&
-    !pathname.startsWith('//') &&
-    !pathname.includes('://')
-  ) {
-    return pathname;
-  }
-
-  return '/dashboard';
-}
+import {
+  getSafeRedirectPath,
+  isTokenValid,
+  shouldAcceptRefreshPayload,
+} from './authSession';
 
 interface AuthContextValue {
   isLoading: boolean;
@@ -110,13 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { data, error } = await refreshMutation();
         const payload = data?.refreshToken;
 
-        if (
-          !error &&
-          payload?.success === true &&
-          payload.accessToken &&
-          isTokenValid(payload.accessToken) &&
-          payload.user
-        ) {
+        if (shouldAcceptRefreshPayload(error, payload)) {
           setAuth(payload.accessToken, mapAuthUser(payload.user));
         } else {
           clearAuth();

@@ -19,6 +19,7 @@ import type {
   SetorNode,
   ColaboradorNode,
 } from '../../graphql/types/disparo.types';
+import { mergeConnectionNodes } from '../../utils/mergeConnectionNodes';
 
 interface Props {
   onNext: () => void;
@@ -104,10 +105,10 @@ export function StepSelecionarDestinatarios({ onNext, onBack }: Props) {
             ...fetchMoreResult,
             colaboradores: {
               ...fetchMoreResult.colaboradores,
-              nodes: [
-                ...(prev.colaboradores?.nodes ?? []),
-                ...fetchMoreResult.colaboradores.nodes,
-              ],
+              nodes: mergeConnectionNodes(
+                prev.colaboradores?.nodes,
+                fetchMoreResult.colaboradores.nodes,
+              ),
             },
           };
         },

@@ -10,6 +10,10 @@ import { SetContextLink } from '@apollo/client/link/context';
 import { ErrorLink } from '@apollo/client/link/error';
 import { RemoveTypenameFromVariablesLink } from '@apollo/client/link/remove-typename';
 import { useAuthStore } from '../auth/authStore';
+import {
+  createPendingRequestQueue,
+  shouldAttemptTokenRefresh,
+} from './authRefresh';
 import { REFRESH_TOKEN_MUTATION } from './mutations/auth.mutation';
 import type { RefreshTokenData } from './types/auth.types';
 
@@ -82,26 +86,9 @@ const authLink = new SetContextLink((prevContext) => {
 
 // ─── Refresh Token Logic ──────────────────────────────────────────────────────
 
-const SKIP_REFRESH_OPERATIONS = new Set(['Login', 'RefreshToken', 'Logout']);
-
 // Fila de requests que chegaram enquanto o refresh estava em andamento.
 // Quando o refresh resolver, todas são liberadas com o novo token (ou rejeitadas).
-type PendingRequest = {
-  resolve: (token: string) => void;
-  reject: (error: unknown) => void;
-};
-
-let pendingRequests: PendingRequest[] = [];
-
-const resolvePendingRequests = (newToken: string) => {
-  pendingRequests.forEach(({ resolve }) => resolve(newToken));
-  pendingRequests = [];
-};
-
-const rejectPendingRequests = (error: unknown) => {
-  pendingRequests.forEach(({ reject }) => reject(error));
-  pendingRequests = [];
-};
+const pendingRequestQueue = createPendingRequestQueue();
 
 const refreshAccessToken = (): Promise<string> => {
   return apolloClient
@@ -133,15 +120,13 @@ const refreshAccessToken = (): Promise<string> => {
 const errorLink = new ErrorLink(({ error, operation, forward }) => {
   if (!CombinedGraphQLErrors.is(error)) return;
 
-  if (operation.operationName && SKIP_REFRESH_OPERATIONS.has(operation.operationName)) {
-    return;
-  }
-
-  const isUnauthenticated = error.errors.some(
-    (err) => err.extensions?.code === 'UNAUTHENTICATED'
+  const errorCodes = error.errors.map((err) =>
+    typeof err.extensions?.code === 'string' ? err.extensions.code : undefined,
   );
 
-  if (!isUnauthenticated) return;
+  if (!shouldAttemptTokenRefresh(operation.operationName, errorCodes)) {
+    return;
+  }
 
   const { isRefreshing, setRefreshing, clearAuth } = useAuthStore.getState();
 
@@ -151,7 +136,7 @@ const errorLink = new ErrorLink(({ error, operation, forward }) => {
   return new Observable((observer) => {
     if (isRefreshing) {
       // Refresh em andamento — enfileira e aguarda o novo token
-      pendingRequests.push({
+      pendingRequestQueue.enqueue({
         resolve: (newToken: string) => {
           operation.setContext(({ headers = {} }) => ({
             headers: { ...headers, Authorization: `Bearer ${newToken}` },
@@ -169,7 +154,7 @@ const errorLink = new ErrorLink(({ error, operation, forward }) => {
 
     refreshAccessToken()
       .then((newToken) => {
-        resolvePendingRequests(newToken);
+        pendingRequestQueue.resolveAll(newToken);
         setRefreshing(false);
 
         operation.setContext(({ headers = {} }) => ({
@@ -179,7 +164,7 @@ const errorLink = new ErrorLink(({ error, operation, forward }) => {
         forward(operation).subscribe(observer);
       })
       .catch((err) => {
-        rejectPendingRequests(err);
+        pendingRequestQueue.rejectAll(err);
         setRefreshing(false);
         clearAuth();
 
