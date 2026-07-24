@@ -2,8 +2,7 @@ import { Button } from '../components/Button'
 import { useState } from 'react';
 import { SplitScreenLayout } from '../layouts/SplitScreenLayout';
 import loginImage from '@/assets/wallpaper/Professional.png'
-// import headerImage from '@/assets/logos/LogoHeaderFormSample.png';
-import headerImage from '@/assets/logos/LogoCorreta.png';
+import headerImage from '@/assets/logos/LogoIcon.png';
 import { AuthImage } from "../components/AuthImage/AuthImage";
 import { useForm, SubmitHandler } from "react-hook-form"
 import { Input } from '../components/Input';
@@ -47,11 +46,12 @@ export function LoginPage() {
           <div className='flex justify-center pt-8'>
             <img
               src={headerImage}
-              alt="Logo"
+              alt="Logo ARP"
               loading="eager"
               onLoad={() => setLoadedLogo(true)}
-              className={`w-108 h-24 object-cover transition-opacity duration-300 ${loadedLogo ? "opacity-100" : "opacity-0"
-                }`}
+              className={`h-20 w-auto object-contain transition-opacity duration-300 ${
+                loadedLogo ? 'opacity-100' : 'opacity-0'
+              }`}
             />
           </div>
           {/* /Header */}
@@ -120,7 +120,7 @@ export function LoginPage() {
 
           {/* Footer */}
           <p className='pb-6 px-8 text-center text-xs'>
-            © Prospect 2025 - Análise de Riscos Piscossociais
+            © Prospect 2025 - {import.meta.env.VITE_ARP_TITLE}
             <br />
             <a href='#' className='underline'>Política de Privacidade</a>
             {' '}e{' '}

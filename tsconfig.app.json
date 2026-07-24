@@ -25,9 +25,8 @@
     "noUncheckedSideEffectImports": true,
 
     /* Imports */
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": ["src"]
