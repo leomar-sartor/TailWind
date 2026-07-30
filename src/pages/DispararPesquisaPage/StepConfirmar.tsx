@@ -39,9 +39,14 @@ export function StepConfirmar({ onBack, onSuccess }: Props) {
     GET_COLABORADORES_BY_SETOR,
     {
       variables: {
-        first: 500,
+        first: 50,
         where: setorIdsSelecionados.length > 0
-          ? { setorId: { in: setorIdsSelecionados.map(Number) } }
+          ? {
+              and: [
+                { setorId: { in: setorIdsSelecionados.map(Number) } },
+                { id: { in: colaboradoresSelecionados.map(Number) } },
+              ],
+            }
           : null,
       },
       skip: setorIdsSelecionados.length === 0,

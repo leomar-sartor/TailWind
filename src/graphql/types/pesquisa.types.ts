@@ -28,6 +28,8 @@ export interface QuestaoDetail {
   obrigatoria: boolean;
   multiplasRespostas: boolean;
   maximoDeCaracteres: number | null;
+  categoriaId?: EntityId | null;
+  categoria?: { id: EntityId; nome: string } | null;
   opcoes: QuestaoOpcaoDetail[];
 }
 
@@ -50,6 +52,7 @@ export interface QuestaoInput {
   obrigatoria: boolean;
   multiplasRespostas: boolean;
   maximoDeCaracteres: number | null;
+  categoriaId?: number | null;
   opcoes?: QuestaoOpcaoInput[];
 }
 

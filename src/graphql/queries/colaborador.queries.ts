@@ -2,7 +2,7 @@ import { gql } from '@apollo/client';
 
 export const GET_COLABORADORES = gql`
   query Colaboradores($where: ColaboradorFilterInput, $first: Int = 10, $after: String) {
-    colaboradores(where: $where, first: $first, after: $after) {
+    colaboradores(where: $where, first: $first, after: $after, order: [{ id: DESC }]) {
       nodes {
         id
         nome

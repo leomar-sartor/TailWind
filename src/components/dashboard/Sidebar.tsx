@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Building2, ChevronDown, FileSearch, Layers, LayoutDashboard, Menu, Search, Send, Users } from 'lucide-react';
+import { Building2, ChevronDown, FileSearch, Layers, LayoutDashboard, Menu, Search, Send, Tags, Users } from 'lucide-react';
 import type { MenuPage } from '../../hooks/useDashboardPageConfig';
 
 type SidebarProps = {
@@ -26,6 +26,7 @@ const groups = [
       { label: 'Empresa', page: 'empresa' as MenuPage, icon: <Building2 className="h-4 w-4" /> },
       { label: 'Setor', page: 'setor' as MenuPage, icon: <Layers className="h-4 w-4" /> },
       { label: 'Colaboradores', page: 'colaboradores' as MenuPage, icon: <Users className="h-4 w-4" /> },
+      { label: 'Categoria', page: 'categoria' as MenuPage, icon: <Tags className="h-4 w-4" /> },
     ],
   },
   {

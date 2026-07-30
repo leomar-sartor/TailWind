@@ -18,6 +18,8 @@ import { CreateEditPesquisaPageWithLayout } from '../pages/CreateEditPesquisaPag
 import { PesquisaPageWrapper } from '../pages/PesquisaPageWrapper';
 import { ColaboradorPageWrapper } from '../pages/ColaboradorPageWrapper';
 import { CreateEditColaboradorPageWithLayout } from '../pages/CreateEditColaboradorPageWithLayout';
+import { CategoriaPageWrapper } from '../pages/CategoriaPageWrapper';
+import { CreateEditCategoriaPageWithLayout } from '../pages/CreateEditCategoriaPageWithLayout';
 import { SurveyPage } from '../pages/SurveyPage';
 import { DispararPesquisaPageWithLayout } from '../pages/DispararPesquisaPageWithLayout';
 
@@ -51,6 +53,8 @@ export function AppRouter() {
                 <Route path="/dashboard/empresa/create" element={<CreateEditEmpresaPageWithLayout />} />
                 <Route path="/dashboard/colaboradores" element={<ColaboradorPageWrapper />} />
                 <Route path="/dashboard/colaboradores/create" element={<CreateEditColaboradorPageWithLayout />} />
+                <Route path="/dashboard/categoria" element={<CategoriaPageWrapper />} />
+                <Route path="/dashboard/categoria/create" element={<CreateEditCategoriaPageWithLayout />} />
                 <Route path="/dashboard/pesquisa" element={<PesquisaPageWrapper />} />
                 <Route path="/dashboard/pesquisa/create" element={<CreateEditPesquisaPageWithLayout />} />
                 <Route path="/dashboard/pesquisa/disparar" element={<DispararPesquisaPageWithLayout />} />

@@ -27,6 +27,7 @@ import type {
 } from '../graphql/types/setor.types';
 import type { AndFilterInput } from '../graphql/types/common.types';
 import { formatCpf, stripCpfMask } from '../utils/cpf';
+import { FormErrorAlert } from '../components/FormErrorAlert';
 import { getGraphQLErrorMessage } from '../utils/confirmToast';
 import { mergeConnectionNodes } from '../utils/mergeConnectionNodes';
 
@@ -311,11 +312,7 @@ export function CreateEditColaboradorPage() {
       </div>
 
       <section className="dashboard-card rounded-[28px] border p-6 shadow-xl">
-        {submitError ? (
-          <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
-            {submitError}
-          </div>
-        ) : null}
+        <FormErrorAlert message={submitError} />
 
         <form onSubmit={colaboradorForm.handleSubmit(handleSubmit)} className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-2">

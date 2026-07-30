@@ -26,7 +26,7 @@ interface Props {
   onBack: () => void;
 }
 
-const COLABORADORES_PAGE_SIZE = 50;
+const PAGE_SIZE = 50;
 
 export function StepSelecionarDestinatarios({ onNext, onBack }: Props) {
 
@@ -48,21 +48,59 @@ export function StepSelecionarDestinatarios({ onNext, onBack }: Props) {
     GetEmpresasData,
     GetEmpresasDisparoVars
   >(GET_EMPRESAS_DISPARO, {
-    variables: { first: 50 },
+    variables: { first: PAGE_SIZE },
     fetchPolicy: 'cache-first',
   });
   const empresas = empresasData?.empresas?.nodes ?? [];
 
   // ── Setores da empresa selecionada ──────────────────────────────────────────
-  const { data: setoresData, loading: loadingSetores } = useQuery<
-    GetSetoresData,
-    GetSetoresByEmpresaVars
-  >(GET_SETORES_BY_EMPRESA, {
-    variables: { first: 100, where: empresaId ? { empresaId: { eq: Number(empresaId) } } : null },
+  const setoresWhere = empresaId ? { empresaId: { eq: Number(empresaId) } } : null;
+
+  const {
+    data: setoresData,
+    loading: loadingSetores,
+    fetchMore: fetchMoreSetores,
+    networkStatus: setoresNetworkStatus,
+  } = useQuery<GetSetoresData, GetSetoresByEmpresaVars>(GET_SETORES_BY_EMPRESA, {
+    variables: { first: PAGE_SIZE, where: setoresWhere },
     skip: !empresaId,
-    fetchPolicy: 'cache-first',
+    fetchPolicy: 'network-only',
+    notifyOnNetworkStatusChange: true,
   });
   const setores = setoresData?.setores?.nodes ?? [];
+  const setoresPageInfo = setoresData?.setores?.pageInfo;
+  const setoresTotalCount = setoresData?.setores?.totalCount ?? setores.length;
+  const hasMoreSetores = !!setoresPageInfo?.hasNextPage;
+  const loadingMoreSetores = setoresNetworkStatus === NetworkStatus.fetchMore;
+
+  const handleLoadMoreSetores = async () => {
+    if (!hasMoreSetores || !setoresPageInfo?.endCursor || loadingMoreSetores) return;
+
+    try {
+      await fetchMoreSetores({
+        variables: {
+          first: PAGE_SIZE,
+          after: setoresPageInfo.endCursor,
+          where: setoresWhere,
+        },
+        updateQuery: (prev, { fetchMoreResult }) => {
+          if (!fetchMoreResult) return prev;
+          return {
+            ...fetchMoreResult,
+            setores: {
+              ...fetchMoreResult.setores,
+              nodes: mergeConnectionNodes(
+                prev.setores?.nodes,
+                fetchMoreResult.setores.nodes,
+              ),
+            },
+          };
+        },
+      });
+    } catch (err) {
+      console.error('Erro ao carregar mais setores:', err);
+    }
+  };
 
   // ── Colaboradores dos setores selecionados ──────────────────────────────────
   const colaboradoresWhere = setorIdsSelecionados.length > 0
@@ -76,7 +114,7 @@ export function StepSelecionarDestinatarios({ onNext, onBack }: Props) {
     networkStatus,
   } = useQuery<GetColaboradoresData, GetColaboradoresBySetorVars>(GET_COLABORADORES_BY_SETOR, {
     variables: {
-      first: COLABORADORES_PAGE_SIZE,
+      first: PAGE_SIZE,
       where: colaboradoresWhere,
     },
     skip: setorIdsSelecionados.length === 0,
@@ -95,7 +133,7 @@ export function StepSelecionarDestinatarios({ onNext, onBack }: Props) {
     try {
       await fetchMoreColaboradores({
         variables: {
-          first: COLABORADORES_PAGE_SIZE,
+          first: PAGE_SIZE,
           after: colaboradoresPageInfo.endCursor,
           where: colaboradoresWhere,
         },
@@ -118,7 +156,10 @@ export function StepSelecionarDestinatarios({ onNext, onBack }: Props) {
     }
   };
 
-  const todosSetoresSelecionados = setores.length > 0 && setorIdsSelecionados.length === setores.length;
+  const todosSetoresSelecionados =
+    setores.length > 0 &&
+    !hasMoreSetores &&
+    setorIdsSelecionados.length === setores.length;
   const todosColabsSelecionados = colaboradores.length > 0 && colaboradoresSelecionados.length === colaboradores.length;
 
   return (
@@ -177,39 +218,56 @@ export function StepSelecionarDestinatarios({ onNext, onBack }: Props) {
                     : selecionarTodosSetores(setores.map((s: SetorNode) => String(s.id)))
                 }
               >
-                {todosSetoresSelecionados ? 'Desmarcar todos' : 'Selecionar todos'}
+                {todosSetoresSelecionados ? 'Desmarcar todos' : 'Selecionar todos (carregados)'}
               </button>
             )}
           </div>
 
-          {loadingSetores ? (
+          {loadingSetores && !loadingMoreSetores ? (
             <p className="text-sm text-[#8592A3]">Carregando setores...</p>
           ) : setores.length === 0 ? (
             <p className="text-sm text-[#8592A3]">Nenhum setor encontrado para esta empresa.</p>
           ) : (
-            <div className="flex flex-wrap gap-2">
-              {setores.map((s: SetorNode) => {
-                const isSelected = setorIdsSelecionados.includes(String(s.id));
-                return (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => toggleSetor(String(s.id))}
-                    className={[
-                      'px-4 py-2 rounded-xl text-sm font-medium border transition-all inline-flex items-center gap-2',
-                      isSelected
-                        ? 'bg-[#696CFF] text-white border-[#696CFF] shadow-md'
-                        : 'bg-white text-[#384551] border-[#E4E6E8] hover:border-[#696CFF] hover:bg-[#F4F6FA]',
-                    ].join(' ')}
-                  >
-                    {isSelected
-                      ? <CheckSquare className="h-3.5 w-3.5" />
-                      : <Square className="h-3.5 w-3.5 text-[#C4C8CC]" />
-                    }
-                    {s.nome}
-                  </button>
-                );
-              })}
+            <div className="space-y-3">
+              {setoresTotalCount > setores.length && (
+                <p className="text-xs text-[#8592A3]">
+                  {setores.length} de {setoresTotalCount} setores carregados
+                </p>
+              )}
+              <div className="flex flex-wrap gap-2">
+                {setores.map((s: SetorNode) => {
+                  const isSelected = setorIdsSelecionados.includes(String(s.id));
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => toggleSetor(String(s.id))}
+                      className={[
+                        'px-4 py-2 rounded-xl text-sm font-medium border transition-all inline-flex items-center gap-2',
+                        isSelected
+                          ? 'bg-[#696CFF] text-white border-[#696CFF] shadow-md'
+                          : 'bg-white text-[#384551] border-[#E4E6E8] hover:border-[#696CFF] hover:bg-[#F4F6FA]',
+                      ].join(' ')}
+                    >
+                      {isSelected
+                        ? <CheckSquare className="h-3.5 w-3.5" />
+                        : <Square className="h-3.5 w-3.5 text-[#C4C8CC]" />
+                      }
+                      {s.nome}
+                    </button>
+                  );
+                })}
+              </div>
+              {hasMoreSetores && (
+                <button
+                  type="button"
+                  onClick={handleLoadMoreSetores}
+                  disabled={loadingMoreSetores}
+                  className="text-sm font-medium text-[#696CFF] hover:underline disabled:opacity-50"
+                >
+                  {loadingMoreSetores ? 'Carregando...' : 'Carregar mais setores'}
+                </button>
+              )}
             </div>
           )}
         </div>

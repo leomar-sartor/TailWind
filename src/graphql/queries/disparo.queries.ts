@@ -38,12 +38,17 @@ export const GET_EMPRESAS_DISPARO = gql`
 `;
 
 export const GET_SETORES_BY_EMPRESA = gql`
-  query GetSetoresByEmpresa($first: Int, $where: SetorFilterInput) {
-    setores(first: $first, where: $where) {
+  query GetSetoresByEmpresa($first: Int, $after: String, $where: SetorFilterInput) {
+    setores(first: $first, after: $after, where: $where) {
       nodes {
         id
         nome
       }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+      totalCount
     }
   }
 `;

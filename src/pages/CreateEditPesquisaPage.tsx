@@ -3,11 +3,13 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { useFieldArray, useForm, SubmitHandler, type FieldError } from 'react-hook-form';
 import { ArrowLeft, PlusCircle, Plus, Trash2 } from 'lucide-react';
+import { FormErrorAlert } from '../components/FormErrorAlert';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { Select } from '../components/Select';
 import { CREATE_PESQUISA_MUTATION, UPDATE_PESQUISA_MUTATION } from '../graphql/mutations/pesquisa.mutations';
 import { GET_PESQUISA_BY_ID } from '../graphql/queries/pesquisa.queries';
+import { GET_CATEGORIAS_OPTIONS } from '../graphql/queries/categoria.queries';
 import type {
   CreatePesquisaData,
   CreatePesquisaVars,
@@ -17,6 +19,10 @@ import type {
   UpdatePesquisaData,
   UpdatePesquisaVars,
 } from '../graphql/types/pesquisa.types';
+import type {
+  GetCategoriasOptionsData,
+  GetCategoriasOptionsVars,
+} from '../graphql/types/categoria.types';
 import { getGraphQLErrorMessage } from '../utils/confirmToast';
 
 type QuestaoForm = {
@@ -25,6 +31,7 @@ type QuestaoForm = {
   obrigatoria: boolean;
   multiplasRespostas: boolean;
   maximoDeCaracteres: string;
+  categoriaId: string;
   opcoes: Array<{ ordem: number; descricao: string }>;
 };
 
@@ -41,8 +48,21 @@ const defaultQuestao: QuestaoForm = {
   obrigatoria: true,
   multiplasRespostas: false,
   maximoDeCaracteres: '',
+  categoriaId: '',
   opcoes: [{ ordem: 1, descricao: '' }],
 };
+
+function todayLocalDate(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function toDateInputValue(iso: string): string {
+  return iso.slice(0, 10);
+}
 
 export function CreateEditPesquisaPage() {
   const navigate = useNavigate();
@@ -56,7 +76,7 @@ export function CreateEditPesquisaPage() {
   const pesquisaForm = useForm<PesquisaFormValues>({
     defaultValues: {
       nome: '',
-      dataInicial: '',
+      dataInicial: todayLocalDate(),
       dataFinal: '',
       questoes: [{ ...defaultQuestao }],
     },
@@ -90,6 +110,15 @@ export function CreateEditPesquisaPage() {
     }
   );
 
+  const { data: categoriasData, loading: loadingCategorias } = useQuery<
+    GetCategoriasOptionsData,
+    GetCategoriasOptionsVars
+  >(GET_CATEGORIAS_OPTIONS, {
+    variables: { first: 50 },
+    fetchPolicy: 'cache-and-network',
+  });
+  const categorias = categoriasData?.categorias?.nodes ?? [];
+
   // Refetch quando o ID mudar
   useEffect(() => {
     if (pesquisaId && refetch) {
@@ -103,14 +132,15 @@ export function CreateEditPesquisaPage() {
       const pesquisa = pesquisaData.pesquisaById;
       pesquisaForm.reset({
         nome: pesquisa.nome,
-        dataInicial: pesquisa.dataInicial.slice(0, 16), // Converter ISO para datetime-local
-        dataFinal: pesquisa.dataFinal.slice(0, 16),
+        dataInicial: toDateInputValue(pesquisa.dataInicial),
+        dataFinal: toDateInputValue(pesquisa.dataFinal),
         questoes: pesquisa.questoes.map((q) => ({
           titulo: q.titulo,
           tipo: (q.tipo === 'OPCAO' ? 'OPCAO' : 'TEXTO') as TipoQuestao,
           obrigatoria: q.obrigatoria,
           multiplasRespostas: q.multiplasRespostas,
           maximoDeCaracteres: q.maximoDeCaracteres ? String(q.maximoDeCaracteres) : '',
+          categoriaId: q.categoriaId != null ? String(q.categoriaId) : q.categoria?.id != null ? String(q.categoria.id) : '',
           opcoes: q.opcoes.map((op) => ({
             ordem: op.ordem,
             descricao: op.descricao,
@@ -157,8 +187,8 @@ export function CreateEditPesquisaPage() {
     try {
       const payload = {
         nome: values.nome.trim(),
-        dataInicial: new Date(values.dataInicial).toISOString(),
-        dataFinal: new Date(values.dataFinal).toISOString(),
+        dataInicial: new Date(`${values.dataInicial}T00:00:00`).toISOString(),
+        dataFinal: new Date(`${values.dataFinal}T23:59:59`).toISOString(),
         questoes: values.questoes.map((questao) => ({
           titulo: questao.titulo.trim(),
           tipo: questao.tipo,
@@ -168,6 +198,7 @@ export function CreateEditPesquisaPage() {
             questao.tipo === 'TEXTO' && questao.maximoDeCaracteres
               ? Number(questao.maximoDeCaracteres)
               : null,
+          categoriaId: questao.categoriaId ? Number(questao.categoriaId) : null,
           ...(questao.tipo === 'OPCAO'
             ? {
                 opcoes: questao.opcoes.map((opcao, index) => ({
@@ -204,7 +235,12 @@ export function CreateEditPesquisaPage() {
 
       setSuccessMessage(successMsg);
       if (!isEditing) {
-        reset({ nome: '', dataInicial: '', dataFinal: '', questoes: [{ ...defaultQuestao }] });
+        reset({
+          nome: '',
+          dataInicial: todayLocalDate(),
+          dataFinal: '',
+          questoes: [{ ...defaultQuestao }],
+        });
       }
       navigate('/dashboard/pesquisa', {
         replace: true,
@@ -249,11 +285,7 @@ export function CreateEditPesquisaPage() {
         </div>
       )}
 
-      {errorMessage && (
-        <div className="rounded-3xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
-          {errorMessage}
-        </div>
-      )}
+      <FormErrorAlert message={errorMessage} className="mb-0 rounded-3xl border-rose-200 bg-rose-50 text-rose-700" />
 
       <article className="dashboard-card rounded-[28px] border p-6 shadow-xl">
         <form className="space-y-8" onSubmit={handleSubmit(handleSubmitPesquisa)}>
@@ -268,7 +300,7 @@ export function CreateEditPesquisaPage() {
             />
             <Input
               name="dataInicial"
-              type="datetime-local"
+              type="date"
               placeholder="Data inicial"
               registration={register('dataInicial', {
                 required: 'Data inicial é obrigatória',
@@ -277,7 +309,7 @@ export function CreateEditPesquisaPage() {
             />
             <Input
               name="dataFinal"
-              type="datetime-local"
+              type="date"
               placeholder="Data final"
               registration={register('dataFinal', {
                 required: 'Data final é obrigatória',
@@ -326,7 +358,7 @@ export function CreateEditPesquisaPage() {
                       </Button>
                     </div>
 
-                    <div className="grid gap-4 lg:grid-cols-2">
+                    <div className="grid gap-4 lg:grid-cols-3">
                       <Input
                         name={`questoes.${index}.titulo`}
                         placeholder="Título da questão"
@@ -342,6 +374,22 @@ export function CreateEditPesquisaPage() {
                       >
                         <option value="TEXTO">Texto</option>
                         <option value="OPCAO">Opção</option>
+                      </Select>
+                      <Select
+                        name={`questoes.${index}.categoriaId`}
+                        registration={register(`questoes.${index}.categoriaId` as const, {
+                          required: 'Categoria é obrigatória',
+                        })}
+                        error={formState.errors.questoes?.[index]?.categoriaId as FieldError | undefined}
+                      >
+                        <option value="">
+                          {loadingCategorias ? 'Carregando categorias...' : 'Selecione a categoria'}
+                        </option>
+                        {categorias.map((categoria) => (
+                          <option key={categoria.id} value={String(categoria.id)}>
+                            {categoria.nome}
+                          </option>
+                        ))}
                       </Select>
                     </div>
 

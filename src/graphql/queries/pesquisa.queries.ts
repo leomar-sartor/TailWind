@@ -2,7 +2,7 @@ import { gql } from '@apollo/client';
 
 export const GET_PESQUISAS = gql`
   query BuscarPesquisa {
-    pesquisas {
+    pesquisas(order: [{ id: DESC }]) {
       nodes {
         id
         nome
@@ -60,6 +60,11 @@ export const GET_PESQUISA_BY_ID = gql`
         obrigatoria
         multiplasRespostas
         maximoDeCaracteres
+        categoriaId
+        categoria {
+          id
+          nome
+        }
         opcoes {
           id
           ordem

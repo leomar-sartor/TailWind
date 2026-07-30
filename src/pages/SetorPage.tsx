@@ -170,21 +170,21 @@ export function SetorPage() {
               {setores.map((setor) => (
                 <tr key={setor.id} className="hover:bg-[#F4F6FA] transition-colors">
                   <td className="px-6 py-4 align-top text-sm text-[#2B2C40]">
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-nowrap items-center gap-1.5 whitespace-nowrap">
                       <button
                         type="button"
-                        className="inline-flex items-center gap-2 rounded-3xl border border-slate-200 bg-white px-3 py-2 text-sm text-[#2B2C40] transition hover:bg-[#F4F6FA]"
+                        className="inline-flex shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white px-2 py-1.5 text-sm text-[#2B2C40] transition hover:bg-[#F4F6FA]"
                         onClick={() => handleEdit(setor.id)}
                       >
-                        <Edit3 className="h-4 w-4" />
+                        <Edit3 className="h-3.5 w-3.5" />
                       </button>
                       <button
                         type="button"
-                        className="inline-flex items-center gap-2 rounded-3xl border border-rose-200 bg-white px-3 py-2 text-sm text-rose-500 transition hover:bg-rose-50"
+                        className="inline-flex shrink-0 items-center justify-center rounded-2xl border border-rose-200 bg-white px-2 py-1.5 text-sm text-rose-500 transition hover:bg-rose-50"
                         onClick={() => handleRemove(setor.id)}
                         disabled={isBusy}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   </td>

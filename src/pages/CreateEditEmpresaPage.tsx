@@ -4,6 +4,7 @@ import { useMutation, useQuery } from '@apollo/client/react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '../components/Button';
+import { FormErrorAlert } from '../components/FormErrorAlert';
 import { LabeledInput } from '../components/LabeledInput';
 import {
   CREATE_EMPRESA_MUTATION,
@@ -146,11 +147,7 @@ export function CreateEditEmpresaPage() {
 
       <div>
         <article className="dashboard-card rounded-[28px] border p-6 shadow-xl">
-          {submitError ? (
-            <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
-              {submitError}
-            </div>
-          ) : null}
+          <FormErrorAlert message={submitError} />
 
           <form className="space-y-6" onSubmit={empresaForm.handleSubmit(handleSubmit)}>
             <div className="space-y-4">
