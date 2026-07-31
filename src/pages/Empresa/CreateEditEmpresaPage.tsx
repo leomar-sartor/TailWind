@@ -2,8 +2,7 @@ import { useEffect, useState, type ChangeEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { useForm, SubmitHandler } from 'react-hook-form';
-import { ArrowLeft } from 'lucide-react';
-import { Button } from '../../components/Button';
+import { CadastroFormActions, CadastroFormHeader } from '../../components/cadastro';
 import { FormErrorAlert } from '../../components/FormErrorAlert';
 import { LabeledInput } from '../../components/LabeledInput';
 import {
@@ -47,15 +46,15 @@ export function CreateEditEmpresaPage() {
   );
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const { data: empresaData, loading: loadingEmpresa, refetch } = useQuery<GetEmpresaByIdData, GetEmpresaByIdVars>(
-    GET_EMPRESA_BY_ID,
-    {
-      variables: {
-        id: Number(empresaId),
-      },
-      skip: !empresaId,
-    }
-  );
+  const { data: empresaData, loading: loadingEmpresa, refetch } = useQuery<
+    GetEmpresaByIdData,
+    GetEmpresaByIdVars
+  >(GET_EMPRESA_BY_ID, {
+    variables: {
+      id: Number(empresaId),
+    },
+    skip: !empresaId,
+  });
 
   useEffect(() => {
     if (empresaId && refetch) {
@@ -90,18 +89,19 @@ export function CreateEditEmpresaPage() {
     };
 
     try {
-      const result = isEditing && empresaId
-        ? await updateEmpresa({
-            variables: {
-              id: Number(empresaId),
-              input: payload,
-            },
-          })
-        : await createEmpresa({
-            variables: {
-              input: payload,
-            },
-          });
+      const result =
+        isEditing && empresaId
+          ? await updateEmpresa({
+              variables: {
+                id: Number(empresaId),
+                input: payload,
+              },
+            })
+          : await createEmpresa({
+              variables: {
+                input: payload,
+              },
+            });
 
       const mutationErrorMessage = getGraphQLErrorMessage(result.error);
 
@@ -112,92 +112,74 @@ export function CreateEditEmpresaPage() {
 
       navigate('/dashboard/empresa', {
         replace: true,
-        state: { message: isEditing ? 'Empresa atualizada com sucesso!' : 'Empresa cadastrada com sucesso!' },
+        state: {
+          message: isEditing
+            ? 'Empresa atualizada com sucesso!'
+            : 'Empresa cadastrada com sucesso!',
+        },
       });
     } catch (err) {
-      const message = getGraphQLErrorMessage(err) ?? 'Não foi possível salvar a empresa. Tente novamente.';
+      const message =
+        getGraphQLErrorMessage(err) ?? 'Não foi possível salvar a empresa. Tente novamente.';
       setSubmitError(message);
       console.error(err);
     }
   };
 
   const isBusy = creating || updating || loadingEmpresa;
+  const goBack = () => navigate('/dashboard/empresa');
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <button
-          onClick={() => navigate('/dashboard/empresa')}
-          className="inline-flex items-center gap-2 text-[#696CFF] hover:text-[#384551] transition"
-        >
-          <ArrowLeft className="h-5 w-5" />
-          <span className="text-sm font-medium">Voltar</span>
-        </button>
-        <div>
-          <h1 className="text-2xl font-semibold text-[#2B2C40]">
-            {isEditing ? 'Editar empresa' : 'Cadastrar nova empresa'}
-          </h1>
-          <p className="mt-1 text-sm text-[#6C7287]">
-            {isEditing
-              ? 'Atualize as informações da empresa.'
-              : 'Preencha o formulário abaixo para criar uma nova empresa.'}
-          </p>
-        </div>
-      </div>
+      <CadastroFormHeader
+        title={isEditing ? 'Editar empresa' : 'Cadastrar nova empresa'}
+        description={
+          isEditing
+            ? 'Atualize as informações da empresa.'
+            : 'Preencha o formulário abaixo para criar uma nova empresa.'
+        }
+        onBack={goBack}
+      />
 
-      <div>
-        <article className="dashboard-card rounded-[28px] border p-6 shadow-xl">
-          <FormErrorAlert message={submitError} />
+      <section className="dashboard-card rounded-[28px] border p-6 shadow-xl">
+        <FormErrorAlert message={submitError} />
 
-          <form className="space-y-6" onSubmit={empresaForm.handleSubmit(handleSubmit)}>
-            <div className="space-y-4">
-              <LabeledInput
-                name="nomeFantasia"
-                label="Nome fantasia"
-                required
-                registration={empresaForm.register('nomeFantasia', {
-                  required: 'Nome fantasia obrigatório',
-                })}
-                error={empresaForm.formState.errors.nomeFantasia}
-              />
-              <LabeledInput
-                name="cnpj"
-                label="CNPJ"
-                required
-                registration={empresaForm.register('cnpj', {
-                  required: 'CNPJ obrigatório',
-                  onChange: handleCnpjChange,
-                })}
-                error={empresaForm.formState.errors.cnpj}
-              />
-              <LabeledInput
-                name="descricao"
-                label="Descrição da empresa"
-                registration={empresaForm.register('descricao', {
-                })}
-                error={empresaForm.formState.errors.descricao}
-              />
-            </div>
+        <form className="space-y-6" onSubmit={empresaForm.handleSubmit(handleSubmit)}>
+          <div className="space-y-4">
+            <LabeledInput
+              name="nomeFantasia"
+              label="Nome fantasia"
+              required
+              registration={empresaForm.register('nomeFantasia', {
+                required: 'Nome fantasia obrigatório',
+              })}
+              error={empresaForm.formState.errors.nomeFantasia}
+            />
+            <LabeledInput
+              name="cnpj"
+              label="CNPJ"
+              required
+              registration={empresaForm.register('cnpj', {
+                required: 'CNPJ obrigatório',
+                onChange: handleCnpjChange,
+              })}
+              error={empresaForm.formState.errors.cnpj}
+            />
+            <LabeledInput
+              name="descricao"
+              label="Descrição da empresa"
+              registration={empresaForm.register('descricao')}
+              error={empresaForm.formState.errors.descricao}
+            />
+          </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-              <Button
-                type="button"
-                onClick={() => navigate('/dashboard/empresa')}
-                className="rounded-3xl border border-slate-200 bg-white text-[#2B2C40] hover:bg-[#F4F6FA] px-5 py-3"
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                disabled={isBusy}
-                className="rounded-3xl px-5 py-3"
-              >
-                {isBusy ? 'Salvando...' : isEditing ? 'Atualizar' : 'Cadastrar'}
-              </Button>
-            </div>
-          </form>
-        </article>
-      </div>
+          <CadastroFormActions
+            submitLabel={isEditing ? 'Atualizar' : 'Cadastrar'}
+            isBusy={isBusy}
+            onCancel={goBack}
+          />
+        </form>
+      </section>
     </div>
   );
 }

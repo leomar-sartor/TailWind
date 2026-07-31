@@ -1,32 +1,45 @@
+import { useEffect, useState, type ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { useAuthStore, selectUser } from '../../auth/authStore';
-import { useAuth } from '../../auth/AuthContext';
-import { DashboardHeader } from '../../components/dashboard/DashboardHeader';
-import { DashboardFooter } from '../../components/dashboard/DashboardFooter';
-import { Sidebar } from '../../components/dashboard/Sidebar';
-import { DashboardLayout } from '../../layouts/DashboardLayout';
-import { PageContainer } from '../../components/dashboard/PageContainer';
-import { ColaboradorPage } from './ColaboradorPage';
-import { useDashboardPageConfig, type MenuPage } from '../../hooks/useDashboardPageConfig';
+import { useAuthStore, selectUser } from '../auth/authStore';
+import { useAuth } from '../auth/AuthContext';
+import { DashboardHeader } from '../components/dashboard/DashboardHeader';
+import { DashboardFooter } from '../components/dashboard/DashboardFooter';
+import { Sidebar } from '../components/dashboard/Sidebar';
+import { PageContainer } from '../components/dashboard/PageContainer';
+import { CadastroAlert } from '../components/cadastro/CadastroAlert';
+import { useDashboardPageConfig, type MenuPage } from '../hooks/useDashboardPageConfig';
+import { DashboardLayout } from './DashboardLayout';
 
-export function ColaboradorPageWrapper() {
+type DashboardPageShellProps = {
+  page: MenuPage;
+  children: ReactNode;
+  /** Show flash message from `location.state.message`. Defaults to true. */
+  showFlashMessage?: boolean;
+};
+
+/**
+ * Shared dashboard chrome (sidebar, header, footer, page container) for cadastro routes.
+ */
+export function DashboardPageShell({
+  page,
+  children,
+  showFlashMessage = true,
+}: DashboardPageShellProps) {
   const location = useLocation();
   const user = useAuthStore(selectUser);
   const { logout } = useAuth();
   const [message, setMessage] = useState<string | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const selectedPage: MenuPage = 'colaboradores';
-  const { pageInfo, handlePageChange } = useDashboardPageConfig(selectedPage);
+  const { pageInfo, handlePageChange } = useDashboardPageConfig(page);
 
   useEffect(() => {
-    if (location.state?.message) {
-      setMessage(location.state.message);
-      const timer = setTimeout(() => setMessage(null), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [location.state?.message]);
+    if (!showFlashMessage || !location.state?.message) return;
+
+    setMessage(location.state.message);
+    const timer = setTimeout(() => setMessage(null), 5000);
+    return () => clearTimeout(timer);
+  }, [location.state?.message, showFlashMessage]);
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 639.98px)');
@@ -72,7 +85,7 @@ export function ColaboradorPageWrapper() {
       sidebar={
         <Sidebar
           collapsed={sidebarCollapsed}
-          activePage={selectedPage}
+          activePage={page}
           onSelectPage={handlePageChange}
           onToggleSidebar={handleToggleSidebar}
         />
@@ -80,7 +93,7 @@ export function ColaboradorPageWrapper() {
       header={
         <DashboardHeader
           collapsed={sidebarCollapsed}
-          pageTitle={pageInfo[selectedPage].title}
+          pageTitle={pageInfo[page].title}
           userName={user?.username ?? user?.email?.split('@')[0] ?? 'Usuário'}
           roles={user?.roles ?? ['Gestor']}
           onSettings={handleSettings}
@@ -90,13 +103,17 @@ export function ColaboradorPageWrapper() {
       footer={<DashboardFooter collapsed={sidebarCollapsed} />}
       contentClassName={contentPadding}
     >
-      <PageContainer loading={false} title={pageInfo[selectedPage].title} description={pageInfo[selectedPage].description}>
+      <PageContainer
+        loading={false}
+        title={pageInfo[page].title}
+        description={pageInfo[page].description}
+      >
         {message && (
-          <div className="mb-4 rounded-3xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">
+          <CadastroAlert variant="success" className="mb-4">
             {message}
-          </div>
+          </CadastroAlert>
         )}
-        <ColaboradorPage />
+        {children}
       </PageContainer>
     </DashboardLayout>
   );

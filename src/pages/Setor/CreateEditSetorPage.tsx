@@ -2,8 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { useForm, SubmitHandler } from 'react-hook-form';
-import { ArrowLeft } from 'lucide-react';
-import { Button } from '../../components/Button';
+import { CadastroFormActions, CadastroFormHeader } from '../../components/cadastro';
 import { FormErrorAlert } from '../../components/FormErrorAlert';
 import { LabeledInput } from '../../components/LabeledInput';
 import { LabeledSelectWithSearch } from '../../components/LabeledSelect/LabeledSelectWithSearch';
@@ -198,90 +197,67 @@ export function CreateEditSetorPage() {
   };
 
   const isBusy = creating || updating || loadingSetor || empresasLoading;
+  const goBack = () => navigate('/dashboard/setor');
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <button
-          type="button"
-          onClick={() => navigate('/dashboard/setor')}
-          className="inline-flex items-center gap-2 text-[#696CFF] hover:text-[#384551] transition"
-        >
-          <ArrowLeft className="h-5 w-5" />
-          <span className="text-sm font-medium">Voltar</span>
-        </button>
-        <div>
-          <h1 className="text-2xl font-semibold text-[#2B2C40]">
-            {isEditing ? 'Editar setor' : 'Cadastrar novo setor'}
-          </h1>
-          <p className="mt-1 text-sm text-[#6C7287]">
-            {isEditing
-              ? 'Atualize as informações do setor.'
-              : 'Preencha o formulário abaixo para criar um novo setor.'}
-          </p>
-        </div>
-      </div>
+      <CadastroFormHeader
+        title={isEditing ? 'Editar setor' : 'Cadastrar novo setor'}
+        description={
+          isEditing
+            ? 'Atualize as informações do setor.'
+            : 'Preencha o formulário abaixo para criar um novo setor.'
+        }
+        onBack={goBack}
+      />
 
-      <div>
-        <article className="dashboard-card rounded-[28px] border p-6 shadow-xl">
-          <FormErrorAlert message={submitError} />
+      <section className="dashboard-card rounded-[28px] border p-6 shadow-xl">
+        <FormErrorAlert message={submitError} />
 
-          <form className="space-y-6" onSubmit={setorForm.handleSubmit(handleSubmit)}>
-            <div className="space-y-4">
-              <LabeledSelectWithSearch
-                label="Empresa"
-                required
-                items={empresasItems}
-                selectedId={selectedEmpresaId}
-                placeholder="Selecione uma empresa"
-                searchPlaceholder="Buscar empresa..."
-                isLoading={empresasLoading}
-                hasMore={empresasData?.empresas?.pageInfo?.hasNextPage ?? false}
-                onLoadMore={handleLoadMoreEmpresas}
-                onSearch={setEmpresasSearchQuery}
-                onChange={handleEmpresaChange}
-                disabled={isEditing}
-                registration={setorForm.register('empresaId', {
-                  required: isEditing ? false : 'Empresa obrigatória',
-                })}
-                error={setorForm.formState.errors.empresaId}
-              />
-              <LabeledInput
-                name="nome"
-                label="Nome do setor"
-                required
-                registration={setorForm.register('nome', {
-                  required: 'Nome obrigatório',
-                })}
-                error={setorForm.formState.errors.nome}
-              />
-              <LabeledInput
-                name="descricao"
-                label="Descrição do setor"
-                registration={setorForm.register('descricao')}
-                error={setorForm.formState.errors.descricao}
-              />
-            </div>
+        <form className="space-y-6" onSubmit={setorForm.handleSubmit(handleSubmit)}>
+          <div className="space-y-4">
+            <LabeledSelectWithSearch
+              label="Empresa"
+              required
+              items={empresasItems}
+              selectedId={selectedEmpresaId}
+              placeholder="Selecione uma empresa"
+              searchPlaceholder="Buscar empresa..."
+              isLoading={empresasLoading}
+              hasMore={empresasData?.empresas?.pageInfo?.hasNextPage ?? false}
+              onLoadMore={handleLoadMoreEmpresas}
+              onSearch={setEmpresasSearchQuery}
+              onChange={handleEmpresaChange}
+              disabled={isEditing}
+              registration={setorForm.register('empresaId', {
+                required: isEditing ? false : 'Empresa obrigatória',
+              })}
+              error={setorForm.formState.errors.empresaId}
+            />
+            <LabeledInput
+              name="nome"
+              label="Nome do setor"
+              required
+              registration={setorForm.register('nome', {
+                required: 'Nome obrigatório',
+              })}
+              error={setorForm.formState.errors.nome}
+            />
+            <LabeledInput
+              name="descricao"
+              label="Descrição do setor"
+              registration={setorForm.register('descricao')}
+              error={setorForm.formState.errors.descricao}
+            />
+          </div>
 
-            <div className="flex gap-3 pt-4">
-              <Button
-                type="submit"
-                disabled={isBusy}
-                className="rounded-3xl px-6 py-3"
-              >
-                {isEditing ? 'Atualizar setor' : 'Salvar setor'}
-              </Button>
-              <Button
-                type="button"
-                onClick={() => navigate('/dashboard/setor')}
-                className="rounded-3xl border border-slate-200 bg-white text-[#2B2C40] hover:bg-[#F4F6FA] px-6 py-3"
-              >
-                Cancelar
-              </Button>
-            </div>
-          </form>
-        </article>
-      </div>
+          <CadastroFormActions
+            submitLabel={isEditing ? 'Atualizar setor' : 'Salvar setor'}
+            isBusy={isBusy}
+            onCancel={goBack}
+          />
+        </form>
+      </section>
     </div>
   );
 }

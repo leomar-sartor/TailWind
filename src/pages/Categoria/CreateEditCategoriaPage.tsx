@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { useForm, SubmitHandler } from 'react-hook-form';
-import { ArrowLeft } from 'lucide-react';
-import { Button } from '../../components/Button';
+import { CadastroFormActions, CadastroFormHeader } from '../../components/cadastro';
 import { FormErrorAlert } from '../../components/FormErrorAlert';
 import { LabeledInput } from '../../components/LabeledInput';
 import {
@@ -116,29 +115,19 @@ export function CreateEditCategoriaPage() {
   };
 
   const isBusy = creating || updating || loadingCategoria;
+  const goBack = () => navigate('/dashboard/categoria');
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <button
-          onClick={() => navigate('/dashboard/categoria')}
-          className="inline-flex items-center gap-2 text-[#696CFF] hover:text-[#384551] transition"
-          type="button"
-        >
-          <ArrowLeft className="h-5 w-5" />
-          <span className="text-sm font-medium">Voltar</span>
-        </button>
-        <div>
-          <h1 className="text-2xl font-semibold text-[#2B2C40]">
-            {isEditing ? 'Editar categoria' : 'Cadastrar categoria'}
-          </h1>
-          <p className="mt-1 text-sm text-[#6C7287]">
-            {isEditing
-              ? 'Atualize o nome e a descrição da categoria.'
-              : 'Informe o nome e, se quiser, uma descrição para a categoria.'}
-          </p>
-        </div>
-      </div>
+      <CadastroFormHeader
+        title={isEditing ? 'Editar categoria' : 'Cadastrar categoria'}
+        description={
+          isEditing
+            ? 'Atualize o nome e a descrição da categoria.'
+            : 'Informe o nome e, se quiser, uma descrição para a categoria.'
+        }
+        onBack={goBack}
+      />
 
       <section className="dashboard-card rounded-[28px] border p-6 shadow-xl">
         <FormErrorAlert message={submitError} />
@@ -161,18 +150,11 @@ export function CreateEditCategoriaPage() {
             />
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-            <Button type="submit" disabled={isBusy} className="rounded-3xl px-5 py-3">
-              {isBusy ? 'Salvando...' : isEditing ? 'Atualizar categoria' : 'Cadastrar categoria'}
-            </Button>
-            <Button
-              type="button"
-              onClick={() => navigate('/dashboard/categoria')}
-              className="rounded-3xl border border-slate-200 bg-white text-[#2B2C40] hover:bg-[#F4F6FA] px-5 py-3"
-            >
-              Cancelar
-            </Button>
-          </div>
+          <CadastroFormActions
+            submitLabel={isEditing ? 'Atualizar categoria' : 'Cadastrar categoria'}
+            isBusy={isBusy}
+            onCancel={goBack}
+          />
         </form>
       </section>
     </div>

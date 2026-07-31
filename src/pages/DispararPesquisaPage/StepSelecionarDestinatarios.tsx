@@ -20,13 +20,12 @@ import type {
   ColaboradorNode,
 } from '../../graphql/Disparo/types';
 import { mergeConnectionNodes } from '../../utils/mergeConnectionNodes';
+import { DISPARO_DESTINATARIOS_PAGE_SIZE } from '../../constants/disparo';
 
 interface Props {
   onNext: () => void;
   onBack: () => void;
 }
-
-const PAGE_SIZE = 50;
 
 export function StepSelecionarDestinatarios({ onNext, onBack }: Props) {
 
@@ -48,7 +47,7 @@ export function StepSelecionarDestinatarios({ onNext, onBack }: Props) {
     GetEmpresasData,
     GetEmpresasDisparoVars
   >(GET_EMPRESAS_DISPARO, {
-    variables: { first: PAGE_SIZE },
+    variables: { first: DISPARO_DESTINATARIOS_PAGE_SIZE },
     fetchPolicy: 'cache-first',
   });
   const empresas = empresasData?.empresas?.nodes ?? [];
@@ -62,7 +61,7 @@ export function StepSelecionarDestinatarios({ onNext, onBack }: Props) {
     fetchMore: fetchMoreSetores,
     networkStatus: setoresNetworkStatus,
   } = useQuery<GetSetoresData, GetSetoresByEmpresaVars>(GET_SETORES_BY_EMPRESA, {
-    variables: { first: PAGE_SIZE, where: setoresWhere },
+    variables: { first: DISPARO_DESTINATARIOS_PAGE_SIZE, where: setoresWhere },
     skip: !empresaId,
     fetchPolicy: 'network-only',
     notifyOnNetworkStatusChange: true,
@@ -79,7 +78,7 @@ export function StepSelecionarDestinatarios({ onNext, onBack }: Props) {
     try {
       await fetchMoreSetores({
         variables: {
-          first: PAGE_SIZE,
+          first: DISPARO_DESTINATARIOS_PAGE_SIZE,
           after: setoresPageInfo.endCursor,
           where: setoresWhere,
         },
@@ -114,7 +113,7 @@ export function StepSelecionarDestinatarios({ onNext, onBack }: Props) {
     networkStatus,
   } = useQuery<GetColaboradoresData, GetColaboradoresBySetorVars>(GET_COLABORADORES_BY_SETOR, {
     variables: {
-      first: PAGE_SIZE,
+      first: DISPARO_DESTINATARIOS_PAGE_SIZE,
       where: colaboradoresWhere,
     },
     skip: setorIdsSelecionados.length === 0,
@@ -133,7 +132,7 @@ export function StepSelecionarDestinatarios({ onNext, onBack }: Props) {
     try {
       await fetchMoreColaboradores({
         variables: {
-          first: PAGE_SIZE,
+          first: DISPARO_DESTINATARIOS_PAGE_SIZE,
           after: colaboradoresPageInfo.endCursor,
           where: colaboradoresWhere,
         },

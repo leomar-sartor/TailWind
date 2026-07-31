@@ -6,12 +6,11 @@ import { Input } from '../../components/Input';
 import { useDisparoStore } from '../../store/disparoStore';
 import { GET_PESQUISAS_PAGINATED } from '../../graphql/Disparo/queries';
 import type { GetPesquisasData, GetPesquisasVars, PesquisaNode } from '../../graphql/Disparo/types';
+import { DISPARO_PESQUISA_PAGE_SIZE } from '../../constants/disparo';
 
 interface Props {
   onNext: () => void;
 }
-
-const PAGE_SIZE = 8;
 
 export function StepSelecionarPesquisa({ onNext }: Props) {
 
@@ -23,7 +22,7 @@ export function StepSelecionarPesquisa({ onNext }: Props) {
 
   const { data, loading } = useQuery<GetPesquisasData, GetPesquisasVars>(GET_PESQUISAS_PAGINATED, {
     variables: {
-      first: PAGE_SIZE,
+      first: DISPARO_PESQUISA_PAGE_SIZE,
       where: appliedSearch ? { nome: { contains: appliedSearch } } : null,
     },
     fetchPolicy: 'cache-first',

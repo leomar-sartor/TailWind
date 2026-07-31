@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { useForm, SubmitHandler } from 'react-hook-form';
-import { Button } from '../../components/Button';
+import { CadastroFormActions, CadastroFormHeader } from '../../components/cadastro';
 import { LabeledInput } from '../../components/LabeledInput';
 import { LabeledSelectWithSearch } from '../../components/LabeledSelect/LabeledSelectWithSearch';
 import type { SelectItem } from '../../components/Select/SelectWithSearch';
@@ -297,19 +297,19 @@ export function CreateEditColaboradorPage() {
   };
 
   const isBusy = creating || updating || loadingColaborador;
+  const goBack = () => navigate('/dashboard/colaboradores');
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between px-4">
-        <div>
-          <h2 className="text-xl font-semibold text-[#2B2C40]">
-            {colaboradorId ? 'Editar colaborador' : 'Cadastrar colaborador'}
-          </h2>
-          <p className="mt-1 text-sm dashboard-text-muted">
-            {colaboradorId ? 'Atualize as informações do colaborador.' : 'Preencha os dados para cadastrar um novo colaborador.'}
-          </p>
-        </div>
-      </div>
+      <CadastroFormHeader
+        title={colaboradorId ? 'Editar colaborador' : 'Cadastrar colaborador'}
+        description={
+          colaboradorId
+            ? 'Atualize as informações do colaborador.'
+            : 'Preencha os dados para cadastrar um novo colaborador.'
+        }
+        onBack={goBack}
+      />
 
       <section className="dashboard-card rounded-[28px] border p-6 shadow-xl">
         <FormErrorAlert message={submitError} />
@@ -381,22 +381,11 @@ export function CreateEditColaboradorPage() {
             />
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-            <Button
-              type="button"
-              onClick={() => navigate('/dashboard/colaboradores')}
-              className="rounded-3xl border border-slate-200 bg-white text-[#2B2C40] hover:bg-[#F4F6FA] px-5 py-3"
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              disabled={isBusy}
-              className="rounded-3xl px-5 py-3"
-            >
-              {isBusy ? 'Salvando...' : colaboradorId ? 'Atualizar' : 'Cadastrar'}
-            </Button>
-          </div>
+          <CadastroFormActions
+            submitLabel={colaboradorId ? 'Atualizar' : 'Cadastrar'}
+            isBusy={isBusy}
+            onCancel={goBack}
+          />
         </form>
       </section>
     </div>
