@@ -9,8 +9,8 @@ import { DashboardOverview } from '../components/dashboard/DashboardOverview';
 import { Sidebar } from '../components/dashboard/Sidebar';
 import { DashboardLayout } from '../layouts/DashboardLayout';
 import { PageContainer } from '../components/dashboard/PageContainer';
-import { SetorPage } from './SetorPage';
-import { EmpresaPage } from './EmpresaPage';
+import { SetorPage } from './Setor/SetorPage';
+import { EmpresaPage } from './Empresa/EmpresaPage';
 
 type MenuPage = 'dashboard' | 'cadastros' | 'pesquisas' | 'pesquisa' | 'empresa' | 'setor' | 'colaboradores' | 'categoria' | 'consultar' | 'enviar';
 

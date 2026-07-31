@@ -3,15 +3,15 @@ import { useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router-dom';
 import { Building2, Layers, RadioTower, Send } from 'lucide-react';
 import { Button } from '../Button';
-import { GET_DASHBOARD_PESQUISAS } from '../../graphql/queries/dashboard.queries';
-import { GET_EMPRESAS_DISPARO, GET_SETORES_BY_EMPRESA } from '../../graphql/queries/disparo.queries';
+import { GET_DASHBOARD_PESQUISAS } from '../../graphql/Dashboard/queries';
+import { GET_EMPRESAS_DISPARO, GET_SETORES_BY_EMPRESA } from '../../graphql/Disparo/queries';
 import type {
   GetEmpresasData,
   GetEmpresasDisparoVars,
   GetSetoresByEmpresaVars,
   GetSetoresData,
-} from '../../graphql/types/disparo.types';
-import type { EntityId } from '../../graphql/types/common.types';
+} from '../../graphql/Disparo/types';
+import type { EntityId } from '../../graphql/Common/types';
 
 type ConviteNode = {
   id: EntityId;

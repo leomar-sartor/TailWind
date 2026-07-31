@@ -10,18 +10,18 @@ import { AuthGuard } from '../auth/AuthGuard';
 import { LoginPage } from '../pages/LoginPage';
 import { DashboardPage } from '../pages/DashboardPage';
 import { UnauthorizedPage } from '../pages/UnauthorizedPage';
-import { CreateEditSetorPageWithLayout } from '../pages/CreateEditSetorPageWithLayout';
-import { SetorPageWrapper } from '../pages/SetorPageWrapper';
-import { CreateEditEmpresaPageWithLayout } from '../pages/CreateEditEmpresaPageWithLayout';
-import { EmpresaPageWrapper } from '../pages/EmpresaPageWrapper';
-import { CreateEditPesquisaPageWithLayout } from '../pages/CreateEditPesquisaPageWithLayout';
-import { PesquisaPageWrapper } from '../pages/PesquisaPageWrapper';
-import { ColaboradorPageWrapper } from '../pages/ColaboradorPageWrapper';
-import { CreateEditColaboradorPageWithLayout } from '../pages/CreateEditColaboradorPageWithLayout';
-import { CategoriaPageWrapper } from '../pages/CategoriaPageWrapper';
-import { CreateEditCategoriaPageWithLayout } from '../pages/CreateEditCategoriaPageWithLayout';
+import { CreateEditSetorPageWithLayout } from '../pages/Setor/CreateEditSetorPageWithLayout';
+import { SetorPageWrapper } from '../pages/Setor/SetorPageWrapper';
+import { CreateEditEmpresaPageWithLayout } from '../pages/Empresa/CreateEditEmpresaPageWithLayout';
+import { EmpresaPageWrapper } from '../pages/Empresa/EmpresaPageWrapper';
+import { CreateEditPesquisaPageWithLayout } from '../pages/Pesquisa/CreateEditPesquisaPageWithLayout';
+import { PesquisaPageWrapper } from '../pages/Pesquisa/PesquisaPageWrapper';
+import { ColaboradorPageWrapper } from '../pages/Colaborador/ColaboradorPageWrapper';
+import { CreateEditColaboradorPageWithLayout } from '../pages/Colaborador/CreateEditColaboradorPageWithLayout';
+import { CategoriaPageWrapper } from '../pages/Categoria/CategoriaPageWrapper';
+import { CreateEditCategoriaPageWithLayout } from '../pages/Categoria/CreateEditCategoriaPageWithLayout';
 import { SurveyPage } from '../pages/SurveyPage';
-import { DispararPesquisaPageWithLayout } from '../pages/DispararPesquisaPageWithLayout';
+import { DispararPesquisaPageWithLayout } from '../pages/DispararPesquisaPage/DispararPesquisaPageWithLayout';
 
 // ─── AppRouter ────────────────────────────────────────────────────────────────
 // Hierarquia de providers:

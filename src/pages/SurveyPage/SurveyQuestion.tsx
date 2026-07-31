@@ -7,7 +7,7 @@ import {
   CREATE_RESPOSTA_MUTATION,
   AUTO_SAVE_PESQUISA_MUTATION,
   FINALIZAR_PESQUISA_MUTATION,
-} from '../../graphql/mutations/pesquisa.mutations';
+} from '../../graphql/Pesquisa/mutations';
 import type {
   AutoSavePesquisaData,
   AutoSavePesquisaVars,
@@ -15,7 +15,7 @@ import type {
   CreateRespostaVars,
   FinalizarPesquisaData,
   FinalizarPesquisaVars,
-} from '../../graphql/types/survey.types';
+} from '../../graphql/Pesquisa/survey.types';
 import { getGraphQLErrorMessage } from '../../utils/confirmToast';
 import headerImage from '@/assets/logos/LogoHeaderFormSample.png';
 

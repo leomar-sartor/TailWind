@@ -1,12 +1,12 @@
 import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@apollo/client/react';
-import { GET_SESSAO_PESQUISA } from '../../graphql/queries/pesquisa.queries.ts';
+import { GET_SESSAO_PESQUISA } from '../../graphql/Pesquisa/queries.ts';
 import { useSurveyStore } from '../../store/surveyStore.ts';
 import type {
   GetSessaoPesquisaData,
   GetSessaoPesquisaVars,
-} from '../../graphql/types/survey.types';
+} from '../../graphql/Pesquisa/survey.types';
 
 import { SurveyQuestion } from './SurveyQuestion.tsx';
 import { SurveyFinished } from './SurveyFinished.tsx';

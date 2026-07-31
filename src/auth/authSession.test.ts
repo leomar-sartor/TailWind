@@ -4,7 +4,7 @@ import {
   isTokenValid,
   shouldAcceptRefreshPayload,
 } from './authSession';
-import type { AuthPayload } from '../graphql/types/auth.types';
+import type { AuthPayload } from '../graphql/Auth/types';
 import { makeTestJwt } from '../test/jwtTestUtils';
 
 function makePayload(overrides: Partial<AuthPayload> = {}): AuthPayload {

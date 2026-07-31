@@ -1,5 +1,5 @@
 import { jwtDecode } from 'jwt-decode';
-import type { AuthPayload } from '../graphql/types/auth.types';
+import type { AuthPayload } from '../graphql/Auth/types';
 
 interface JwtPayload {
   sub: string;

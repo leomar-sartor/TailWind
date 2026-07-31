@@ -3,15 +3,15 @@ import { useMutation, useQuery } from '@apollo/client/react';
 import { CheckCircle, ChevronLeft, RadioTower, Users, Send, AlertTriangle } from 'lucide-react';
 import { Button } from '../../components/Button';
 import { useDisparoStore } from '../../store/disparoStore';
-import { DISPARAR_PESQUISA_MUTATION } from '../../graphql/mutations/disparo.mutations';
-import { GET_COLABORADORES_BY_SETOR } from '../../graphql/queries/disparo.queries';
+import { DISPARAR_PESQUISA_MUTATION } from '../../graphql/Disparo/mutations';
+import { GET_COLABORADORES_BY_SETOR } from '../../graphql/Disparo/queries';
 import type {
   ColaboradorNode,
   DispararPesquisaData,
   DispararPesquisaVars,
   GetColaboradoresBySetorVars,
   GetColaboradoresData,
-} from '../../graphql/types/disparo.types';
+} from '../../graphql/Disparo/types';
 import { getGraphQLErrorMessage } from '../../utils/confirmToast';
 
 interface Props {

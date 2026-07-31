@@ -7,7 +7,7 @@ import {
   GET_EMPRESAS_DISPARO,
   GET_SETORES_BY_EMPRESA,
   GET_COLABORADORES_BY_SETOR,
-} from '../../graphql/queries/disparo.queries';
+} from '../../graphql/Disparo/queries';
 import type {
   GetEmpresasData,
   GetEmpresasDisparoVars,
@@ -18,7 +18,7 @@ import type {
   EmpresaNode,
   SetorNode,
   ColaboradorNode,
-} from '../../graphql/types/disparo.types';
+} from '../../graphql/Disparo/types';
 import { mergeConnectionNodes } from '../../utils/mergeConnectionNodes';
 
 interface Props {

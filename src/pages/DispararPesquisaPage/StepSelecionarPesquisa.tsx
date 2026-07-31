@@ -4,8 +4,8 @@ import { Search, ChevronRight, RadioTower } from 'lucide-react';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { useDisparoStore } from '../../store/disparoStore';
-import { GET_PESQUISAS_PAGINATED } from '../../graphql/queries/disparo.queries';
-import type { GetPesquisasData, GetPesquisasVars, PesquisaNode } from '../../graphql/types/disparo.types';
+import { GET_PESQUISAS_PAGINATED } from '../../graphql/Disparo/queries';
+import type { GetPesquisasData, GetPesquisasVars, PesquisaNode } from '../../graphql/Disparo/types';
 
 interface Props {
   onNext: () => void;

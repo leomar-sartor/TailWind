@@ -14,8 +14,8 @@ import {
   createPendingRequestQueue,
   shouldAttemptTokenRefresh,
 } from './authRefresh';
-import { REFRESH_TOKEN_MUTATION } from './mutations/auth.mutation';
-import type { RefreshTokenData } from './types/auth.types';
+import { REFRESH_TOKEN_MUTATION } from './Auth/mutation';
+import type { RefreshTokenData } from './Auth/types';
 
 // ─── HTTP Link ────────────────────────────────────────────────────────────────
 

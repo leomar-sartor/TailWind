@@ -18,14 +18,14 @@ import {
   LOGIN_MUTATION,
   LOGOUT_MUTATION,
   REFRESH_TOKEN_MUTATION,
-} from '../graphql/mutations/auth.mutation';
+} from '../graphql/Auth/mutation';
 import type {
   LoginData,
   LoginInput,
   LoginVars,
   LogoutData,
   RefreshTokenData,
-} from '../graphql/types/auth.types';
+} from '../graphql/Auth/types';
 import {
   getSafeRedirectPath,
   isTokenValid,
