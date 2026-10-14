@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { toast } from 'react-toastify';
@@ -23,8 +23,7 @@ import type {
   RemoveEmpresaVars,
 } from '../../graphql/Empresa/types';
 import type { FilterClause, OrFilterInput } from '../../graphql/Common/types';
-import { useCursorPagination } from '../../hooks/useCursorPagination';
-import { useDebouncedValue } from '../../hooks/useDebouncedValue';
+import { useCrudListPage } from '../../hooks/useCrudListPage';
 import { formatCnpj, stripCnpjMask } from '../../utils/cnpj';
 import { confirmDeletion, getGraphQLErrorMessage } from '../../utils/confirmToast';
 import { CADASTRO_PAGE_SIZE } from '../../constants/cadastro';
@@ -55,10 +54,11 @@ function buildWhere(filter: string): OrFilterInput | null {
 
 export function EmpresaPage() {
   const navigate = useNavigate();
-  const [globalFilter, setGlobalFilter] = useState('');
-  const debouncedGlobalFilter = useDebouncedValue(globalFilter, 300);
-
   const {
+    globalFilter,
+    setGlobalFilter,
+    debouncedGlobalFilter,
+    variables,
     after,
     currentCursorIndex,
     hasPreviousPage,
@@ -69,16 +69,10 @@ export function EmpresaPage() {
     goToPageIndex,
     canGoToPage,
     canGoToLastKnown,
-  } = useCursorPagination({ resetDeps: [debouncedGlobalFilter] });
-
-  const variables = useMemo<GetEmpresasVars>(
-    () => ({
-      where: buildWhere(debouncedGlobalFilter),
-      first: CADASTRO_PAGE_SIZE,
-      after,
-    }),
-    [debouncedGlobalFilter, after],
-  );
+  } = useCrudListPage<GetEmpresasVars>({
+    pageSize: CADASTRO_PAGE_SIZE,
+    buildWhere,
+  });
 
   const { data, loading, error, refetch } = useQuery<GetEmpresasData, GetEmpresasVars>(GET_EMPRESAS, {
     variables,

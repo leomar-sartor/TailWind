@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { toast } from 'react-toastify';
@@ -22,8 +22,7 @@ import type {
   SetorNode,
 } from '../../graphql/Setor/types';
 import type { FilterClause, OrFilterInput } from '../../graphql/Common/types';
-import { useCursorPagination } from '../../hooks/useCursorPagination';
-import { useDebouncedValue } from '../../hooks/useDebouncedValue';
+import { useCrudListPage } from '../../hooks/useCrudListPage';
 import { CADASTRO_PAGE_SIZE } from '../../constants/cadastro';
 import { confirmDeletion, getGraphQLErrorMessage } from '../../utils/confirmToast';
 
@@ -48,10 +47,10 @@ function buildWhere(filter: string): OrFilterInput | null {
 
 export function SetorPage() {
   const navigate = useNavigate();
-  const [globalFilter, setGlobalFilter] = useState('');
-  const debouncedGlobalFilter = useDebouncedValue(globalFilter, 300);
-
   const {
+    globalFilter,
+    setGlobalFilter,
+    variables,
     after,
     currentCursorIndex,
     hasPreviousPage,
@@ -62,16 +61,10 @@ export function SetorPage() {
     goToPageIndex,
     canGoToPage,
     canGoToLastKnown,
-  } = useCursorPagination({ resetDeps: [debouncedGlobalFilter] });
-
-  const variables = useMemo<GetSetoresVars>(
-    () => ({
-      where: buildWhere(debouncedGlobalFilter),
-      first: CADASTRO_PAGE_SIZE,
-      after,
-    }),
-    [debouncedGlobalFilter, after],
-  );
+  } = useCrudListPage<GetSetoresVars>({
+    pageSize: CADASTRO_PAGE_SIZE,
+    buildWhere,
+  });
 
   const { data, loading, error, refetch } = useQuery<GetSetoresData, GetSetoresVars>(GET_SETORS, {
     variables,
