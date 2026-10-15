@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { toast } from 'react-toastify';
@@ -23,8 +23,7 @@ import type {
   RemoveCategoriaVars,
 } from '../../graphql/Categoria/types';
 import type { FilterClause, OrFilterInput } from '../../graphql/Common/types';
-import { useCursorPagination } from '../../hooks/useCursorPagination';
-import { useDebouncedValue } from '../../hooks/useDebouncedValue';
+import { useCrudListPage } from '../../hooks/useCrudListPage';
 import { confirmDeletion, getGraphQLErrorMessage } from '../../utils/confirmToast';
 import { CADASTRO_PAGE_SIZE } from '../../constants/cadastro';
 import { formatDatePtBr } from '../../utils/date';
@@ -49,10 +48,10 @@ function buildWhere(filter: string): OrFilterInput | null {
 
 export function CategoriaPage() {
   const navigate = useNavigate();
-  const [globalFilter, setGlobalFilter] = useState('');
-  const debouncedGlobalFilter = useDebouncedValue(globalFilter, 300);
-
   const {
+    globalFilter,
+    setGlobalFilter,
+    variables,
     after,
     currentCursorIndex,
     hasPreviousPage,
@@ -63,16 +62,10 @@ export function CategoriaPage() {
     goToPageIndex,
     canGoToPage,
     canGoToLastKnown,
-  } = useCursorPagination({ resetDeps: [debouncedGlobalFilter] });
-
-  const variables = useMemo<GetCategoriasVars>(
-    () => ({
-      where: buildWhere(debouncedGlobalFilter),
-      first: CADASTRO_PAGE_SIZE,
-      after,
-    }),
-    [debouncedGlobalFilter, after],
-  );
+  } = useCrudListPage<GetCategoriasVars>({
+    pageSize: CADASTRO_PAGE_SIZE,
+    buildWhere,
+  });
 
   const { data, loading, error, refetch } = useQuery<GetCategoriasData, GetCategoriasVars>(
     GET_CATEGORIAS,
