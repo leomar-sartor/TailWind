@@ -10,6 +10,7 @@ import { SetContextLink } from '@apollo/client/link/context';
 import { ErrorLink } from '@apollo/client/link/error';
 import { RemoveTypenameFromVariablesLink } from '@apollo/client/link/remove-typename';
 import { useAuthStore } from '../auth/authStore';
+import { useActiveContextStore } from '../auth/activeContextStore';
 import {
   createPendingRequestQueue,
   shouldAttemptTokenRefresh,
@@ -75,13 +76,44 @@ const httpLink = new HttpLink({
 
 const authLink = new SetContextLink((prevContext) => {
   const token = useAuthStore.getState().accessToken;
+  const activeContext = useActiveContextStore.getState();
 
   return {
     headers: {
       ...prevContext.headers,
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(activeContext.tenantId ? { 'X-Tenant-Id': activeContext.tenantId } : {}),
+      ...(activeContext.companyId ? { 'X-Company-Id': activeContext.companyId } : {}),
     },
   };
+});
+
+const contextIsolationLink = new ApolloLink((operation, forward) => {
+  const startedAtVersion = useActiveContextStore.getState().version;
+
+  return new Observable((observer) => {
+    const subscription = forward(operation).subscribe({
+      next(value) {
+        if (useActiveContextStore.getState().version === startedAtVersion) {
+          observer.next(value);
+        } else {
+          observer.complete();
+        }
+      },
+      error(error) {
+        if (useActiveContextStore.getState().version === startedAtVersion) {
+          observer.error(error);
+        } else {
+          observer.complete();
+        }
+      },
+      complete() {
+        observer.complete();
+      },
+    });
+
+    return () => subscription.unsubscribe();
+  });
 });
 
 // ─── Refresh Token Logic ──────────────────────────────────────────────────────
@@ -185,6 +217,7 @@ export const apolloClient = new ApolloClient({
   link: ApolloLink.from([
     errorLink,
     authLink,
+    contextIsolationLink,
     new RemoveTypenameFromVariablesLink(),
     httpLink,
   ]),

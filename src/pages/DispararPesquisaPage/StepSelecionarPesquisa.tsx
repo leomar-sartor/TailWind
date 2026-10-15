@@ -37,7 +37,7 @@ export function StepSelecionarPesquisa({ onNext }: Props) {
   return (
     <div className="space-y-4">
       {/* Search */}
-      <div className="dashboard-card rounded-[20px] border shadow-sm p-6">
+      <div className="dashboard-card rounded-xl border shadow-sm p-6">
         <h3 className="text-base font-semibold text-[#2B2C40] mb-4">Selecione a pesquisa</h3>
 
         <div className="flex gap-3 items-end">
@@ -52,7 +52,7 @@ export function StepSelecionarPesquisa({ onNext }: Props) {
           <Button
             type="button"
             onClick={() => setAppliedSearch(search)}
-            className="rounded-2xl px-5 py-3 inline-flex items-center gap-2 mb-2"
+            className="rounded-lg px-4 py-2 inline-flex items-center gap-2 mb-2"
           >
             <Search className="h-4 w-4" />
             Buscar
@@ -61,7 +61,7 @@ export function StepSelecionarPesquisa({ onNext }: Props) {
       </div>
 
       {/* Lista */}
-      <div className="dashboard-card rounded-[20px] border shadow-sm overflow-hidden">
+      <div className="dashboard-card rounded-xl border shadow-sm overflow-hidden">
         {loading && (
           <div className="py-12 text-center text-sm text-[#8592A3]">Carregando pesquisas...</div>
         )}
@@ -120,7 +120,7 @@ export function StepSelecionarPesquisa({ onNext }: Props) {
           type="button"
           onClick={onNext}
           disabled={!pesquisaId}
-          className="rounded-2xl px-6 py-3 inline-flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="rounded-lg px-4 py-2 inline-flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
         >
           Próximo: Destinatários
           <ChevronRight className="h-4 w-4" />

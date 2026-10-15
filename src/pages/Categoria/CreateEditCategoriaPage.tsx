@@ -129,7 +129,7 @@ export function CreateEditCategoriaPage() {
         onBack={goBack}
       />
 
-      <section className="dashboard-card rounded-[28px] border p-6 shadow-xl">
+      <section className="dashboard-card rounded-xl border p-6 shadow-xl">
         <FormErrorAlert message={submitError} />
 
         <form onSubmit={categoriaForm.handleSubmit(handleSubmit)} className="space-y-6">

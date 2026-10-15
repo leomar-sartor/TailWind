@@ -199,7 +199,7 @@ export function SurveyQuestion() {
           </p>
 
           {/* Card da questão */}
-          <div className="dashboard-card rounded-[20px] border shadow-lg p-8 mb-6">
+          <div className="dashboard-card rounded-xl border shadow-lg p-8 mb-6">
 
             <h2 className="text-lg font-semibold text-[#2B2C40] mb-1 leading-snug">
               {questaoAtual.titulo}

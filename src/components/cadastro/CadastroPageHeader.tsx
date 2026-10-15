@@ -27,7 +27,6 @@ export function CadastroPageHeader({
         <Button
           type="button"
           onClick={onCreate}
-          className="rounded-3xl px-5 py-3 inline-flex items-center gap-2"
         >
           <PlusCircle className="h-4 w-4" />
           {createLabel}

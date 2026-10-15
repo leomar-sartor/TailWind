@@ -1,3 +1,4 @@
+import { StatusBadge } from '../../components/StatusBadge';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client/react';
@@ -181,15 +182,7 @@ export function ColaboradorPage() {
             <CadastroTableCell>{colaborador.empresa?.nomeFantasia || '—'}</CadastroTableCell>
             <CadastroTableCell>{colaborador.setor?.nome || '—'}</CadastroTableCell>
             <CadastroTableCell>
-              <span
-                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                  colaborador.ativo
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-red-100 text-red-800'
-                }`}
-              >
-                {colaborador.ativo ? 'Ativo' : 'Inativo'}
-              </span>
+              <StatusBadge tone={colaborador.ativo ? 'positive' : 'negative'}>{colaborador.ativo ? 'Ativo' : 'Inativo'}</StatusBadge>
             </CadastroTableCell>
             <CadastroTableCell muted>{formatDatePtBr(colaborador.createdAt)}</CadastroTableCell>
           </CadastroTableRow>

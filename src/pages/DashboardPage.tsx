@@ -3,17 +3,19 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Building2, FileSearch } from 'lucide-react';
 import { useAuthStore, selectUser } from '../auth/authStore';
 import { useAuth } from '../auth/AuthContext';
+import { useActiveContext } from '../auth/ActiveContext';
 import { DashboardHeader } from '../components/dashboard/DashboardHeader';
 import { DashboardFooter } from '../components/dashboard/DashboardFooter';
-import { DashboardOverview } from '../components/dashboard/DashboardOverview';
+import { DashboardOperationsOverview } from '../components/dashboard/DashboardOperationsOverview';
+import { MySurveysOverview } from '../components/dashboard/MySurveysOverview';
 import { Sidebar } from '../components/dashboard/Sidebar';
 import { DashboardLayout } from '../layouts/DashboardLayout';
 import { PageContainer } from '../components/dashboard/PageContainer';
 import { SetorPage } from './Setor/SetorPage';
 import { EmpresaPage } from './Empresa/EmpresaPage';
-
-type MenuPage = 'dashboard' | 'cadastros' | 'pesquisas' | 'pesquisa' | 'empresa' | 'setor' | 'colaboradores' | 'categoria' | 'consultar' | 'enviar';
-
+import { PesquisaPadronizadaPage } from './Pesquisa/PesquisaPadronizadaPage';
+import { AccessManagementPage } from './AccessManagementPage';
+import { useDashboardPageConfig, type MenuPage } from '../hooks/useDashboardPageConfig';
 type PageInfo = {
   title: string;
   description: string;
@@ -21,6 +23,9 @@ type PageInfo = {
 };
 
 const pageInfo: Record<MenuPage, PageInfo> = {
+  usuarios: { title: 'Usuários', subtitle: 'Administração', description: 'Gestão de usuários' },
+  permissoes: { title: 'Permissões', subtitle: 'Administração', description: 'Permissões por persona' },
+  tenants: { title: 'Tenants', subtitle: 'Administração', description: 'Administração global de tenants' },
   dashboard: {
     title: 'Dashboard',
     description: 'Andamento das pesquisas por empresa e setor',
@@ -40,6 +45,16 @@ const pageInfo: Record<MenuPage, PageInfo> = {
     title: 'Pesquisa',
     description: 'Cadastro de pesquisa e perguntas',
     subtitle: 'Cadastre novas pesquisas, perguntas e opções em uma única página.',
+  },
+  pesquisaPadronizada: {
+    title: 'Pesquisas padronizadas',
+    description: 'Gestão de pesquisas padronizadas',
+    subtitle: 'Crie, publique e acompanhe pesquisas com escala fixa.',
+  },
+  acessos: {
+    title: 'Perfis',
+    description: 'Administração de acessos',
+    subtitle: 'Gerencie memberships e personas contextuais.',
   },
   empresa: {
     title: 'Cadastros',
@@ -75,29 +90,21 @@ const pageInfo: Record<MenuPage, PageInfo> = {
 
 export function DashboardPage() {
   const user = useAuthStore(selectUser);
+  const { permissions, isAdmin } = useActiveContext();
   const { logout } = useAuth();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() =>
+    typeof window !== 'undefined' && localStorage.getItem('dashboardSidebarCollapsed') === 'true');
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 639.98px)').matches);
   const [selectedPage, setSelectedPage] = useState<MenuPage>('dashboard');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 639.98px)');
     const update = () => setIsMobile(media.matches);
-    update();
     media.addEventListener('change', update);
     return () => media.removeEventListener('change', update);
   }, []);
-
-  useEffect(() => {
-    if (isMobile) {
-      setSidebarCollapsed(true);
-      return;
-    }
-
-    const saved = localStorage.getItem('dashboardSidebarCollapsed');
-    setSidebarCollapsed(saved === 'true');
-  }, [isMobile]);
 
   useEffect(() => {
     const saved = localStorage.getItem('dashboardSidebarCollapsed');
@@ -112,7 +119,10 @@ export function DashboardPage() {
     setSidebarCollapsed((prev) => !prev);
   };
 
+  const { handlePageChange: navigatePage } = useDashboardPageConfig(selectedPage);
   const handlePageChange = (page: MenuPage) => {
+    if (['consultar', 'usuarios', 'permissoes'].includes(page)) { navigatePage(page); return; }
+    if (page === 'tenants') { navigate('/dashboard/tenants'); return; }
     if (page === selectedPage && page !== 'pesquisa') {
       return;
     }
@@ -142,6 +152,16 @@ export function DashboardPage() {
       return;
     }
 
+    if (page === 'pesquisaPadronizada') {
+      navigate('/dashboard/pesquisa-padronizada');
+      return;
+    }
+
+    if (page === 'acessos') {
+      navigate('/dashboard/perfis');
+      return;
+    }
+
     if (page === 'enviar') {
       navigate('/dashboard/pesquisa/disparar');
       return;
@@ -164,7 +184,10 @@ export function DashboardPage() {
 
   const content = useMemo(() => {
     if (selectedPage === 'dashboard') {
-      return <DashboardOverview />;
+      if (!isAdmin && permissions.includes('pesquisa.responder') && !permissions.includes('pesquisa.acompanhar')) {
+        return <MySurveysOverview />;
+      }
+      return <DashboardOperationsOverview />;
     }
 
     if (selectedPage === 'empresa') {
@@ -178,11 +201,11 @@ export function DashboardPage() {
     if (selectedPage === 'cadastros') {
       return (
         <div className="grid gap-4 lg:grid-cols-2">
-          <article className="dashboard-card rounded-[28px] border p-6 shadow-xl shadow-[0_18px_60px_-28px_rgba(43,44,64,0.18)]">
+          <article className="dashboard-card rounded-xl border p-6 shadow-xl shadow-[0_18px_60px_-28px_rgba(43,44,64,0.18)]">
             <h3 className="text-lg font-semibold text-[#2B2C40]">Resumo de cadastros</h3>
             <p className="mt-2 text-sm dashboard-text-muted">Acompanhe o status geral dos cadastros de empresas e setores.</p>
             <div className="mt-6 space-y-4">
-              <div className="dashboard-card-alt rounded-3xl border p-4">
+              <div className="dashboard-card-alt rounded-xl border p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="text-sm dashboard-text-muted">Empresas cadastradas</p>
@@ -190,7 +213,7 @@ export function DashboardPage() {
                   </div>
                 </div>
               </div>
-              <div className="dashboard-card-alt rounded-3xl border p-4">
+              <div className="dashboard-card-alt rounded-xl border p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="text-sm dashboard-text-muted">Setores ativos</p>
@@ -201,13 +224,13 @@ export function DashboardPage() {
             </div>
           </article>
 
-          <article className="dashboard-card rounded-[28px] border p-6 shadow-xl shadow-[0_18px_60px_-28px_rgba(43,44,64,0.18)]">
+          <article className="dashboard-card rounded-xl border p-6 shadow-xl shadow-[0_18px_60px_-28px_rgba(43,44,64,0.18)]">
             <h3 className="text-lg font-semibold text-[#2B2C40]">Acessos rápidos</h3>
             <div className="mt-5 space-y-4">
               <button
                 type="button"
                 onClick={() => navigate('/dashboard/empresa')}
-                className="flex w-full items-center justify-between rounded-3xl border dashboard-border bg-white px-4 py-4 text-left text-[#2B2C40] transition hover:border-orange-400/40 hover:bg-[#F4F6FA]"
+                className="flex w-full items-center justify-between rounded-xl border dashboard-border bg-white px-4 py-4 text-left text-[#2B2C40] transition hover:border-orange-400/40 hover:bg-[#F4F6FA]"
               >
                 <div>
                   <p className="font-semibold">Ir para empresas</p>
@@ -218,7 +241,7 @@ export function DashboardPage() {
               <button
                 type="button"
                 onClick={() => navigate('/dashboard/setor')}
-                className="flex w-full items-center justify-between rounded-3xl border dashboard-border bg-white px-4 py-4 text-left text-[#2B2C40] transition hover:border-orange-400/40 hover:bg-[#F4F6FA]"
+                className="flex w-full items-center justify-between rounded-xl border dashboard-border bg-white px-4 py-4 text-left text-[#2B2C40] transition hover:border-orange-400/40 hover:bg-[#F4F6FA]"
               >
                 <div>
                   <p className="font-semibold">Ir para setores</p>
@@ -233,11 +256,19 @@ export function DashboardPage() {
     }
 
     if (selectedPage === 'pesquisas') {
-      return <DashboardOverview />;
+      return <DashboardOperationsOverview />;
+    }
+
+    if (selectedPage === 'pesquisaPadronizada') {
+      return <PesquisaPadronizadaPage />;
+    }
+
+    if (selectedPage === 'acessos') {
+      return <AccessManagementPage />;
     }
 
     return (
-      <div className="dashboard-card space-y-4 rounded-[28px] border p-6 shadow-xl shadow-[0_18px_60px_-28px_rgba(43,44,64,0.18)]">
+      <div className="dashboard-card space-y-4 rounded-xl border p-6 shadow-xl shadow-[0_18px_60px_-28px_rgba(43,44,64,0.18)]">
         <div className="flex items-center justify-between gap-4">
           <div>
             <h3 className="text-lg font-semibold text-[#2B2C40]">Consulta inteligente</h3>
@@ -245,36 +276,38 @@ export function DashboardPage() {
           </div>
           <FileSearch className="h-6 w-6 text-orange-400" />
         </div>
-        <div className="rounded-3xl border dashboard-border bg-[#F4F6FA] p-6">
+        <div className="rounded-xl border dashboard-border bg-[#F4F6FA] p-6">
           <p className="text-sm text-[#646E78]">Pesquisa de contratos, clientes e valores está disponível aqui. Escolha o filtro desejado para começar.</p>
         </div>
       </div>
     );
-  }, [navigate, selectedPage]);
+  }, [navigate, selectedPage, isAdmin, permissions]);
 
-  const contentPadding = sidebarCollapsed ? 'pl-20 pr-4' : 'pl-72 pr-4';
+  const isSidebarCollapsed = sidebarCollapsed || isMobile;
+  const contentPadding = isSidebarCollapsed ? 'pl-20 pr-4' : 'pl-72 pr-4';
 
   return (
     <DashboardLayout
       sidebar={
         <Sidebar
-          collapsed={sidebarCollapsed}
+          collapsed={isSidebarCollapsed}
           activePage={selectedPage}
+          permissions={permissions}
+          isAdmin={isAdmin}
           onSelectPage={handlePageChange}
           onToggleSidebar={handleToggleSidebar}
         />
       }
       header={
         <DashboardHeader
-          collapsed={sidebarCollapsed}
+          collapsed={isSidebarCollapsed}
           pageTitle={pageInfo[selectedPage].title}
           userName={user?.username ?? user?.email?.split('@')[0] ?? 'Usuário'}
-          roles={user?.roles ?? ['Gestor']}
           onSettings={handleSettings}
           onLogout={handleLogout}
         />
       }
-      footer={<DashboardFooter collapsed={sidebarCollapsed} />}
+      footer={<DashboardFooter collapsed={isSidebarCollapsed} />}
       contentClassName={contentPadding}
     >
       <PageContainer

@@ -10,7 +10,7 @@ export function SurveyInvalid({ message }: SurveyInvalidProps) {
     <div className="min-h-screen flex flex-col items-center justify-center px-4" style={{ background: 'var(--color-bg)' }}>
       <img src={headerImage} alt="Logo" className="h-12 object-contain mb-10 opacity-80" />
 
-      <div className="dashboard-card rounded-[24px] border shadow-xl p-10 max-w-md w-full text-center">
+      <div className="dashboard-card rounded-xl border shadow-xl p-10 max-w-md w-full text-center">
         <div className="flex justify-center mb-6">
           <div className="bg-rose-50 rounded-full p-4">
             <AlertTriangle className="h-12 w-12 text-rose-400" strokeWidth={1.5} />

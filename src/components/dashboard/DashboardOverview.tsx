@@ -130,7 +130,7 @@ export function DashboardOverview() {
 
   return (
     <div className="space-y-6">
-      <div className="dashboard-card rounded-[28px] border p-6 shadow-xl">
+      <div className="dashboard-card rounded-xl border p-6 shadow-xl">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <h3 className="text-lg font-semibold text-[#2B2C40]">Andamento das pesquisas</h3>
@@ -142,7 +142,7 @@ export function DashboardOverview() {
             <Button
               type="button"
               onClick={() => navigate('/dashboard/pesquisa')}
-              className="rounded-2xl px-4 py-2.5 inline-flex items-center gap-2"
+              className="rounded-lg px-4 py-2.5 inline-flex items-center gap-2"
             >
               <RadioTower className="h-4 w-4" />
               Pesquisas
@@ -150,7 +150,7 @@ export function DashboardOverview() {
             <Button
               type="button"
               onClick={() => navigate('/dashboard/pesquisa/disparar')}
-              className="rounded-2xl border border-slate-200 bg-white text-[#2B2C40] hover:bg-[#F4F6FA] px-4 py-2.5 inline-flex items-center gap-2"
+              className="rounded-lg border border-slate-200 bg-white text-[#2B2C40] hover:bg-[#F4F6FA] px-4 py-2.5 inline-flex items-center gap-2"
             >
               <Send className="h-4 w-4" />
               Disparar
@@ -170,7 +170,7 @@ export function DashboardOverview() {
                 setEmpresaId(e.target.value);
                 setSetorId('');
               }}
-              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-[#2B2C40]"
+              className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm text-[#2B2C40]"
             >
               <option value="">Todas as empresas</option>
               {empresas.map((empresa) => (
@@ -190,7 +190,7 @@ export function DashboardOverview() {
               value={setorId}
               onChange={(e) => setSetorId(e.target.value)}
               disabled={!empresaId}
-              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-[#2B2C40] disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm text-[#2B2C40] disabled:cursor-not-allowed disabled:opacity-50"
             >
               <option value="">
                 {!empresaId ? 'Selecione uma empresa' : 'Todos os setores'}
@@ -212,14 +212,14 @@ export function DashboardOverview() {
           { label: 'Pendentes', value: totals.pendente },
           { label: 'Concluídos', value: totals.completo },
         ].map((item) => (
-          <article key={item.label} className="dashboard-card rounded-[28px] border p-5 shadow-xl">
+          <article key={item.label} className="dashboard-card rounded-xl border p-5 shadow-xl">
             <p className="text-xs uppercase tracking-[0.2em] dashboard-text-muted">{item.label}</p>
             <p className="mt-3 text-3xl font-semibold text-[#2B2C40]">{item.value}</p>
           </article>
         ))}
       </div>
 
-      <section className="dashboard-card rounded-[28px] border p-0 overflow-hidden shadow-xl">
+      <section className="dashboard-card rounded-xl border p-0 overflow-hidden shadow-xl">
         <div className="border-b px-6 py-4">
           <h3 className="text-lg font-semibold text-[#2B2C40]">Pesquisas</h3>
           <p className="mt-1 text-sm dashboard-text-muted">

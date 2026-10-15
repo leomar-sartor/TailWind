@@ -211,7 +211,7 @@ export function CreateEditSetorPage() {
         onBack={goBack}
       />
 
-      <section className="dashboard-card rounded-[28px] border p-6 shadow-xl">
+      <section className="dashboard-card rounded-xl border p-6 shadow-xl">
         <FormErrorAlert message={submitError} />
 
         <form className="space-y-6" onSubmit={setorForm.handleSubmit(handleSubmit)}>

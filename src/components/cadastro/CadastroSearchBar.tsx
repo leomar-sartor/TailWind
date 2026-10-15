@@ -15,7 +15,7 @@ export function CadastroSearchBar({
   placeholder = 'Pesquisar...',
 }: CadastroSearchBarProps) {
   return (
-    <section className="dashboard-card rounded-[28px] border p-6 shadow-xl">
+    <section className="dashboard-card rounded-xl border p-6 shadow-xl">
       <div className="flex items-center justify-between gap-4">
         <div>
           <h3 className="text-lg font-semibold text-[#2B2C40]">Buscar</h3>
@@ -26,7 +26,7 @@ export function CadastroSearchBar({
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
-            className="w-full rounded-3xl border border-slate-200 px-4 py-2"
+            className="w-full rounded-xl border border-slate-200 px-4 py-2"
           />
         </div>
       </div>

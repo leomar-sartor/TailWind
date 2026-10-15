@@ -29,6 +29,8 @@ import { formatCnpj, stripCnpjMask } from '../../utils/cnpj';
 import { confirmDeletion, getGraphQLErrorMessage } from '../../utils/confirmToast';
 import { CADASTRO_PAGE_SIZE } from '../../constants/cadastro';
 import { formatDatePtBr } from '../../utils/date';
+import { useActiveContext } from '../../auth/ActiveContext';
+import { MinhaEmpresaPage } from './MinhaEmpresaPage';
 
 const COLUMNS = ['Ações', 'Código', 'Cnpj', 'Nome Fantasia', 'Descrição', 'Data de Criação'];
 
@@ -54,6 +56,12 @@ function buildWhere(filter: string): OrFilterInput | null {
 }
 
 export function EmpresaPage() {
+  const { personas, isAdmin } = useActiveContext();
+  if (!isAdmin && personas.includes('empresa') && !personas.includes('operador')) return <MinhaEmpresaPage />;
+  return <EmpresaListPage />;
+}
+
+function EmpresaListPage() {
   const navigate = useNavigate();
   const [globalFilter, setGlobalFilter] = useState('');
   const debouncedGlobalFilter = useDebouncedValue(globalFilter, 300);

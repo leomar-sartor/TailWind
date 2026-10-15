@@ -14,14 +14,19 @@ export function RowActions({ onEdit, onDelete, disabled = false }: RowActionsPro
     <div className="flex flex-nowrap items-center gap-1.5 whitespace-nowrap">
       <button
         type="button"
-        className="inline-flex shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white px-2 py-1.5 text-sm text-[#2B2C40] transition hover:bg-[#F4F6FA]"
+        className="inline-flex shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm dashboard-text transition hover:bg-[#F4F6FA]"
+        title="Editar"
+        aria-label="Editar"
+        disabled={disabled}
         onClick={onEdit}
       >
         <Edit3 className="h-3.5 w-3.5" />
       </button>
       <button
         type="button"
-        className="inline-flex shrink-0 items-center justify-center rounded-2xl border border-rose-200 bg-white px-2 py-1.5 text-sm text-rose-500 transition hover:bg-rose-50"
+        className="inline-flex shrink-0 items-center justify-center rounded-lg border border-rose-200 bg-white px-2 py-1.5 text-sm text-rose-500 transition hover:bg-rose-50"
+        title="Excluir"
+        aria-label="Excluir"
         onClick={onDelete}
         disabled={disabled}
       >

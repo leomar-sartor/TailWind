@@ -45,12 +45,14 @@
   }
 
   .dashboard-card {
+    border-radius: 0.75rem;
     background-color: var(--color-surface) !important;
     border-color: var(--color-border) !important;
     color: var(--color-text) !important;
   }
 
   .dashboard-card-alt {
+    border-radius: 0.75rem;
     background-color: var(--color-surface-soft) !important;
     border-color: var(--color-border) !important;
     color: var(--color-text) !important;
@@ -116,7 +118,7 @@
 
   .dark .dashboard-card {
     background-color: var(--color-surface) !important;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35) !important;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18) !important;
   }
 
   .dark .dashboard-card-alt {
@@ -124,7 +126,7 @@
   }
 
   .dark .dashboard-header {
-    background-color: rgba(30, 30, 30, 0.92) !important;
+    background-color: rgba(24, 33, 45, 0.96) !important;
   }
 
   .dark .dashboard-sidebar {
@@ -132,7 +134,7 @@
   }
 
   .dark .dashboard-footer {
-    background-color: rgba(18, 18, 18, 0.95) !important;
+    background-color: rgba(16, 21, 29, 0.96) !important;
     color: var(--color-text-muted) !important;
   }
 
@@ -144,29 +146,29 @@
     background-color: var(--color-surface) !important;
   }
 
-  .dark .bg-[#E6E7FF],
-  .dark .bg-[#F8FAFF],
-  .dark .bg-[#FBFCFF],
-  .dark .bg-[#F5F5F9],
-  .dark .bg-[#E6FFE9],
-  .dark .bg-[#E4E6E8],
-  .dark .bg-[#F0F0FF],
-  .dark .bg-[#FEF9C3] {
+  .dark .bg-\[\#E6E7FF\],
+  .dark .bg-\[\#F8FAFF\],
+  .dark .bg-\[\#FBFCFF\],
+  .dark .bg-\[\#F5F5F9\],
+  .dark .bg-\[\#E6FFE9\],
+  .dark .bg-\[\#E4E6E8\],
+  .dark .bg-\[\#F0F0FF\],
+  .dark .bg-\[\#FEF9C3\] {
     background-color: var(--color-surface-soft) !important;
   }
 
-  .dark .bg-[#F5F7FC],
-  .dark .bg-[#F4F6FA] {
+  .dark .bg-\[\#F5F7FC\],
+  .dark .bg-\[\#F4F6FA\] {
     background-color: var(--color-surface-soft) !important;
   }
 
   .dark .border-slate-200,
-  .dark .border-[#E4E6E8],
-  .dark .border-[#CBD5E1],
-  .dark .border-[#D7D8FF],
-  .dark .border-[#8592A3],
-  .dark .border-[#696CFF],
-  .dark .border-[#E4E6E8] {
+  .dark .border-\[\#E4E6E8\],
+  .dark .border-\[\#CBD5E1\],
+  .dark .border-\[\#D7D8FF\],
+  .dark .border-\[\#8592A3\],
+  .dark .border-\[\#696CFF\],
+  .dark .border-\[\#E4E6E8\] {
     border-color: var(--color-border) !important;
   }
 
@@ -174,43 +176,84 @@
     border-color: var(--color-border) !important;
   }
 
-  .dark .hover\:bg-[#F4F6FA]:hover,
-  .dark .hover\:bg-[#F5F5F9]:hover,
-  .dark .hover\:bg-[#E6E7FF]:hover,
-  .dark .hover\:bg-[#F8FAFF]:hover,
-  .dark .hover\:bg-[#F0F0FF]:hover {
+  .dark .hover\:bg-\[\#F4F6FA\]:hover,
+  .dark .hover\:bg-\[\#F5F5F9\]:hover,
+  .dark .hover\:bg-\[\#E6E7FF\]:hover,
+  .dark .hover\:bg-\[\#F8FAFF\]:hover,
+  .dark .hover\:bg-\[\#F0F0FF\]:hover {
     background-color: var(--color-surface-soft) !important;
   }
 
-  .dark .text-[#384551],
-  .dark .text-[#2B2C40],
-  .dark .text-[#111827],
-  .dark .text-[#111827] {
+  .dark .text-\[\#384551\],
+  .dark .text-\[\#2B2C40\],
+  .dark .text-\[\#111827\],
+  .dark .text-\[\#111827\] {
     color: var(--color-text) !important;
   }
 
-  .dark .text-[#6C7287],
-  .dark .text-[#646E78],
-  .dark .text-[#8592A3],
-  .dark .text-[#C4C8CC] {
+  .dark .text-\[\#6C7287\],
+  .dark .text-\[\#646E78\],
+  .dark .text-\[\#8592A3\],
+  .dark .text-\[\#C4C8CC\] {
     color: var(--color-text-muted) !important;
   }
 
-  .dark .text-[#6C7287],
-  .dark .text-[#646E78] {
-    color: var(--color-text-muted) !important;
-  }
-
-  .dark .text-[#6C7287],
-  .dark .text-[#646E78] {
-    color: var(--color-text-muted) !important;
-  }
-
-  .dark .hover\:bg-[#F4F6FA]:hover {
+  .dark .hover\:bg-\[\#F4F6FA\]:hover {
     background-color: var(--color-surface-soft) !important;
   }
 
   /* Tables */
+  .dark .cadastro-table thead {
+    background-color: #223044 !important;
+  }
+
+  .dark .cadastro-table th {
+    color: #cdd9e9 !important;
+    border-color: var(--color-border);
+  }
+
+  .dark .cadastro-table :is(th, td, tbody, tr),
+  .dark .dashboard-content .border-t {
+    border-color: var(--color-border) !important;
+  }
+
+  .dark .cadastro-table td > button,
+  .dark .cadastro-table td > div > button {
+    background-color: var(--color-surface-soft);
+    border-color: #43566f;
+    transition: background-color 150ms, border-color 150ms;
+  }
+
+  .dark .cadastro-table td button:enabled:hover {
+    background-color: #30455e;
+    border-color: #7088a7;
+  }
+
+  .dark :where(button, summary, a, input, textarea, select):focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 3px;
+    --tw-ring-offset-color: var(--color-surface);
+  }
+
+  .dark button:disabled {
+    cursor: not-allowed;
+  }
+
+  .dark .dashboard-sidebar button:hover {
+    color: var(--color-text) !important;
+  }
+
+  .dark .dashboard-sidebar button[aria-current="page"],
+  .dark .dashboard-sidebar button[data-active="true"] {
+    color: #83e8c4 !important;
+    background-color: #193a35 !important;
+  }
+
+  .dark .dashboard-sidebar button[aria-current="page"] svg,
+  .dark .dashboard-sidebar button[data-active="true"] svg {
+    color: inherit !important;
+  }
+
   .dark thead {
     background-color: var(--color-surface-soft) !important;
   }
@@ -220,7 +263,7 @@
   }
 
   .dark tbody tr:hover {
-    background-color: var(--color-surface-soft) !important;
+    background-color: var(--color-surface-hover) !important;
   }
 
   .dark table.divide-y > :not([hidden]) ~ :not([hidden]) {
@@ -234,6 +277,15 @@
     background-color: var(--color-surface-soft) !important;
     border-color: var(--color-border) !important;
     color: var(--color-text) !important;
+  }
+
+  .dark .dashboard-content :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), textarea, select) {
+    border-color: var(--color-control-border) !important;
+  }
+
+  .dark input[type="checkbox"],
+  .dark input[type="radio"] {
+    accent-color: #69deb6;
   }
 
   .dark input::placeholder,
@@ -251,8 +303,9 @@
   }
 
   .dark .text-rose-700,
+  .dark .text-rose-600,
   .dark .text-rose-500 {
-    color: #ff6b6b !important;
+    color: #fda4af !important;
   }
 
   .dark .hover\:bg-rose-50:hover {

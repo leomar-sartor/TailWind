@@ -107,7 +107,7 @@ export function SelectWithSearch({
           onClick={() => setIsOpen(!isOpen)}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          className={`w-full flex items-center justify-between rounded-2xl border p-4 h-14 text-base bg-[#FEF9C3] border-[#CBD5E1] text-[#111827] focus-visible:ring-[#696CFF] focus-visible:ring-3 focus-visible:ring-offset-2 focus-visible:outline-none transition-colors ${
+          className={`w-full flex items-center justify-between rounded-lg border p-4 h-14 text-base bg-[#FEF9C3] border-[#CBD5E1] text-[#111827] focus-visible:ring-[#696CFF] focus-visible:ring-3 focus-visible:ring-offset-2 focus-visible:outline-none transition-colors ${
             hasError ? 'border-red-500' : isFocused || isFilled ? 'border-[#696CFF]' : ''
           }`}
         >
@@ -121,7 +121,7 @@ export function SelectWithSearch({
 
         {/* Dropdown Menu */}
         {isOpen && (
-          <div className="absolute top-full left-0 right-0 mt-2 rounded-2xl border border-[#CBD5E1] bg-white shadow-lg z-50">
+          <div className="absolute top-full left-0 right-0 mt-2 rounded-lg border border-[#CBD5E1] bg-white shadow-lg z-50">
             {/* Search Input */}
             <div className="sticky top-0 border-b border-[#CBD5E1] bg-white p-3 rounded-t-2xl">
               <div className="relative">

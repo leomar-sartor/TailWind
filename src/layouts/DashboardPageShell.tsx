@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuthStore, selectUser } from '../auth/authStore';
 import { useAuth } from '../auth/AuthContext';
+import { useActiveContext } from '../auth/ActiveContext';
 import { DashboardHeader } from '../components/dashboard/DashboardHeader';
 import { DashboardFooter } from '../components/dashboard/DashboardFooter';
 import { Sidebar } from '../components/dashboard/Sidebar';
@@ -27,37 +28,30 @@ export function DashboardPageShell({
 }: DashboardPageShellProps) {
   const location = useLocation();
   const user = useAuthStore(selectUser);
+  const { permissions, isAdmin } = useActiveContext();
   const { logout } = useAuth();
-  const [message, setMessage] = useState<string | null>(null);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const [message, setMessage] = useState<string | null>(() =>
+    showFlashMessage && typeof location.state?.message === 'string'
+      ? location.state.message
+      : null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() =>
+    typeof window !== 'undefined' && localStorage.getItem('dashboardSidebarCollapsed') === 'true');
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 639.98px)').matches);
   const { pageInfo, handlePageChange } = useDashboardPageConfig(page);
 
   useEffect(() => {
-    if (!showFlashMessage || !location.state?.message) return;
-
-    setMessage(location.state.message);
+    if (!message) return;
     const timer = setTimeout(() => setMessage(null), 5000);
     return () => clearTimeout(timer);
-  }, [location.state?.message, showFlashMessage]);
+  }, [message]);
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 639.98px)');
     const update = () => setIsMobile(media.matches);
-    update();
     media.addEventListener('change', update);
     return () => media.removeEventListener('change', update);
   }, []);
-
-  useEffect(() => {
-    if (isMobile) {
-      setSidebarCollapsed(true);
-      return;
-    }
-
-    const saved = localStorage.getItem('dashboardSidebarCollapsed');
-    setSidebarCollapsed(saved === 'true');
-  }, [isMobile]);
 
   useEffect(() => {
     const saved = localStorage.getItem('dashboardSidebarCollapsed');
@@ -78,29 +72,31 @@ export function DashboardPageShell({
     window.alert('Abrir configurações de usuário (a implementar).');
   };
 
-  const contentPadding = sidebarCollapsed ? 'pl-20 pr-4' : 'pl-72 pr-4';
+  const isSidebarCollapsed = sidebarCollapsed || isMobile;
+  const contentPadding = isSidebarCollapsed ? 'pl-20 pr-4' : 'pl-72 pr-4';
 
   return (
     <DashboardLayout
       sidebar={
         <Sidebar
-          collapsed={sidebarCollapsed}
+          collapsed={isSidebarCollapsed}
           activePage={page}
+          permissions={permissions}
+          isAdmin={isAdmin}
           onSelectPage={handlePageChange}
           onToggleSidebar={handleToggleSidebar}
         />
       }
       header={
         <DashboardHeader
-          collapsed={sidebarCollapsed}
+          collapsed={isSidebarCollapsed}
           pageTitle={pageInfo[page].title}
           userName={user?.username ?? user?.email?.split('@')[0] ?? 'Usuário'}
-          roles={user?.roles ?? ['Gestor']}
           onSettings={handleSettings}
           onLogout={handleLogout}
         />
       }
-      footer={<DashboardFooter collapsed={sidebarCollapsed} />}
+      footer={<DashboardFooter collapsed={isSidebarCollapsed} />}
       contentClassName={contentPadding}
     >
       <PageContainer

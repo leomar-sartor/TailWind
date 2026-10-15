@@ -68,14 +68,14 @@ export function PesquisaPage() {
           <p className="mt-1 text-sm dashboard-text-muted">Veja as pesquisas cadastradas e crie uma nova pesquisa.</p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <Button type="button" onClick={handleCreate} className="rounded-3xl px-5 py-3 inline-flex items-center gap-2">
+          <Button type="button" onClick={handleCreate} className="rounded-xl px-4 py-2 inline-flex items-center gap-2">
             <PlusCircle className="h-4 w-4" />
             Cadastrar pesquisa
           </Button>
         </div>
       </div>
 
-      <section className="dashboard-card rounded-[28px] border p-0 overflow-hidden shadow-xl">
+      <section className="dashboard-card rounded-xl border p-0 overflow-hidden shadow-xl">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-slate-200 text-left">
             <thead className="bg-[#F8FAFF]">
@@ -94,14 +94,14 @@ export function PesquisaPage() {
                     <div className="flex flex-nowrap items-center gap-1.5 whitespace-nowrap">
                       <button
                         type="button"
-                        className="inline-flex shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white px-2 py-1.5 text-sm text-[#2B2C40] transition hover:bg-[#F4F6FA]"
+                        className="inline-flex shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm text-[#2B2C40] transition hover:bg-[#F4F6FA]"
                         onClick={() => handleEdit(pesquisa.id)}
                       >
                         <Edit3 className="h-3.5 w-3.5" />
                       </button>
                       <button
                         type="button"
-                        className="inline-flex shrink-0 items-center justify-center rounded-2xl border border-rose-200 bg-white px-2 py-1.5 text-sm text-rose-500 transition hover:bg-rose-50"
+                        className="inline-flex shrink-0 items-center justify-center rounded-lg border border-rose-200 bg-white px-2 py-1.5 text-sm text-rose-500 transition hover:bg-rose-50"
                         onClick={() => handleDelete(pesquisa.id)}
                         disabled={deleting}
                       >
@@ -128,7 +128,7 @@ export function PesquisaPage() {
       </section>
 
       {error && (
-        <div className="rounded-3xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
           Erro ao carregar pesquisas. Verifique a conexão e tente novamente.
         </div>
       )}

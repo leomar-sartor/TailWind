@@ -165,7 +165,7 @@ export function StepSelecionarDestinatarios({ onNext, onBack }: Props) {
     <div className="space-y-4">
 
       {/* ── Empresa ─────────────────────────────────────────────────────────── */}
-      <div className="dashboard-card rounded-[20px] border shadow-sm p-6">
+      <div className="dashboard-card rounded-xl border shadow-sm p-6">
         <div className="flex items-center gap-2 mb-4">
           <Building2 className="h-4 w-4 text-[#696CFF]" />
           <h3 className="text-base font-semibold text-[#2B2C40]">Empresa</h3>
@@ -199,7 +199,7 @@ export function StepSelecionarDestinatarios({ onNext, onBack }: Props) {
 
       {/* ── Setores ─────────────────────────────────────────────────────────── */}
       {empresaId && (
-        <div className="dashboard-card rounded-[20px] border shadow-sm p-6">
+        <div className="dashboard-card rounded-xl border shadow-sm p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Layers className="h-4 w-4 text-[#696CFF]" />
@@ -274,7 +274,7 @@ export function StepSelecionarDestinatarios({ onNext, onBack }: Props) {
 
       {/* ── Colaboradores ───────────────────────────────────────────────────── */}
       {setorIdsSelecionados.length > 0 && (
-        <div className="dashboard-card rounded-[20px] border shadow-sm overflow-hidden">
+        <div className="dashboard-card rounded-xl border shadow-sm overflow-hidden">
           <div className="flex items-center justify-between px-6 py-4 border-b">
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-[#696CFF]" />
@@ -389,7 +389,7 @@ export function StepSelecionarDestinatarios({ onNext, onBack }: Props) {
           type="button"
           onClick={onNext}
           disabled={colaboradoresSelecionados.length === 0}
-          className="rounded-2xl px-6 py-3 inline-flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="rounded-lg px-4 py-2 inline-flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
         >
           Próximo: Confirmar
           <ChevronRight className="h-4 w-4" />

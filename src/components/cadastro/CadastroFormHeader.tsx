@@ -15,18 +15,18 @@ export function CadastroFormHeader({
   onBack,
 }: CadastroFormHeaderProps) {
   return (
-    <div className="flex items-center gap-4">
+    <div className="space-y-3">
       <button
         type="button"
         onClick={onBack}
-        className="inline-flex items-center gap-2 text-[#696CFF] hover:text-[#384551] transition"
+        className="inline-flex h-8 items-center gap-1.5 rounded-md px-2 text-xs font-medium dashboard-text-muted transition-colors hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
       >
-        <ArrowLeft className="h-5 w-5" />
-        <span className="text-sm font-medium">Voltar</span>
+        <ArrowLeft aria-hidden="true" className="h-3.5 w-3.5" />
+        <span>Voltar à listagem</span>
       </button>
       <div>
-        <h1 className="text-2xl font-semibold text-[#2B2C40]">{title}</h1>
-        <p className="mt-1 text-sm text-[#6C7287]">{description}</p>
+        <h1 className="text-xl font-semibold dashboard-text">{title}</h1>
+        <p className="mt-1 text-sm dashboard-text-muted">{description}</p>
       </div>
     </div>
   );

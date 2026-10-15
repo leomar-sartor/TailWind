@@ -20,6 +20,7 @@ import type {
 } from '../../graphql/Empresa/types';
 import { formatCnpj, stripCnpjMask } from '../../utils/cnpj';
 import { getGraphQLErrorMessage } from '../../utils/confirmToast';
+import { useActiveContext } from '../../auth/ActiveContext';
 
 type EmpresaFormValues = {
   id?: string;
@@ -31,7 +32,9 @@ type EmpresaFormValues = {
 export function CreateEditEmpresaPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const empresaId = searchParams.get('id');
+  const { activeContext, personas, isAdmin } = useActiveContext();
+  const ownCompanyOnly = !isAdmin && personas.includes('empresa') && !personas.includes('operador');
+  const empresaId = ownCompanyOnly ? activeContext.companyId : searchParams.get('id');
   const isEditing = !!empresaId;
 
   const empresaForm = useForm<EmpresaFormValues>({
@@ -81,6 +84,10 @@ export function CreateEditEmpresaPage() {
 
   const handleSubmit: SubmitHandler<EmpresaFormValues> = async (values) => {
     setSubmitError(null);
+    if (ownCompanyOnly && !empresaId) {
+      setSubmitError('Selecione sua empresa no contexto ativo.');
+      return;
+    }
 
     const payload = {
       cnpj: stripCnpjMask(values.cnpj.trim()),
@@ -141,7 +148,7 @@ export function CreateEditEmpresaPage() {
         onBack={goBack}
       />
 
-      <section className="dashboard-card rounded-[28px] border p-6 shadow-xl">
+      <section className="dashboard-card rounded-xl border p-6 shadow-xl">
         <FormErrorAlert message={submitError} />
 
         <form className="space-y-6" onSubmit={empresaForm.handleSubmit(handleSubmit)}>

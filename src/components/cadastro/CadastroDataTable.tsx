@@ -23,7 +23,7 @@ export function CadastroDataTable({
   footer,
 }: CadastroDataTableProps) {
   return (
-    <section className="dashboard-card rounded-[28px] border p-0 overflow-hidden shadow-xl">
+    <section className="dashboard-card cadastro-table rounded-xl border p-0 overflow-hidden shadow-xl">
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-slate-200 text-left">
           <thead className="bg-[#F8FAFF]">
@@ -31,7 +31,7 @@ export function CadastroDataTable({
               {columns.map((column) => (
                 <th
                   key={column}
-                  className="px-6 py-4 text-sm font-semibold text-[#2B2C40]"
+                  className="px-6 py-4 text-sm font-semibold dashboard-text"
                 >
                   {column}
                 </th>
@@ -44,7 +44,7 @@ export function CadastroDataTable({
               <tr>
                 <td
                   colSpan={columns.length}
-                  className="px-6 py-12 text-center text-sm text-[#6C7287]"
+                  className="px-6 py-12 text-center text-sm dashboard-text-muted"
                 >
                   {loading ? (loadingText ?? emptyText) : emptyText}
                 </td>
@@ -74,7 +74,7 @@ export function CadastroTableCell({
 }: CadastroTableCellProps) {
   return (
     <td
-      className={`px-6 py-4 align-top text-sm ${muted ? 'text-[#6C7287]' : 'text-[#2B2C40]'} ${className}`.trim()}
+      className={`px-6 py-4 align-top text-sm ${muted ? 'dashboard-text-muted' : 'dashboard-text'} ${className}`.trim()}
     >
       {children}
     </td>

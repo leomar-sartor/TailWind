@@ -90,7 +90,7 @@ export function StepConfirmar({ onBack, onSuccess }: Props) {
   // ── Sucesso ──────────────────────────────────────────────────────────────────
   if (disparado) {
     return (
-      <div className="dashboard-card rounded-[20px] border shadow-sm p-10 text-center">
+      <div className="dashboard-card rounded-xl border shadow-sm p-10 text-center">
         <div className="flex justify-center mb-6">
           <div className="bg-[#E6FFE9] rounded-full p-4">
             <CheckCircle className="h-12 w-12 text-[#71DD37]" strokeWidth={1.5} />
@@ -110,7 +110,7 @@ export function StepConfirmar({ onBack, onSuccess }: Props) {
         <Button
           type="button"
           onClick={handleNovoDisparo}
-          className="rounded-2xl px-6 py-3 inline-flex items-center gap-2"
+          className="rounded-lg px-4 py-2 inline-flex items-center gap-2"
         >
           <Send className="h-4 w-4" />
           Novo disparo
@@ -124,7 +124,7 @@ export function StepConfirmar({ onBack, onSuccess }: Props) {
     <div className="space-y-4">
 
       {/* Resumo */}
-      <div className="dashboard-card rounded-[20px] border shadow-sm p-6 space-y-5">
+      <div className="dashboard-card rounded-xl border shadow-sm p-6 space-y-5">
         <h3 className="text-base font-semibold text-[#2B2C40]">Confirmar disparo</h3>
 
         {/* Pesquisa */}
@@ -204,7 +204,7 @@ export function StepConfirmar({ onBack, onSuccess }: Props) {
           type="button"
           onClick={handleDisparar}
           disabled={loading}
-          className="rounded-2xl px-6 py-3 inline-flex items-center gap-2 disabled:opacity-60"
+          className="rounded-lg px-4 py-2 inline-flex items-center gap-2 disabled:opacity-60"
         >
           {loading ? (
             'Disparando...'

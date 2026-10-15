@@ -37,7 +37,7 @@ export function DispararPesquisaPage() {
       </div>
 
       {/* Stepper */}
-      <div className="dashboard-card rounded-[20px] border shadow-sm px-6 py-4">
+      <div className="dashboard-card rounded-xl border shadow-sm px-6 py-4">
         <div className="flex items-center gap-2">
           {STEPS.map((s, i) => {
             const isActive = step === s.id;

@@ -12,7 +12,7 @@ export function FormErrorAlert({ message, className }: FormErrorAlertProps) {
   return (
     <div
       className={[
-        'mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700',
+        'mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700',
         className,
       ]
         .filter(Boolean)

@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { useFieldArray, useForm, SubmitHandler, type FieldError } from 'react-hook-form';
-import { ArrowLeft, PlusCircle, Plus, Trash2 } from 'lucide-react';
+import { PlusCircle, Plus, Trash2 } from 'lucide-react';
+import { CadastroFormActions, CadastroFormHeader } from '../../components/cadastro';
 import { FormErrorAlert } from '../../components/FormErrorAlert';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
@@ -258,36 +259,19 @@ export function CreateEditPesquisaPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <button
-          onClick={() => navigate('/dashboard/pesquisa')}
-          className="inline-flex items-center gap-2 text-[#696CFF] hover:text-[#384551] transition"
-          type="button"
-        >
-          <ArrowLeft className="h-5 w-5" />
-          <span className="text-sm font-medium">Voltar</span>
-        </button>
-        <div>
-          <h1 className="text-2xl font-semibold text-[#2B2C40]">
-            {isEditing ? 'Editar pesquisa' : 'Cadastrar nova pesquisa'}
-          </h1>
-          <p className="mt-1 text-sm text-[#6C7287]">
-            {isEditing
-              ? 'Atualize as informações da pesquisa, suas perguntas e opções.'
-              : 'Preencha o formulário abaixo para criar uma pesquisa com perguntas e opções.'}
-          </p>
-        </div>
-      </div>
+      <CadastroFormHeader title={isEditing ? 'Editar pesquisa' : 'Cadastrar nova pesquisa'}
+        description={isEditing ? 'Atualize as informações da pesquisa, suas perguntas e opções.' : 'Preencha o formulário abaixo para criar uma pesquisa com perguntas e opções.'}
+        onBack={() => navigate('/dashboard/pesquisa')} />
 
       {successMessage && (
-        <div className="rounded-3xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">
           {successMessage}
         </div>
       )}
 
-      <FormErrorAlert message={errorMessage} className="mb-0 rounded-3xl border-rose-200 bg-rose-50 text-rose-700" />
+      <FormErrorAlert message={errorMessage} className="mb-0 rounded-xl border-rose-200 bg-rose-50 text-rose-700" />
 
-      <article className="dashboard-card rounded-[28px] border p-6 shadow-xl">
+      <article className="dashboard-card rounded-xl border p-6 shadow-xl">
         <form className="space-y-8" onSubmit={handleSubmit(handleSubmitPesquisa)}>
           <div className="grid gap-4 lg:grid-cols-3">
             <Input
@@ -329,7 +313,7 @@ export function CreateEditPesquisaPage() {
               <Button
                 type="button"
                 onClick={addQuestao}
-                className="rounded-3xl px-5 py-3 inline-flex items-center gap-2"
+                className="rounded-xl px-4 py-2 inline-flex items-center gap-2"
               >
                 <PlusCircle className="h-4 w-4" />
                 Adicionar questão
@@ -342,7 +326,7 @@ export function CreateEditPesquisaPage() {
                 const opcoes = questoes?.[index]?.opcoes ?? [];
 
                 return (
-                  <section key={field.id} className="rounded-[28px] border border-slate-200 bg-[#FBFCFF] p-5 shadow-sm">
+                  <section key={field.id} className="rounded-xl border border-slate-200 bg-[#FBFCFF] p-5 shadow-sm">
                     <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div>
                         <p className="text-sm font-semibold text-[#2B2C40]">Questão {index + 1}</p>
@@ -351,7 +335,7 @@ export function CreateEditPesquisaPage() {
                       <Button
                         type="button"
                         onClick={() => removeQuestao(index)}
-                        className="rounded-3xl border border-rose-200 bg-white text-rose-500 hover:bg-rose-50 px-4 py-2"
+                        className="rounded-xl border border-rose-200 bg-white text-rose-500 hover:bg-rose-50 px-4 py-2"
                       >
                         <Trash2 className="h-4 w-4" />
                         Remover
@@ -437,7 +421,7 @@ export function CreateEditPesquisaPage() {
                           <Button
                             type="button"
                             onClick={() => addOpcao(index)}
-                            className="rounded-3xl px-4 py-2 inline-flex items-center gap-2"
+                            className="rounded-xl px-4 py-2 inline-flex items-center gap-2"
                           >
                             <Plus className="h-4 w-4" />
                             Adicionar opção
@@ -446,7 +430,7 @@ export function CreateEditPesquisaPage() {
 
                         <div className="space-y-3">
                           {opcoes.map((_, optionIndex) => (
-                            <div key={`${field.id}-opcao-${optionIndex}`} className="grid gap-3 md:grid-cols-[1fr_auto] items-end rounded-3xl border border-slate-200 bg-white p-4">
+                            <div key={`${field.id}-opcao-${optionIndex}`} className="grid gap-3 md:grid-cols-[1fr_auto] items-end rounded-xl border border-slate-200 bg-white p-4">
                               <Input
                                 name={`questoes.${index}.opcoes.${optionIndex}.descricao`}
                                 placeholder={`Opção ${optionIndex + 1}`}
@@ -456,13 +440,13 @@ export function CreateEditPesquisaPage() {
                                 error={formState.errors.questoes?.[index]?.opcoes?.[optionIndex]?.descricao as FieldError | undefined}
                               />
                               <div className="flex items-center gap-2">
-                                <span className="rounded-3xl border border-slate-200 bg-[#F4F6FA] px-3 py-2 text-sm text-[#6C7287]">
+                                <span className="rounded-xl border border-slate-200 bg-[#F4F6FA] px-3 py-2 text-sm text-[#6C7287]">
                                   {optionIndex + 1}
                                 </span>
                                 <Button
                                   type="button"
                                   onClick={() => removeOpcao(index, optionIndex)}
-                                  className="rounded-3xl border border-rose-200 bg-white text-rose-500 hover:bg-rose-50 px-4 py-2"
+                                  className="rounded-xl border border-rose-200 bg-white text-rose-500 hover:bg-rose-50 px-4 py-2"
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -478,22 +462,7 @@ export function CreateEditPesquisaPage() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-            <Button
-              type="submit"
-              disabled={isBusy}
-              className="rounded-3xl px-5 py-3"
-            >
-              {isBusy ? 'Salvando...' : isEditing ? 'Atualizar pesquisa' : 'Cadastrar pesquisa'}
-            </Button>
-            <Button
-              type="button"
-              onClick={() => navigate('/dashboard/pesquisa')}
-              className="rounded-3xl border border-slate-200 bg-white text-[#2B2C40] hover:bg-[#F4F6FA] px-5 py-3"
-            >
-              Cancelar
-            </Button>
-          </div>
+          <CadastroFormActions submitLabel={isEditing ? 'Atualizar pesquisa' : 'Cadastrar pesquisa'} isBusy={isBusy} onCancel={() => navigate('/dashboard/pesquisa')} />
         </form>
       </article>
     </div>

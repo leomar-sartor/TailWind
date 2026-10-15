@@ -23,7 +23,8 @@ export function CadastroAlert({
 }: CadastroAlertProps) {
   return (
     <div
-      className={`rounded-3xl border p-4 text-sm ${variantClassName[variant]} ${className}`.trim()}
+      role={variant === 'error' ? 'alert' : 'status'}
+      className={`rounded-xl border p-4 text-sm ${variantClassName[variant]} ${className}`.trim()}
     >
       {children}
     </div>

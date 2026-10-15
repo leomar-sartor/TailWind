@@ -4,6 +4,7 @@ type CadastroFormActionsProps = {
   submitLabel: string;
   busyLabel?: string;
   isBusy?: boolean;
+  submitDisabled?: boolean;
   onCancel: () => void;
   cancelLabel?: string;
 };
@@ -15,6 +16,7 @@ export function CadastroFormActions({
   submitLabel,
   busyLabel = 'Salvando...',
   isBusy = false,
+  submitDisabled = false,
   onCancel,
   cancelLabel = 'Cancelar',
 }: CadastroFormActionsProps) {
@@ -22,15 +24,14 @@ export function CadastroFormActions({
     <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
       <Button
         type="submit"
-        disabled={isBusy}
-        className="rounded-3xl px-5 py-3"
+        disabled={isBusy || submitDisabled}
       >
         {isBusy ? busyLabel : submitLabel}
       </Button>
       <Button
         type="button"
+        variant="secondary"
         onClick={onCancel}
-        className="rounded-3xl border border-slate-200 bg-white text-[#2B2C40] hover:bg-[#F4F6FA] px-5 py-3"
       >
         {cancelLabel}
       </Button>

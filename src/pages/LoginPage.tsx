@@ -95,7 +95,7 @@ export function LoginPage() {
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className='w-full rounded-2xl my-4 p-4 justify-center'
+                  className='w-full rounded-lg my-4 p-4 justify-center'
                 >
                   Entrar
                 </Button>

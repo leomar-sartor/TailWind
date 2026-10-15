@@ -20,7 +20,7 @@ export function DashboardLayout({
       <div className="fixed inset-x-0 top-0 h-1 bg-orange-500 z-50" />
       {sidebar}
       {header}
-      <main className={`flex-1 pt-16 transition-all duration-300 ${contentClassName}`}>
+      <main className={`dashboard-content flex-1 pt-16 transition-all duration-300 ${contentClassName}`}>
         {children}
       </main>
       {footer}

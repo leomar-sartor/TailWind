@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { authStorage } from './authStorage';
+import { useActiveContextStore } from './activeContextStore';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -82,6 +83,7 @@ export const useAuthStore = create<AuthState>()(
       // Logout: limpa tudo da memória
       clearAuth: () => {
         authStorage.clear();
+        useActiveContextStore.getState().clearActiveContext();
         set(
           {
             accessToken: null,

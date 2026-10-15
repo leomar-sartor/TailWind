@@ -1,12 +1,17 @@
 import { useNavigate } from 'react-router-dom';
 
-export type MenuPage = 'dashboard' | 'cadastros' | 'pesquisas' | 'pesquisa' | 'empresa' | 'setor' | 'colaboradores' | 'categoria' | 'consultar' | 'enviar';
+export type MenuPage = 'dashboard' | 'cadastros' | 'pesquisas' | 'pesquisa' | 'pesquisaPadronizada' | 'acessos' | 'usuarios' | 'permissoes' | 'tenants' | 'empresa' | 'setor' | 'colaboradores' | 'categoria' | 'consultar' | 'enviar';
 
 export const pageInfo: Record<MenuPage, { title: string; description: string }> = {
   dashboard: { title: 'Dashboard', description: 'Andamento das pesquisas por empresa e setor' },
+  usuarios: { title: 'Usuários', description: 'Dados de usuários e administração global' },
+  permissoes: { title: 'Permissões', description: 'Catálogo e permissões por persona' },
+  tenants: { title: 'Tenants', description: 'Administração global de tenants' },
   cadastros: { title: 'Cadastros', description: 'Visão geral dos cadastros' },
   pesquisas: { title: 'Pesquisas', description: 'Visão geral das pesquisas' },
   pesquisa: { title: 'Pesquisa', description: 'Listagem e cadastro de pesquisas' },
+  pesquisaPadronizada: { title: 'Pesquisas padronizadas', description: 'Gestão operacional de pesquisas padronizadas' },
+    acessos: { title: 'Perfis', description: 'Gestão de usuários, memberships e personas' },
   empresa: { title: 'Cadastros', description: 'Cadastro de empresas' },
   setor: { title: 'Cadastros', description: 'Cadastro de setores' },
   colaboradores: { title: 'Cadastros', description: 'Cadastro de colaboradores' },
@@ -17,14 +22,19 @@ export const pageInfo: Record<MenuPage, { title: string; description: string }> 
 
 const navigationMap: Record<MenuPage, string | null> = {
   dashboard: '/dashboard',
+  usuarios: '/dashboard/usuarios',
+  permissoes: '/dashboard/permissoes',
+  tenants: '/dashboard/tenants',
   cadastros: '/dashboard',
   pesquisas: '/dashboard',
   pesquisa: '/dashboard/pesquisa',
+  pesquisaPadronizada: '/dashboard/pesquisa-padronizada',
+    acessos: '/dashboard/perfis',
   empresa: '/dashboard/empresa',
   setor: '/dashboard/setor',
   colaboradores: '/dashboard/colaboradores',
   categoria: '/dashboard/categoria',
-  consultar: '/dashboard',
+  consultar: '/dashboard/consultar',
   enviar: '/dashboard/pesquisa/disparar',
 };
 

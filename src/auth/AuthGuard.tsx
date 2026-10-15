@@ -19,7 +19,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
 
-        <div className="flex items-center gap-3 bg-white/80 dark:bg-black/60 px-6 py-4 rounded-2xl shadow-xl">
+        <div className="flex items-center gap-3 bg-white/80 dark:bg-black/60 px-6 py-4 rounded-lg shadow-xl">
 
           <Loader
             color="#3e9392"

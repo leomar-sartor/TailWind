@@ -60,7 +60,7 @@ export function SurveyPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-6" style={{ background: 'var(--color-bg)' }}>
         <img src={headerImage} alt="Logo" className="w-48 h-12 object-contain opacity-80" />
-        <div className="flex items-center gap-3 bg-white px-6 py-4 rounded-2xl shadow-md">
+        <div className="flex items-center gap-3 bg-white px-6 py-4 rounded-lg shadow-md">
           <Loader className="size-5 animate-spin text-[#696CFF] [animation-duration:1.5s]" />
           <span className="text-sm font-medium text-[#384551]">Carregando pesquisa...</span>
         </div>
